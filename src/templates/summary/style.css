@@ -1,0 +1,76 @@
+.ls-slide[data-slide-type="summary"] .ls-sum {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  gap: calc(48 * var(--u));
+  align-items: center;
+}
+.ls-slide[data-slide-type="summary"] .ls-sum[data-layout="both"] {
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+}
+.ls-slide[data-slide-type="summary"] .ls-sum-points {
+  display: flex;
+  flex-direction: column;
+  gap: calc(22 * var(--u));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: ls-sum;
+}
+.ls-slide[data-slide-type="summary"] .ls-sum-point {
+  position: relative;
+  padding-left: calc(92 * var(--u));
+  font-size: calc(54 * var(--u));
+  font-weight: 700;
+  line-height: 1.3;
+  counter-increment: ls-sum;
+}
+.ls-slide[data-slide-type="summary"] .ls-sum-point::before {
+  content: counter(ls-sum);
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: calc(60 * var(--u));
+  height: calc(60 * var(--u));
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: var(--ls-accent);
+  color: #fff;
+  font-size: calc(34 * var(--u));
+  font-weight: 800;
+  line-height: calc(60 * var(--u));
+  text-align: center;
+}
+.ls-slide[data-slide-type="summary"] .ls-sum[data-layout="points"] .ls-sum-points {
+  padding: 0 10%;
+}
+.ls-slide[data-slide-type="summary"] .ls-sum-words {
+  --cols: 3;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  gap: calc(20 * var(--u));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ls-slide[data-slide-type="summary"] .ls-sum[data-layout="words"] .ls-sum-words {
+  --cols: 4;
+}
+.ls-slide[data-slide-type="summary"] .ls-sum-word {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(4 * var(--u));
+  padding: calc(18 * var(--u)) calc(12 * var(--u));
+  border: calc(4 * var(--u)) solid var(--ls-surface-border);
+  border-radius: calc(var(--ls-radius) * var(--u));
+  background: var(--ls-surface);
+}
+.ls-slide[data-slide-type="summary"] .ls-sum-hanzi {
+  font-size: calc(84 * var(--u));
+  font-weight: 700;
+  line-height: 1.1;
+}
+.ls-slide[data-slide-type="summary"] .ls-sum-pinyin {
+  font-size: calc(36 * var(--u));
+}

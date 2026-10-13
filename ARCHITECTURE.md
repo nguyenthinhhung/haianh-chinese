@@ -106,6 +106,10 @@ interface SlideTemplate<C> {
   đáp án đúng). Runtime xử lý phím Tiếp: còn bước thì chạy bước kế tiếp, hết bước
   thì sang slide sau; phím Lùi đi ngược lại. Giống hiệu ứng xuất hiện từng phần
   trong PowerPoint, nên giáo viên chỉ cần bút trình chiếu.
+- Phần lớn slide không cần `interaction` riêng: runtime lõi tự lấy các phần tử
+  đánh dấu `data-ls-reveal` làm bước, hiện lần lượt theo thứ tự (cùng giá trị thì
+  hiện cùng lúc), kèm âm thanh nhẹ (`data-ls-sound`, ví dụ `flip` cho thẻ lật).
+  Chỉ hoạt động cần logic riêng (trò chơi) mới viết `interaction`.
 - `editor` là mô tả dữ liệu (trường text, danh sách, ảnh, audio, lựa chọn đúng/sai…),
   không phải component React riêng — Properties panel tự dựng form. Thêm template
   mới không cần viết UI mới, trừ khi có trường đặc biệt.
@@ -113,7 +117,10 @@ interface SlideTemplate<C> {
   từ vựng không mang theo mã của trò chơi.
 
 Theme theo hợp đồng tương tự trong `themes/<id>/`: CSS variables, hình trang trí
-SVG, bộ âm thanh phản hồi (đúng / sai / hoàn thành), font Latin.
+SVG, font Latin. Âm thanh phản hồi (hiện ra / lật thẻ / đúng / sai / hoàn thành)
+được runtime tổng hợp bằng WebAudio nên bài không mang file âm thanh nào và không
+vướng bản quyền; pháo giấy khi hoàn thành là hiệu ứng CSS. Cả hai tắt được qua
+`settings.sound` / `settings.animations`.
 
 ---
 
@@ -485,7 +492,7 @@ cắt validation, ghi file an toàn, backup, recovery, hay hỗ trợ macOS.
 | --- | --- | --- | --- |
 | 1. Lát cắt dọc | 🟡 Còn macOS | Phần TypeScript: schema v1 (Zod), `LessonCodec`, migration, hợp đồng plugin tự phát hiện theo thư mục, `cover` + `vocabulary`, theme `classic`, font Nunito nhúng. Phần Rust đã viết: ghi nguyên tử, kiểm tra hash, backup xoay vòng, draft, lock, nhập asset. 57 unit test đạt. Đã kiểm tra trong trình duyệt (bản giả lập lưu trữ): tạo → sửa → Lưu → mở lại; `lesson.html` mở bằng Chrome trình chiếu đúng. | Chưa thử trên macOS. *(Windows: Rust đã biên dịch, clippy sạch, 7 test Rust đạt; đã chạy app thật và kiểm tra lưu, backup, draft, xung đột khi file bị sửa bên ngoài, lock giữa hai tiến trình, phục hồi sau khi kill, lưu khi đóng cửa sổ.)* |
 | 2. Editor | 🟢 Xong (Windows) | Library (tạo, mở, đổi tên, nhân bản, xoá vào Thùng rác; hiện tiêu đề bài); SlideNavigator (thêm, xoá, nhân bản, lên/xuống, kéo thả); PropertiesPanel tự dựng form từ `editor` spec, báo lỗi và cảnh báo giới hạn theo từng trường; nút Lưu + Ctrl+S/⌘S + trạng thái + xử lý xung đột; undo/redo (nút + Ctrl+Z/Ctrl+Y, ⌘Z/⇧⌘Z, gộp lần gõ); draft sau 1 giây + hỏi phục hồi khi mở bài; tự lưu sau 30 giây rảnh và khi đóng cửa sổ; thu nhỏ ảnh ≤ 1920 px khi nhập (giữ đúng chiều xoay EXIF); dọn asset không dùng khi đóng bài. Đã kiểm tra trong app thật trên Windows. | Chọn ảnh/audio qua hộp thoại chưa thử trong app thật. |
-| 3. Dạy + Present | 🟡 Bắt đầu | Runtime lõi trong `lesson.html`: bước theo Tiếp/Lùi, `A`/`R`, Home/End, toàn màn hình, vào lại slide thì bắt đầu lại; ghi chú giáo viên. | 5 loại slide còn lại của nhóm 1; Present trong app; âm thanh phản hồi, hiệu ứng. |
+| 3. Dạy + Present | 🟢 Xong (Windows) | Đủ 7 loại slide nhóm 1 (`cover`, `vocabulary`, `picture-card`, `flashcard`, `dialogue`, `grammar`, `summary`). Present trong app dùng chung runtime với `lesson.html`: F5 từ đầu, Shift+F5 / nút "Trình chiếu" từ slide đang chọn, toàn màn hình, Esc thoát về đúng slide. Runtime: bước Tiếp/Lùi, `A`/`R`, Home/End, hiện từng phần chung cho mọi slide (`data-ls-reveal`), âm thanh phản hồi tổng hợp (WebAudio), pháo giấy. Đã kiểm tra trong app thật: chạy các bước của thẻ lật, hội thoại, ngữ pháp. | Thử bút trình chiếu thật; trình chiếu trọn một bài 15 slide. |
 | 4. Hỏi đáp + theme | ⚪ Chưa bắt đầu | Tuỳ chọn chữ Khải đã có. | Nhóm 2; 4 theme còn lại. |
 | 5. Trò chơi + công cụ lớp học | ⚪ Chưa bắt đầu | | |
 | Ảnh và giọng đọc từ web (thêm ở Rev 6) | 🟢 Xong (Windows) | Tìm ảnh Bing, dán/kéo ảnh, giọng đọc Google Dịch, ghi nguồn ảnh. Đã kiểm tra trong app thật: tìm "quả táo" ra 30 ảnh trong ~2,5 giây, chèn ảnh, tạo giọng đọc 苹果, dán ảnh, kéo địa chỉ ảnh vào. | Kéo ảnh thật từ Chrome/Edge sang chưa thử bằng chuột thật. |
@@ -510,8 +517,8 @@ cắt validation, ghi file an toàn, backup, recovery, hay hỗ trợ macOS.
 - [x] Nút Lưu, Ctrl+S / ⌘S và trạng thái lưu hiển thị đúng.
 
 **Loại slide và theme**
-- [ ] Đủ các loại slide nhóm 1 và 2 (nhóm 3 nếu không bị cắt).
-- [ ] Mọi slide nhóm 1 và 2 chạy hết các bước chỉ bằng Tiếp/Lùi (bút trình chiếu).
+- [ ] Đủ các loại slide nhóm 1 và 2 (nhóm 3 nếu không bị cắt). *(Nhóm 1 đủ.)*
+- [ ] Mọi slide nhóm 1 và 2 chạy hết các bước chỉ bằng Tiếp/Lùi (bút trình chiếu). *(Nhóm 1 đạt với bàn phím; chưa thử bút thật.)*
 - [ ] Mỗi slide hoạt động có phản hồi âm thanh/hiệu ứng và phím `A`/`R`.
 - [ ] Bảng điểm đội, đồng hồ đếm ngược dùng được trong Present và file export.
 - [x] Mỗi slide có ô ghi chú cho giáo viên, không hiện khi trình chiếu.
@@ -531,8 +538,8 @@ cắt validation, ghi file an toàn, backup, recovery, hay hỗ trợ macOS.
 - [ ] File bị sửa từ bên ngoài (OneDrive/iCloud) trong lúc mở → không bị ghi đè âm thầm. *(Đã kiểm tra trên Windows với thư mục OneDrive; chưa thử iCloud.)*
 
 **Present và Export**
-- [ ] Editor, Present và Export hiển thị giống nhau.
-- [ ] Điều hướng bằng bàn phím và bút trình chiếu. *(Chạy đúng trong `lesson.html` trên Chrome; chưa có Present trong app, chưa thử bút thật.)*
+- [ ] Editor, Present và Export hiển thị giống nhau. *(Editor và Present dùng chung hàm render và runtime; Export chưa có.)*
+- [ ] Điều hướng bằng bàn phím và bút trình chiếu. *(Chạy đúng trong `lesson.html` trên Chrome và trong Present của app; chưa thử bút thật.)*
 - [ ] File export mở offline trên máy không cài ứng dụng, chạy đúng trên Chrome,
       Edge và Safari; ảnh, audio, âm thanh phản hồi và tương tác hoạt động.
 

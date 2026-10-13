@@ -24,8 +24,11 @@ export class TemplateRegistry {
     return t;
   }
 
+  /** Templates in menu order: by `order`, then by label. */
   list(category?: TemplateCategory): AnySlideTemplate[] {
-    const all = [...this.templates.values()];
+    const all = [...this.templates.values()].sort(
+      (a, b) => (a.order ?? Infinity) - (b.order ?? Infinity) || a.label.localeCompare(b.label, "vi"),
+    );
     return category ? all.filter((t) => t.category === category) : all;
   }
 }

@@ -28,6 +28,7 @@ export const vocabulary: SlideTemplate<VocabularyContent> = {
   type: "vocabulary",
   label: "Từ vựng",
   category: "teach",
+  order: 20,
   schema,
   aiSchemaHint:
     '1–8 từ. {"heading"?: tiêu đề tiếng Việt, "words": [{"hanzi", "pinyin": có dấu thanh, "meaning": nghĩa tiếng Việt}], "hideMeaning"?: true để hiện nghĩa từng từ khi bấm Tiếp}',

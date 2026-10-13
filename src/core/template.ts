@@ -71,6 +71,8 @@ export interface SlideTemplate<C = unknown> {
   /** Name shown to the teacher. */
   label: string;
   category: TemplateCategory;
+  /** Position in the "add slide" menu; lower first, unset last. */
+  order?: number;
   schema: ZodType<C>;
   /** Short description of the content shape, included in the AI import prompt. */
   aiSchemaHint: string;

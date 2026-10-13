@@ -1,0 +1,98 @@
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-lines {
+  --hanzi: 66;
+  --avatar: 136;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(20 * var(--u));
+  min-height: 0;
+  margin: 0;
+  padding: 0 calc(40 * var(--u));
+  list-style: none;
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-lines[data-count="4"] {
+  --hanzi: 52;
+  --avatar: 110;
+  gap: calc(14 * var(--u));
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-lines[data-count="5"],
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-lines[data-count="6"] {
+  --hanzi: 40;
+  --avatar: 88;
+  gap: calc(10 * var(--u));
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-line {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: calc(24 * var(--u));
+  max-width: 82%;
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-line--b {
+  flex-direction: row-reverse;
+  align-self: flex-end;
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-avatar {
+  flex: none;
+  width: calc(var(--avatar) * var(--u));
+  height: calc(var(--avatar) * var(--u));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--ls-accent-2);
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-line--b .ls-dlg-avatar {
+  background: var(--ls-accent);
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-avatar .ls-dlg-avatar-img {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+  background: var(--ls-surface);
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-initial {
+  font-size: calc(var(--avatar) * 0.5 * var(--u));
+  font-weight: 800;
+  color: #fff;
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-bubble {
+  display: flex;
+  flex-direction: column;
+  gap: calc(4 * var(--u));
+  padding: calc(16 * var(--u)) calc(32 * var(--u));
+  border: calc(4 * var(--u)) solid var(--ls-accent-2);
+  border-radius: calc(var(--ls-radius) * var(--u));
+  background: var(--ls-surface);
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-line--b .ls-dlg-bubble {
+  border-color: var(--ls-accent);
+  text-align: right;
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-name {
+  font-size: calc(var(--hanzi) * 0.45 * var(--u));
+  font-weight: 700;
+  color: var(--ls-muted);
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-hanzi {
+  font-size: calc(var(--hanzi) * var(--u));
+  font-weight: 700;
+  line-height: 1.2;
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-pinyin {
+  font-size: calc(var(--hanzi) * 0.55 * var(--u));
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-meaning {
+  font-size: calc(var(--hanzi) * 0.5 * var(--u));
+  font-weight: 700;
+  color: var(--ls-muted);
+}
+.ls-slide[data-slide-type="dialogue"] .ls-play {
+  flex: none;
+  width: calc(64 * var(--u));
+  height: calc(64 * var(--u));
+}

@@ -17,6 +17,7 @@ export const cover: SlideTemplate<CoverContent> = {
   type: "cover",
   label: "Trang bìa",
   category: "teach",
+  order: 10,
   schema,
   aiSchemaHint:
     'Trang tiêu đề hoặc mở đầu một phần. {"title": chữ Hán, "pinyin"?: pinyin có dấu thanh, "subtitle"?: tiếng Việt}',

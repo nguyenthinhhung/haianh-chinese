@@ -1,0 +1,95 @@
+.ls-slide[data-slide-type="grammar"] .ls-gr {
+  --c1: var(--ls-part-1, #d64545);
+  --c2: var(--ls-part-2, #2a6f97);
+  --c3: var(--ls-part-3, #2f8a4f);
+  --c4: var(--ls-part-4, #b7700b);
+  --c5: var(--ls-part-5, #8e44ad);
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(44 * var(--u));
+}
+.ls-slide[data-slide-type="grammar"] .ls-gr-c1 { --c: var(--c1); }
+.ls-slide[data-slide-type="grammar"] .ls-gr-c2 { --c: var(--c2); }
+.ls-slide[data-slide-type="grammar"] .ls-gr-c3 { --c: var(--c3); }
+.ls-slide[data-slide-type="grammar"] .ls-gr-c4 { --c: var(--c4); }
+.ls-slide[data-slide-type="grammar"] .ls-gr-c5 { --c: var(--c5); }
+
+.ls-slide[data-slide-type="grammar"] .ls-gr-pattern {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: calc(20 * var(--u));
+}
+.ls-slide[data-slide-type="grammar"] .ls-gr-part {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(6 * var(--u));
+  min-width: calc(200 * var(--u));
+  padding: calc(18 * var(--u)) calc(36 * var(--u));
+  border: calc(5 * var(--u)) solid var(--c);
+  border-radius: calc(var(--ls-radius) * var(--u));
+  background: var(--ls-surface);
+}
+.ls-slide[data-slide-type="grammar"] .ls-gr-text {
+  font-size: calc(110 * var(--u));
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--c);
+}
+.ls-slide[data-slide-type="grammar"] .ls-gr-note {
+  font-size: calc(38 * var(--u));
+  font-weight: 700;
+  color: var(--ls-muted);
+}
+.ls-slide[data-slide-type="grammar"] .ls-gr-plus {
+  align-self: center;
+  font-size: calc(90 * var(--u));
+  font-weight: 800;
+  color: var(--ls-muted);
+}
+.ls-slide[data-slide-type="grammar"] .ls-gr-explanation {
+  margin: 0;
+  max-width: 85%;
+  font-size: calc(48 * var(--u));
+  font-weight: 600;
+  text-align: center;
+}
+.ls-slide[data-slide-type="grammar"] .ls-gr-examples {
+  display: flex;
+  flex-direction: column;
+  gap: calc(28 * var(--u));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: center;
+}
+.ls-slide[data-slide-type="grammar"] .ls-gr-example {
+  display: flex;
+  flex-direction: column;
+  gap: calc(2 * var(--u));
+}
+.ls-slide[data-slide-type="grammar"] .ls-gr-example [class^="ls-gr-c"] {
+  color: var(--c);
+}
+.ls-slide[data-slide-type="grammar"] .ls-gr-hanzi {
+  font-size: calc(84 * var(--u));
+  font-weight: 700;
+  line-height: 1.2;
+}
+.ls-slide[data-slide-type="grammar"] .ls-gr-hanzi > span + span {
+  margin-left: calc(10 * var(--u));
+}
+.ls-slide[data-slide-type="grammar"] .ls-gr-pinyin {
+  font-size: calc(44 * var(--u));
+}
+.ls-slide[data-slide-type="grammar"] .ls-gr-meaning {
+  font-size: calc(40 * var(--u));
+  font-weight: 700;
+  color: var(--ls-muted);
+}
