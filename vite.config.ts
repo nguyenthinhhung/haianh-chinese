@@ -18,5 +18,8 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/*.test.ts"],
+    // The on-disk module cache keeps a stale result for import.meta.glob when a
+    // folder is added (e.g. a new template), so new templates went untested.
+    fsModuleCache: false,
   },
 });
