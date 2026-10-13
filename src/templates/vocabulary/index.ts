@@ -3,7 +3,6 @@ import { AssetIdRef } from "../../core/schema";
 import type { SlideTemplate } from "../../core/template";
 import { esc } from "../../renderer/escape";
 import { audioButton, image, pinyin, vi, zh } from "../../renderer/helpers";
-import interaction from "./interaction.js?raw";
 import css from "./style.css?raw";
 
 const word = z.object({
@@ -90,7 +89,6 @@ export const vocabulary: SlideTemplate<VocabularyContent> = {
     },
     { kind: "toggle", key: "hideMeaning", label: "Ẩn nghĩa, bấm Tiếp để hiện từng từ" },
   ],
-  interaction: { source: interaction },
 };
 
 export default vocabulary;

@@ -19,6 +19,102 @@
 
   var NONE = { steps: 0, show: function () {} };
 
+  /* Feedback: tones synthesised with WebAudio, so lessons carry no sound
+   * files and nothing needs licensing. Each sound is a list of notes
+   * [frequency Hz, start s, length s] played with one waveform. */
+  var SOUNDS = {
+    reveal: { wave: "sine", gain: 0.12, notes: [[660, 0, 0.12]] },
+    flip: { wave: "triangle", gain: 0.12, notes: [[420, 0, 0.06], [620, 0.05, 0.08]] },
+    correct: { wave: "sine", gain: 0.2, notes: [[784, 0, 0.14], [1047, 0.12, 0.28]] },
+    wrong: { wave: "square", gain: 0.06, notes: [[196, 0, 0.18], [147, 0.16, 0.3]] },
+    complete: { wave: "triangle", gain: 0.18, notes: [[523, 0, 0.12], [659, 0.1, 0.12], [784, 0.2, 0.12], [1047, 0.3, 0.4]] },
+  };
+  var audioContext = null;
+
+  function playTone(name) {
+    var sound = SOUNDS[name];
+    var Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!sound || !Ctx) return;
+    try {
+      audioContext = audioContext || new Ctx();
+      if (audioContext.state === "suspended") audioContext.resume();
+      var t0 = audioContext.currentTime + 0.01;
+      sound.notes.forEach(function (n) {
+        var osc = audioContext.createOscillator();
+        var gain = audioContext.createGain();
+        osc.type = sound.wave;
+        osc.frequency.value = n[0];
+        gain.gain.setValueAtTime(0, t0 + n[1]);
+        gain.gain.linearRampToValueAtTime(sound.gain, t0 + n[1] + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + n[1] + n[2]);
+        osc.connect(gain).connect(audioContext.destination);
+        osc.start(t0 + n[1]);
+        osc.stop(t0 + n[1] + n[2] + 0.05);
+      });
+    } catch (e) {
+      /* No audio device: feedback is a nicety, never an error. */
+    }
+  }
+
+  var CONFETTI_COLORS = ["#d64545", "#e9b949", "#2a6f97", "#3a9d5d", "#9b5de5"];
+
+  function confetti(slide) {
+    var layer = document.createElement("div");
+    layer.className = "ls-confetti";
+    layer.setAttribute("aria-hidden", "true");
+    for (var i = 0; i < 60; i++) {
+      var piece = document.createElement("i");
+      piece.style.left = Math.random() * 100 + "%";
+      piece.style.background = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
+      piece.style.animationDelay = Math.random() * 0.4 + "s";
+      piece.style.animationDuration = 1.6 + Math.random() * 1.2 + "s";
+      piece.style.setProperty("--drift", (Math.random() * 2 - 1) * 20 + "cqw");
+      layer.appendChild(piece);
+    }
+    slide.appendChild(layer);
+    setTimeout(function () {
+      if (layer.parentNode) layer.parentNode.removeChild(layer);
+    }, 3500);
+  }
+
+  /* Plays feedback for the slide, honouring the lesson's sound and
+   * animation settings. kind: reveal | flip | correct | wrong | complete. */
+  LS.feedback = function (kind, slide) {
+    var deck = slide && slide.closest ? slide.closest(".ls-deck") : null;
+    if (!deck || deck.getAttribute("data-sound") !== "off") playTone(kind);
+    if (kind === "complete" && slide && (!deck || deck.getAttribute("data-animations") !== "off")) confetti(slide);
+  };
+
+  /* Steps for slides without their own interaction: every element marked
+   * data-ls-reveal appears in document order, one per step. Elements sharing
+   * a data-ls-reveal value appear together. data-ls-sound picks the feedback
+   * sound played as each appears. */
+  function revealController(slide) {
+    var items = slide.querySelectorAll("[data-ls-reveal]");
+    if (!items.length) return null;
+    var groups = [];
+    var byKey = {};
+    for (var i = 0; i < items.length; i++) {
+      var key = items[i].getAttribute("data-ls-reveal") || "#" + i;
+      if (!byKey[key]) {
+        byKey[key] = [];
+        groups.push(byKey[key]);
+      }
+      byKey[key].push(items[i]);
+    }
+    var shown = 0;
+    return {
+      steps: groups.length,
+      show: function (n) {
+        for (var g = 0; g < groups.length; g++) {
+          for (var k = 0; k < groups[g].length; k++) groups[g][k].classList.toggle("ls-revealed", g < n);
+        }
+        if (n > shown && n <= groups.length) LS.feedback(groups[n - 1][0].getAttribute("data-ls-sound") || "reveal", slide);
+        shown = n;
+      },
+    };
+  }
+
   function isTyping(t) {
     return t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
   }
@@ -45,14 +141,12 @@
     deck.classList.add("ls-presenting");
 
     var controllers = slides.map(function (el) {
-      var factory = factories[el.getAttribute("data-slide-type")];
+      var factory = factories[el.getAttribute("data-slide-type")] || revealController;
       var c = null;
-      if (factory) {
-        try {
-          c = factory(el);
-        } catch (e) {
-          if (window.console) console.error(e);
-        }
+      try {
+        c = factory(el);
+      } catch (e) {
+        if (window.console) console.error(e);
       }
       return c && typeof c.steps === "number" && typeof c.show === "function" ? c : NONE;
     });

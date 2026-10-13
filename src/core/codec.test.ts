@@ -4,6 +4,7 @@ import { testEnv } from "../test/env";
 import { parseLessonHtml, serializeLessonHtml } from "./codec";
 import { addAsset, addSlide, setSlideField } from "./document";
 import type { LessonDocument } from "./schema";
+import { TemplateRegistry } from "./templateRegistry";
 
 const env = testEnv();
 const roundTrip = (doc: LessonDocument) => parseLessonHtml(serializeLessonHtml(doc, env), env.templates);
@@ -66,13 +67,20 @@ describe("LessonCodec", () => {
     expect(html).toContain('lang="zh-CN">苹果</span>');
   });
 
-  it("embeds only the runtime of templates the lesson uses", () => {
-    const coverOnly = serializeLessonHtml(createFromSample("blank", "Trống", "0.0.0"), env);
+  it("embeds only the CSS and runtime of templates the lesson uses", () => {
+    // A stand-in template with its own interaction script, registered next to the real ones.
+    const vocabulary = env.templates.require("vocabulary");
+    const withScript = { ...vocabulary, type: "scripted", interaction: { source: "/* scripted-interaction */" } };
+    const scriptedEnv = { ...env, templates: new TemplateRegistry([...env.templates.list(), withScript]) };
+
+    const coverOnly = serializeLessonHtml(createFromSample("blank", "Trống", "0.0.0"), scriptedEnv);
     expect(coverOnly).toContain("registerInteraction = function");
-    expect(coverOnly).not.toContain('registerInteraction("vocabulary"');
+    expect(coverOnly).not.toContain("scripted-interaction");
     expect(coverOnly).not.toContain("ls-vocab-grid");
-    const fruits = serializeLessonHtml(createFromSample("fruits", "Hoa quả", "0.0.0"), env);
-    expect(fruits).toContain('registerInteraction("vocabulary"');
+
+    const doc = createFromSample("blank", "Trống", "0.0.0");
+    const scripted = { ...doc, slides: [...doc.slides, { id: "s_scripted01", type: "scripted", content: vocabulary.defaults() }] };
+    expect(serializeLessonHtml(scripted, scriptedEnv)).toContain("scripted-interaction");
   });
 
   it("reads only the JSON and ignores the DOM and other scripts", () => {

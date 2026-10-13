@@ -110,6 +110,31 @@
   transition: none;
 }
 
+/* Confetti when an activity is completed (LessonStudio.feedback). */
+.ls-slide .ls-confetti {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  overflow: hidden;
+  pointer-events: none;
+}
+.ls-slide .ls-confetti i {
+  position: absolute;
+  top: -4%;
+  width: 1.1cqw;
+  height: 1.8cqw;
+  border-radius: 0.2cqw;
+  animation-name: ls-confetti-fall;
+  animation-timing-function: cubic-bezier(0.25, 0.6, 0.6, 1);
+  animation-fill-mode: forwards;
+}
+@keyframes ls-confetti-fall {
+  to {
+    transform: translate(var(--drift), 60cqw) rotate(720deg);
+    opacity: 0.2;
+  }
+}
+
 /* Plain page without the runtime: slides stacked for reading or printing. */
 html:not(.ls-present) body > .ls-deck {
   display: flex;
