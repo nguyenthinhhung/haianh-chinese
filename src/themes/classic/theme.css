@@ -1,0 +1,33 @@
+.ls-deck[data-theme="classic"] {
+  --ls-bg: #fbf8f2;
+  --ls-fg: #1f2933;
+  --ls-muted: #52606d;
+  --ls-accent: #c8102e;
+  --ls-accent-2: #2a6f97;
+  --ls-surface: #ffffff;
+  --ls-surface-border: #eadfce;
+  --ls-pinyin: #2a6f97;
+  --ls-radius: 28;
+}
+.ls-deck[data-theme="classic"] .ls-slide::before,
+.ls-deck[data-theme="classic"] .ls-slide::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+.ls-deck[data-theme="classic"] .ls-slide::before {
+  top: 2.5%;
+  left: 1.5%;
+  width: 9%;
+  aspect-ratio: 1;
+  background-image: var(--decor-corner);
+}
+.ls-deck[data-theme="classic"] .ls-slide::after {
+  right: 2.5%;
+  bottom: 4%;
+  width: 6%;
+  aspect-ratio: 5;
+  background-image: var(--decor-dots);
+}

@@ -1,0 +1,171 @@
+/* Stage shared by Editor, Present and Export.
+   A slide is a fixed 16:9 stage designed at 1920×1080; `--u` is one design
+   pixel, so `calc(64 * var(--u))` is 64px on a 1920-wide screen and scales
+   with whatever box the slide is shown in. */
+
+.ls-deck {
+  --ls-bg: #ffffff;
+  --ls-fg: #1f2933;
+  --ls-muted: #5f6b7a;
+  --ls-accent: #d64545;
+  --ls-accent-2: #2a6f97;
+  --ls-surface: #ffffff;
+  --ls-surface-border: #e3e6ea;
+  --ls-pinyin: #2a6f97;
+  --ls-radius: 28;
+  --ls-font-latin: "LS Nunito", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --ls-font-hanzi-sc: "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
+  --ls-font-kai-sc: "KaiTi", "STKaiti", "Kaiti SC", "AR PL UKai CN", serif;
+  --ls-font-hanzi: var(--ls-font-hanzi-sc);
+}
+.ls-deck[data-hanzi-font="kai"] {
+  --ls-font-hanzi: var(--ls-font-kai-sc);
+}
+
+.ls-slide {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  container-type: size;
+  overflow: hidden;
+  background: var(--ls-bg);
+  color: var(--ls-fg);
+  font-family: var(--ls-font-latin);
+  line-height: 1.25;
+  -webkit-text-size-adjust: 100%;
+}
+.ls-slide *,
+.ls-slide *::before,
+.ls-slide *::after {
+  box-sizing: border-box;
+}
+.ls-slide > * {
+  --u: calc(100cqw / 1920);
+}
+.ls-slide [lang="zh-CN"] {
+  font-family: var(--ls-font-hanzi);
+}
+.ls-slide .ls-pinyin {
+  font-family: var(--ls-font-latin);
+  color: var(--ls-pinyin);
+  font-weight: 700;
+}
+.ls-slide img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.ls-slide .ls-body {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  padding: calc(72 * var(--u)) calc(96 * var(--u));
+}
+.ls-slide .ls-heading {
+  margin: 0 0 calc(32 * var(--u));
+  font-size: calc(64 * var(--u));
+  font-weight: 800;
+  text-align: center;
+  color: var(--ls-accent);
+}
+.ls-slide .ls-play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(72 * var(--u));
+  height: calc(72 * var(--u));
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ls-accent-2);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+}
+.ls-slide .ls-play svg {
+  width: 55%;
+  height: 55%;
+  fill: currentColor;
+}
+
+/* Steps hidden until the teacher presses Next. Outside Present (in the
+   editor or a plain page) everything stays visible, marked as hidden. */
+.ls-slide .ls-hide {
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.ls-deck:not(.ls-presenting) .ls-slide .ls-hide {
+  opacity: 0.45;
+  outline: calc(3 * var(--u)) dashed var(--ls-muted);
+  outline-offset: calc(4 * var(--u));
+}
+.ls-deck.ls-presenting .ls-slide .ls-hide:not(.ls-revealed) {
+  opacity: 0;
+  transform: translateY(calc(12 * var(--u)));
+}
+.ls-deck.ls-presenting[data-animations="off"] .ls-hide {
+  transition: none;
+}
+
+/* Plain page without the runtime: slides stacked for reading or printing. */
+html:not(.ls-present) body > .ls-deck {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1280px;
+  margin: 24px auto;
+  padding: 0 16px;
+}
+
+/* Present: one slide at a time, letterboxed on black. The runtime marks the
+   deck `.ls-presenting`, in a lesson file and in the app alike. */
+html.ls-present,
+html.ls-present body {
+  height: 100%;
+  margin: 0;
+  background: #000;
+  overflow: hidden;
+}
+.ls-deck.ls-presenting {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: #000;
+  cursor: default;
+}
+.ls-deck.ls-presenting > .ls-slide {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(100vw, calc(100vh * 16 / 9));
+  transform: translate(-50%, -50%);
+  visibility: hidden;
+}
+.ls-deck.ls-presenting > .ls-slide.ls-current {
+  visibility: visible;
+}
+.ls-deck.ls-presenting > .ls-progress {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  height: 4px;
+  background: var(--ls-accent);
+  opacity: 0.7;
+  transition: width 0.25s ease;
+  z-index: 10;
+}
+@media print {
+  .ls-deck.ls-presenting {
+    position: static;
+  }
+  .ls-deck.ls-presenting > .ls-slide {
+    position: static;
+    transform: none;
+    visibility: visible;
+    width: 100%;
+    break-after: page;
+  }
+}

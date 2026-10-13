@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Main window. File access goes only through the app's own commands, which are confined to the lesson library and app data; no fs, shell or http plugins.",
+  "windows": ["main"],
+  "permissions": ["core:default", "core:window:allow-set-title", "core:window:allow-destroy", "core:window:allow-set-fullscreen", "core:window:allow-is-fullscreen"]
+}

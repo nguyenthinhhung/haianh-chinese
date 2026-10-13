@@ -1,0 +1,70 @@
+.ls-slide[data-slide-type="vocabulary"] .ls-vocab-grid {
+  --cols: 4;
+  --hanzi: 120;
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+  gap: calc(32 * var(--u));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-height: 0;
+}
+.ls-slide[data-slide-type="vocabulary"] .ls-vocab-grid[data-count="1"] { --cols: 1; --hanzi: 260; }
+.ls-slide[data-slide-type="vocabulary"] .ls-vocab-grid[data-count="2"] { --cols: 2; --hanzi: 200; }
+.ls-slide[data-slide-type="vocabulary"] .ls-vocab-grid[data-count="3"] { --cols: 3; --hanzi: 170; }
+.ls-slide[data-slide-type="vocabulary"] .ls-vocab-grid[data-count="4"] { --cols: 4; --hanzi: 140; }
+.ls-slide[data-slide-type="vocabulary"] .ls-vocab-grid[data-count="5"],
+.ls-slide[data-slide-type="vocabulary"] .ls-vocab-grid[data-count="6"] { --cols: 3; --hanzi: 110; }
+.ls-slide[data-slide-type="vocabulary"] .ls-vocab-grid[data-count="7"],
+.ls-slide[data-slide-type="vocabulary"] .ls-vocab-grid[data-count="8"] { --cols: 4; --hanzi: 100; }
+
+.ls-slide[data-slide-type="vocabulary"] .ls-vocab-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(8 * var(--u));
+  min-height: 0;
+  padding: calc(24 * var(--u));
+  border: calc(4 * var(--u)) solid var(--ls-surface-border);
+  border-radius: calc(var(--ls-radius) * var(--u));
+  background: var(--ls-surface);
+  text-align: center;
+}
+.ls-slide[data-slide-type="vocabulary"] .ls-vocab-media {
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ls-slide[data-slide-type="vocabulary"] .ls-vocab-image {
+  border-radius: calc(16 * var(--u));
+}
+.ls-slide[data-slide-type="vocabulary"] .ls-vocab-hanzi {
+  font-size: calc(var(--hanzi) * var(--u));
+  font-weight: 700;
+  line-height: 1.1;
+}
+.ls-slide[data-slide-type="vocabulary"] .ls-vocab-card--image .ls-vocab-hanzi {
+  font-size: calc(var(--hanzi) * 0.7 * var(--u));
+}
+.ls-slide[data-slide-type="vocabulary"] .ls-vocab-pinyin {
+  font-size: calc(var(--hanzi) * 0.38 * var(--u));
+}
+.ls-slide[data-slide-type="vocabulary"] .ls-vocab-meaning {
+  font-size: calc(var(--hanzi) * 0.34 * var(--u));
+  font-weight: 800;
+  color: var(--ls-muted);
+}
+.ls-slide[data-slide-type="vocabulary"] .ls-play {
+  position: absolute;
+  top: calc(12 * var(--u));
+  right: calc(12 * var(--u));
+  width: calc(56 * var(--u));
+  height: calc(56 * var(--u));
+}
