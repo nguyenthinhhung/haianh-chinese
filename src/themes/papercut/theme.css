@@ -1,0 +1,31 @@
+/* Red paper on warm cream, a window flower in each top corner. */
+.ls-deck[data-theme="papercut"] {
+  --ls-bg: #fff7ef;
+  --ls-fg: #3a1717;
+  --ls-muted: #7a4f45;
+  --ls-accent: #c1121f;
+  --ls-accent-2: #b8860b;
+  --ls-surface: #ffffff;
+  --ls-surface-border: #f2cfc0;
+  --ls-pinyin: #9a3412;
+  --ls-good: #2f7d4f;
+  --ls-radius: 26;
+}
+.ls-deck[data-theme="papercut"] .ls-slide::before,
+.ls-deck[data-theme="papercut"] .ls-slide::after {
+  content: "";
+  position: absolute;
+  top: 2%;
+  width: 7%;
+  aspect-ratio: 1;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-image: var(--decor-flower);
+}
+.ls-deck[data-theme="papercut"] .ls-slide::before {
+  left: 1.5%;
+}
+.ls-deck[data-theme="papercut"] .ls-slide::after {
+  right: 1.5%;
+}

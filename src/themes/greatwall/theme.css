@@ -1,0 +1,35 @@
+/* Sand and brick with hill green. */
+.ls-deck[data-theme="greatwall"] {
+  --ls-bg: #fbf5ea;
+  --ls-fg: #3a2a1f;
+  --ls-muted: #75604d;
+  --ls-accent: #b0412e;
+  --ls-accent-2: #4f7a5a;
+  --ls-surface: #fffdf7;
+  --ls-surface-border: #ead9bf;
+  --ls-pinyin: #3f6f52;
+  --ls-good: #3f6f52;
+  --ls-radius: 20;
+}
+.ls-deck[data-theme="greatwall"] .ls-slide::before,
+.ls-deck[data-theme="greatwall"] .ls-slide::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+.ls-deck[data-theme="greatwall"] .ls-slide::before {
+  top: 2%;
+  right: 1%;
+  width: 18%;
+  aspect-ratio: 2.3;
+  background-image: var(--decor-wall);
+}
+.ls-deck[data-theme="greatwall"] .ls-slide::after {
+  top: 3%;
+  left: 1.5%;
+  width: 11%;
+  aspect-ratio: 1.8;
+  background-image: var(--decor-cloud);
+}

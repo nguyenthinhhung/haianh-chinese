@@ -30,18 +30,22 @@ describe.each(themes.map((t) => [t.id, t] as const))("theme %s", (id, theme) => 
   });
 });
 
-it("ships the MVP themes, two for older students and four seasonal ones", () => {
+it("ships the MVP themes, two for older students, four seasonal and four cultural ones", () => {
   expect(themes.map((t) => t.id).sort()).toEqual([
     "autumn",
     "classic",
     "garden",
+    "greatwall",
     "ink",
     "notebook",
     "ocean",
     "panda",
+    "papercut",
+    "porcelain",
     "space",
     "spring",
     "summer",
+    "tea",
     "winter",
   ]);
 });

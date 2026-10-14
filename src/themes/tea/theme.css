@@ -1,0 +1,35 @@
+/* Tea-leaf green and clay brown on a pale green paper. */
+.ls-deck[data-theme="tea"] {
+  --ls-bg: #f4f8ef;
+  --ls-fg: #2c3a26;
+  --ls-muted: #5d6b55;
+  --ls-accent: #4f7d32;
+  --ls-accent-2: #8b5e3c;
+  --ls-surface: #fffffb;
+  --ls-surface-border: #d9e5cc;
+  --ls-pinyin: #8b5e3c;
+  --ls-good: #4f7d32;
+  --ls-radius: 22;
+}
+.ls-deck[data-theme="tea"] .ls-slide::before,
+.ls-deck[data-theme="tea"] .ls-slide::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+.ls-deck[data-theme="tea"] .ls-slide::before {
+  top: 2%;
+  right: 1.5%;
+  width: 11%;
+  aspect-ratio: 1.33;
+  background-image: var(--decor-teapot);
+}
+.ls-deck[data-theme="tea"] .ls-slide::after {
+  top: 3%;
+  left: 1.5%;
+  width: 10%;
+  aspect-ratio: 1.64;
+  background-image: var(--decor-leaves);
+}
