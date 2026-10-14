@@ -1049,3 +1049,29 @@ input.library-search {
   max-height: 160px;
   overflow-y: auto;
 }
+.lesson-check {
+  width: min(760px, 100%);
+}
+.check-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.check-slide {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  text-align: left;
+  color: var(--text);
+}
+.check-slide ul {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 13px;
+}

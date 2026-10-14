@@ -63,11 +63,16 @@ function walk(value: unknown, found: string[]): void {
   for (const v of Object.values(obj)) if (v && typeof v === "object") walk(v, found);
 }
 
+/** Pinyin problems in one slide's content, without the slide's position. */
+export function slidePinyinProblems(slide: Slide): string[] {
+  const found: string[] = [];
+  walk(slide.content, found);
+  return found;
+}
+
 export function pinyinWarnings(slides: Slide[], registry: TemplateRegistry): string[] {
   return slides.flatMap((s, i) => {
-    const found: string[] = [];
-    walk(s.content, found);
     const label = registry.get(s.type)?.label ?? s.type;
-    return found.map((f) => `Slide ${i + 1} (${label}): ${f}.`);
+    return slidePinyinProblems(s).map((f) => `Slide ${i + 1} (${label}): ${f}.`);
   });
 }

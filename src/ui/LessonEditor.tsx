@@ -5,6 +5,7 @@ import type { RenderEnv } from "../renderer/render";
 import type { OpenLesson } from "./lessonFiles";
 import { AiImportDialog } from "./AiImportDialog";
 import { ImageReviewDialog } from "./ImageReviewDialog";
+import { LessonCheckDialog } from "./LessonCheckDialog";
 import { EXPORT_WARN_BYTES, exportLesson } from "./lessonFiles";
 import { PresentMode } from "./PresentMode";
 import { PropertiesPanel } from "./PropertiesPanel";
@@ -33,6 +34,7 @@ export function LessonEditor({ lesson, onClose }: Props) {
   );
   const [aiImport, setAiImport] = useState(false);
   const [reviewing, setReviewing] = useState(false);
+  const [checking, setChecking] = useState(false);
   const fill = useImageFill(session);
   const clipart = prefersClipart(doc, services.themes);
   const toReview = useMemo(() => picturesToReview(doc, services.templates), [doc, services.templates]);
@@ -139,11 +141,20 @@ export function LessonEditor({ lesson, onClose }: Props) {
             {fill.progress.failed} ô chưa tìm được ảnh
           </span>
         )}
+
         {toReview.length > 0 && (
           <button type="button" className="ghost" onClick={() => setReviewing(true)} title="Xem và đổi các ảnh ứng dụng tự chọn">
             Duyệt ảnh ({toReview.length})
           </button>
         )}
+        <button
+          type="button"
+          className="ghost"
+          onClick={() => setChecking(true)}
+          title="Tìm lỗi, chữ quá dài, pinyin sai, ảnh còn thiếu… trước khi dạy"
+        >
+          Kiểm tra bài
+        </button>
         <button
           type="button"
           className="ghost"
@@ -201,6 +212,17 @@ export function LessonEditor({ lesson, onClose }: Props) {
               text: `Đã thêm ${slides.length} slide vào cuối bài (Ctrl+Z để bỏ).${searching ? " Ảnh đang được tự tìm." : ""}`,
             });
           }}
+        />
+      )}
+
+      {checking && (
+        <LessonCheckDialog
+          doc={doc}
+          onShowSlide={(id) => {
+            setSelectedId(id);
+            setChecking(false);
+          }}
+          onClose={() => setChecking(false)}
         />
       )}
 
