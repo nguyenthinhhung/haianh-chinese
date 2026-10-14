@@ -1,0 +1,42 @@
+/* Icy blue with a red scarf accent; a light theme, so text stays dark. */
+.ls-deck[data-theme="winter"] {
+  --ls-bg: #f3f8fd;
+  --ls-fg: #1c2b3a;
+  --ls-muted: #50677f;
+  --ls-accent: #c0392b;
+  --ls-accent-2: #2b6cb0;
+  --ls-surface: #ffffff;
+  --ls-surface-border: #d3e3f2;
+  --ls-pinyin: #2b6cb0;
+  --ls-good: #2f8a4f;
+  --ls-radius: 30;
+}
+.ls-deck[data-theme="winter"] .ls-slide {
+  background:
+    radial-gradient(circle at 12% 88%, #ffffff 0 2%, transparent 2.2%),
+    radial-gradient(circle at 48% 6%, #ffffff 0 1.2%, transparent 1.4%),
+    radial-gradient(circle at 70% 94%, #ffffff 0 1.6%, transparent 1.8%),
+    linear-gradient(180deg, #e8f2fb 0%, var(--ls-bg) 45%);
+}
+.ls-deck[data-theme="winter"] .ls-slide::before,
+.ls-deck[data-theme="winter"] .ls-slide::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+.ls-deck[data-theme="winter"] .ls-slide::before {
+  top: 1.5%;
+  left: 1%;
+  width: 12%;
+  aspect-ratio: 1.375;
+  background-image: var(--decor-flakes);
+}
+.ls-deck[data-theme="winter"] .ls-slide::after {
+  right: 2%;
+  top: 1%;
+  width: 5%;
+  aspect-ratio: 0.73;
+  background-image: var(--decor-snowman);
+}

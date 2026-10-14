@@ -1,0 +1,38 @@
+/* Sunny sky blue with orange; bright but every text colour stays dark enough on white. */
+.ls-deck[data-theme="summer"] {
+  --ls-bg: #effaff;
+  --ls-fg: #183552;
+  --ls-muted: #4d6a85;
+  --ls-accent: #e8650d;
+  --ls-accent-2: #1677b8;
+  --ls-surface: #ffffff;
+  --ls-surface-border: #c9e6f5;
+  --ls-pinyin: #1677b8;
+  --ls-good: #2a8a3e;
+  --ls-radius: 36;
+}
+.ls-deck[data-theme="summer"] .ls-slide {
+  background: linear-gradient(180deg, #e2f4ff 0%, var(--ls-bg) 40%);
+}
+.ls-deck[data-theme="summer"] .ls-slide::before,
+.ls-deck[data-theme="summer"] .ls-slide::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+.ls-deck[data-theme="summer"] .ls-slide::before {
+  top: 2%;
+  right: 1.5%;
+  width: 10%;
+  aspect-ratio: 1;
+  background-image: var(--decor-sun);
+}
+.ls-deck[data-theme="summer"] .ls-slide::after {
+  left: 1.5%;
+  top: 3%;
+  width: 9%;
+  aspect-ratio: 1.85;
+  background-image: var(--decor-melon);
+}

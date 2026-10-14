@@ -1,0 +1,35 @@
+/* Tết: warm red and gold on a blush background. */
+.ls-deck[data-theme="spring"] {
+  --ls-bg: #fff6f4;
+  --ls-fg: #3b1d1d;
+  --ls-muted: #7c5450;
+  --ls-accent: #d62839;
+  --ls-accent-2: #c27c0e;
+  --ls-surface: #ffffff;
+  --ls-surface-border: #f6d3cd;
+  --ls-pinyin: #1f7a5a;
+  --ls-good: #1f7a5a;
+  --ls-radius: 30;
+}
+.ls-deck[data-theme="spring"] .ls-slide::before,
+.ls-deck[data-theme="spring"] .ls-slide::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+.ls-deck[data-theme="spring"] .ls-slide::before {
+  top: 0;
+  left: 0;
+  width: 17%;
+  aspect-ratio: 1.3;
+  background-image: var(--decor-blossom);
+}
+.ls-deck[data-theme="spring"] .ls-slide::after {
+  top: 0;
+  right: 2%;
+  width: 5%;
+  aspect-ratio: 0.6;
+  background-image: var(--decor-lantern);
+}

@@ -1,0 +1,35 @@
+/* Maple orange and warm browns on cream; pinyin in teal so it stands apart from the accent. */
+.ls-deck[data-theme="autumn"] {
+  --ls-bg: #fff8ee;
+  --ls-fg: #3d2a1a;
+  --ls-muted: #7a5b40;
+  --ls-accent: #c8541f;
+  --ls-accent-2: #8a5a2b;
+  --ls-surface: #fffdf8;
+  --ls-surface-border: #f0dcc2;
+  --ls-pinyin: #23707f;
+  --ls-good: #4f7a32;
+  --ls-radius: 28;
+}
+.ls-deck[data-theme="autumn"] .ls-slide::before,
+.ls-deck[data-theme="autumn"] .ls-slide::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+.ls-deck[data-theme="autumn"] .ls-slide::before {
+  top: 2%;
+  right: 1%;
+  width: 13%;
+  aspect-ratio: 1.375;
+  background-image: var(--decor-moon);
+}
+.ls-deck[data-theme="autumn"] .ls-slide::after {
+  left: 1%;
+  top: 2%;
+  width: 12%;
+  aspect-ratio: 1.85;
+  background-image: var(--decor-leaves);
+}
