@@ -12,7 +12,7 @@ phải chạm vào HTML.
 **Người dùng duy nhất của ứng dụng là giáo viên.** Học sinh chỉ xem màn hình chiếu
 và trả lời bằng lời; giáo viên là người điều khiển mọi thứ trên màn hình.
 
-> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 9).
+> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 10).
 
 ---
 
@@ -394,9 +394,14 @@ mở Editor.
 Giáo viên không viết prompt. Họ chọn nội dung bài; ứng dụng quyết định trình tự
 và loại slide; AI chỉ viết phần ngôn ngữ (chữ Hán, pinyin, nghĩa, ví dụ, câu hỏi).
 
-1. Giáo viên điền `LessonRequest`: chủ đề, lứa tuổi, dạng bài, thời lượng, từ cần
-   dạy, mẫu câu, hoạt động muốn có, yêu cầu thêm. Lựa chọn được nhớ cho lần sau
-   (`localStorage`).
+1. Giáo viên điền `LessonRequest`. Ngoài: chủ đề, lứa tuổi, dạng bài, thời lượng,
+   từ cần dạy, dàn ý. Trong "Tuỳ chỉnh nâng cao": mẫu câu, từ lớp đã học (AI dùng
+   lại trong câu và trò chơi, không dạy lại), nội dung không đưa vào (chữ Hán bị
+   loại mà vẫn xuất hiện thì cảnh báo), hoạt động muốn có, yêu cầu thêm. Lựa chọn
+   được nhớ cho lần sau (`localStorage`). **Mẫu** (preset) lưu cách dạy (lứa tuổi,
+   dạng bài, thời lượng, dàn ý, hoạt động, yêu cầu thêm) theo tên, không lưu chủ
+   đề và từ. `LessonRequest` và mẫu chỉ dùng để tạo prompt, không ghi vào
+   `lesson.html`; `normalizeRequest` đọc được cả cấu hình lưu từ bản cũ.
 2. **Lứa tuổi** (`core/ages.ts`): Mầm non 3–5, Tiểu học lớp 1–3 (6–8), lớp 4–5
    (9–11), THCS 12+. Mỗi mốc có lời dặn cho AI, số từ mới gợi ý, các loại slide
    quá sức (mầm non chưa biết đọc nên bỏ `grammar`, `fill-blank`, `sentence-order`)
@@ -407,7 +412,12 @@ và loại slide; AI chỉ viết phần ngôn ngữ (chữ Hán, pinyin, nghĩa
    với lứa tuổi; dạng bài mất bước chính thì không hiện (mầm non không có "Mẫu
    câu"). Hoạt động giáo viên chọn thu hẹp các bước luyện tập/trò chơi; bước
    không còn loại nào chuyển số slide sang bước hoạt động kế tiếp, nên độ dài bài
-   giữ nguyên. Hộp thoại hiện trước trình tự dự kiến.
+   giữ nguyên. **Dàn ý** (`planOutline`) hiện mọi bước kể cả bước tuỳ chọn đang
+   là 0; giáo viên đổi số slide từng bước bằng −/+ (`outline`, theo tên bước).
+   Bước bài học dựa vào (mở đầu, dạy từ, tổng kết…) giữ tối thiểu 1; bước hoạt
+   động và bước tuỳ chọn bỏ được. Đổi dạng bài, lứa tuổi, thời lượng hay hoạt
+   động thì dàn ý về lại gợi ý. Dàn ý chỉ dùng các bước của blueprint, không có
+   bước tự đặt tên, để app vẫn quyết định loại slide của từng bước.
 4. **Sao chép lời nhắn cho AI**: prompt gồm yêu cầu của giáo viên, trình tự slide
    bắt buộc, `aiSchemaHint` của **chỉ những loại slide trình tự dùng**, quy tắc và
    một ví dụ định dạng (có test bảo đảm ví dụ hợp lệ). AI luôn ghi đủ pinyin và
@@ -702,6 +712,15 @@ Chưa làm:
 ---
 
 ## 12. Lịch sử thay đổi
+
+### Rev 10
+
+| Thay đổi | Lý do |
+| --- | --- |
+| Dàn ý chỉnh được (−/+ số slide mỗi bước, bỏ bước hoạt động/tuỳ chọn) thay cho dòng xem trước | Giáo viên quyết định nhịp bài mà không phải ráp từng slide; trình tự và loại slide vẫn do blueprint quyết định. |
+| `LessonRequest` thêm "từ lớp đã học" và "không đưa vào"; gom các ô phụ vào "Tuỳ chỉnh nâng cao" | Bài hội thoại/mẫu câu cần dùng lại từ cũ mà không dạy lại; form chính chỉ còn những gì bài nào cũng cần. |
+| Mẫu (preset) cách dạy, đặt tên được | Giáo viên dạy nhiều lớp cùng lứa tuổi lặp lại cùng một cấu hình. |
+| Không làm "từ gợi ý" và "mức độ tiếng Việt" | Trùng với "từ bắt buộc + AI tự chọn thêm" và với hồ sơ lứa tuổi. |
 
 ### Rev 9
 

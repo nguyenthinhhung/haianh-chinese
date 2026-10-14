@@ -95,9 +95,14 @@ lật ra hình.
 
 1. **Nhập từ AI…** (ở thư viện để tạo bài mới, hoặc trong bài để thêm slide).
 2. Chọn nội dung bài: chủ đề, lứa tuổi học sinh, thời lượng, dạng bài (Từ vựng,
-   Hội thoại, Mẫu câu, Ôn tập, Tổng hợp). Nếu muốn, ghi thêm các từ cần dạy, mẫu
-   câu, đánh dấu các hoạt động muốn có và yêu cầu thêm. Bên dưới form có trình tự
-   slide dự kiến. Lần sau ứng dụng nhớ lựa chọn này.
+   Hội thoại, Mẫu câu, Ôn tập, Tổng hợp), và nếu muốn thì ghi các từ cần dạy.
+   - **Dàn ý**: bấm − / + để đổi số slide của từng phần; về 0 là bỏ phần đó (ví
+     dụ bỏ trò chơi khi tiết học ngắn). **Về dàn ý gợi ý** để làm lại.
+   - **Tuỳ chỉnh nâng cao**: mẫu câu, từ lớp đã học (AI dùng lại mà không dạy
+     lại), nội dung không đưa vào bài, hoạt động muốn có, yêu cầu thêm.
+   - **Lưu thành mẫu**: lưu cách dạy (lứa tuổi, dạng bài, thời lượng, dàn ý…) để
+     lần sau chọn lại một lần là xong; chủ đề và từ vựng không lưu vào mẫu.
+   Lần sau ứng dụng nhớ lựa chọn gần nhất.
 3. Bấm **Sao chép lời nhắn cho AI**, dán vào ChatGPT, Gemini, Claude… Không cần
    sửa gì trong lời nhắn.
 4. Copy toàn bộ câu trả lời của AI, dán vào ô bên dưới.
