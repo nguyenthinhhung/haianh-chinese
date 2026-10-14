@@ -12,7 +12,7 @@ phải chạm vào HTML.
 **Người dùng duy nhất của ứng dụng là giáo viên.** Học sinh chỉ xem màn hình chiếu
 và trả lời bằng lời; giáo viên là người điều khiển mọi thứ trên màn hình.
 
-> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 13).
+> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 14).
 
 ---
 
@@ -179,6 +179,13 @@ Thanh công cụ có nút **Lưu** kèm trạng thái:
 
 Nút Lưu cho giáo viên cảm giác kiểm soát quen thuộc; autosave bảo đảm quên bấm
 Lưu cũng không mất bài.
+
+**Đóng cửa sổ** (`src-tauri/src/closing.rs`): Rust chặn lệnh đóng, gửi sự kiện
+`app-close-requested` cho trang. Trang trả lời `close_ack` ngay, lưu bài, rồi gọi
+`close_window`; lưu thất bại thì cửa sổ ở lại để báo lỗi, đóng lần nữa thì thoát và
+để draft lại cho lần sau. Trang không trả lời trong 3 giây (bị tải lại thành trang
+trắng hoặc trang lỗi, bị treo) thì Rust tự đóng. Không dùng `onCloseRequested` của
+Tauri: sau khi trang tải lại, listener cũ vẫn được Tauri giữ và chặn đóng mãi mãi.
 
 ### 3.3. Ghi file an toàn
 
@@ -726,6 +733,13 @@ Chưa làm:
 ---
 
 ## 12. Lịch sử thay đổi
+
+### Rev 14
+
+| Thay đổi | Lý do |
+| --- | --- |
+| Đóng cửa sổ do Rust điều phối, trang xác nhận rồi tự đóng, không xác nhận trong 3 giây thì Rust đóng | Đã tái hiện: mở bài rồi trang tải lại (Ctrl+R, hoặc dev server tắt) thì nút đóng bị kẹt vĩnh viễn. Draft ghi mỗi giây nên đóng không chờ lưu cũng không mất bài. |
+| Bỏ quyền `core:window:allow-destroy` của trang | Trang không còn tự huỷ cửa sổ. |
 
 ### Rev 13
 
