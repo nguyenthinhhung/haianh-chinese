@@ -76,8 +76,9 @@ export async function createLessonFromSample(
   sample: SampleId,
   title: string,
   services: Services,
+  themeId?: string,
 ): Promise<OpenLesson> {
-  const doc = createFromSample(sample, title, services.appVersion);
+  const doc = createFromSample(sample, title, services.appVersion, themeId);
   const location = await services.persistence.createLessonDir(folderNameFromTitle(title));
   const { hash } = await services.persistence.writeLesson(location.dir, doc.id, libraryHtml(doc, services), null);
   return { dir: location.dir, doc, hash };

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { LessonLocation } from "../platform/persistence";
 import { SAMPLES, type SampleId } from "../samples";
+import { DEFAULT_THEME_ID } from "../themes";
 import { AiImportDialog } from "./AiImportDialog";
 import { LessonCard } from "./LessonCard";
 import {
@@ -15,6 +16,10 @@ import {
   type PendingDraft,
 } from "./lessonFiles";
 import { useServices } from "./services";
+import { ThemeOptions } from "./ThemeOptions";
+
+// The theme last picked for a new lesson; a teacher's classes rarely change age.
+const THEME_KEY = "ls.newLessonTheme";
 
 interface Props {
   onOpen(lesson: OpenLesson): void;
@@ -38,6 +43,7 @@ export function LibraryScreen({ onOpen }: Props) {
   const [creating, setCreating] = useState(false);
   const [title, setTitle] = useState("");
   const [sample, setSample] = useState<SampleId>("fruits");
+  const [themeId, setThemeId] = useState(() => localStorage.getItem(THEME_KEY) ?? DEFAULT_THEME_ID);
   const [busy, setBusy] = useState(false);
   const [recovery, setRecovery] = useState<{ lesson: OpenLesson; draft: PendingDraft } | null>(null);
   const [aiImport, setAiImport] = useState(false);
@@ -137,7 +143,12 @@ export function LibraryScreen({ onOpen }: Props) {
     setError(null);
     setBusy(true);
     try {
-      const lesson = await createLessonFromSample(sample, name, services);
+      try {
+        localStorage.setItem(THEME_KEY, themeId);
+      } catch {
+        // Only a default for next time.
+      }
+      const lesson = await createLessonFromSample(sample, name, services, themeId);
       await persistence.acquireLock(lesson.doc.id);
       onOpen(lesson);
     } catch (err) {
@@ -158,11 +169,11 @@ export function LibraryScreen({ onOpen }: Props) {
           <button type="button" onClick={() => void openFile()} disabled={busy} title="Mở file lesson.html hoặc file đã xuất từ máy khác">
             Mở file…
           </button>
-          <button type="button" onClick={() => setAiImport(true)} disabled={busy}>
-            Nhập từ AI…
-          </button>
-          <button type="button" className="primary" onClick={() => setCreating(true)} disabled={busy}>
+          <button type="button" onClick={() => setCreating(true)} disabled={busy}>
             + Bài mới
+          </button>
+          <button type="button" className="primary" onClick={() => setAiImport(true)} disabled={busy}>
+            Tạo bài bằng AI…
           </button>
         </div>
       </header>
@@ -235,6 +246,12 @@ export function LibraryScreen({ onOpen }: Props) {
               </label>
             ))}
           </fieldset>
+          <label>
+            Theme
+            <select value={themeId} onChange={(e) => setThemeId(e.target.value)}>
+              <ThemeOptions />
+            </select>
+          </label>
           <div className="form-actions">
             <button type="button" onClick={() => setCreating(false)}>
               Huỷ
@@ -249,7 +266,19 @@ export function LibraryScreen({ onOpen }: Props) {
       {lessons === null ? (
         <p className="muted">Đang tải…</p>
       ) : lessons.length === 0 ? (
-        <p className="empty">Chưa có bài học nào. Bấm “Bài mới” để bắt đầu.</p>
+        <div className="empty">
+          <p>Chưa có bài học nào. Bắt đầu bằng một trong hai cách:</p>
+          <div className="start-choices">
+            <button type="button" className="start-choice" onClick={() => setAiImport(true)} disabled={busy}>
+              <strong>Tạo bài bằng AI</strong>
+              <span>Chọn chủ đề, lứa tuổi và dạng bài; AI soạn nội dung, ứng dụng tự tìm ảnh.</span>
+            </button>
+            <button type="button" className="start-choice" onClick={() => setCreating(true)} disabled={busy}>
+              <strong>Soạn tay</strong>
+              <span>Bắt đầu từ bài mẫu hoặc bài trống, rồi thêm từng slide.</span>
+            </button>
+          </div>
+        </div>
       ) : (
         <ul className="lesson-list">
           {lessons.map((l) => (

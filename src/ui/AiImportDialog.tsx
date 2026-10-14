@@ -411,7 +411,7 @@ export function AiImportDialog({ mode, onImport, onClose }: Props) {
     <div className="dialog-backdrop" onMouseDown={(e) => e.target === e.currentTarget && !busy && onClose()}>
       <div className="dialog ai-import" role="dialog" aria-modal="true" aria-labelledby="ai-import-title">
         <header className="dialog-header">
-          <h2 id="ai-import-title">Nhập bài từ AI</h2>
+          <h2 id="ai-import-title">{mode === "new" ? "Tạo bài bằng AI" : "Thêm slide bằng AI"}</h2>
           <button type="button" className="ghost" onClick={onClose} disabled={busy} aria-label="Đóng">
             ✕
           </button>

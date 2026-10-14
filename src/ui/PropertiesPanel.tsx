@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { AGE_PROFILES, ageRangeLabel } from "../core/ages";
 import { markReviewed } from "../core/autoImages";
 import { addAsset, setSettings, setSlideField, setTheme } from "../core/document";
 import { checkLimits, getIn, type Path } from "../core/fields";
@@ -8,6 +7,7 @@ import { hanziToPinyin, pinyinFits, pinyinPairs } from "../core/pinyin";
 import type { AnySlideTemplate, EditorField, EditorFieldSpec } from "../core/template";
 import type { ImportedAsset } from "../platform/persistence";
 import { ImageSearchDialog } from "./ImageSearchDialog";
+import { ThemeOptions } from "./ThemeOptions";
 import { prefersClipart } from "./useImageFill";
 import type { LessonSession } from "./useLessonSession";
 import { useServices } from "./services";
@@ -466,7 +466,6 @@ function SlideProperties({ session, slide }: { session: LessonSession; slide: Sl
 }
 
 function LessonProperties({ session }: { session: LessonSession }) {
-  const { themes } = useServices();
   const doc: LessonDocument = session.doc;
   return (
     <div className="props-section">
@@ -475,15 +474,7 @@ function LessonProperties({ session }: { session: LessonSession }) {
           Theme
         </label>
         <select id="lesson-theme" value={doc.theme.id} onChange={(e) => session.update((d) => setTheme(d, e.target.value))}>
-          {themes
-            .list()
-            .map((t) => ({ t, youngest: AGE_PROFILES.findIndex((a) => t.ages.includes(a.id)) }))
-            .sort((a, b) => a.youngest - b.youngest)
-            .map(({ t }) => (
-            <option key={t.id} value={t.id}>
-              {t.label} ({ageRangeLabel(t.ages)})
-            </option>
-          ))}
+          <ThemeOptions />
         </select>
       </div>
       <div className="field">

@@ -153,8 +153,8 @@ export function LessonEditor({ lesson, onClose }: Props) {
         >
           Tìm ảnh ô trống
         </button>
-        <button type="button" className="ghost" onClick={() => setAiImport(true)} title="Thêm slide từ nội dung AI soạn">
-          Nhập từ AI…
+        <button type="button" className="ghost" onClick={() => setAiImport(true)} title="Thêm slide do AI soạn vào cuối bài">
+          Thêm slide bằng AI…
         </button>
         <button
           type="button"

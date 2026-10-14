@@ -249,6 +249,30 @@ textarea {
   text-align: center;
   color: var(--muted);
 }
+.start-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 280px));
+  justify-content: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+.start-choice {
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+  text-align: left;
+  color: var(--text);
+}
+.start-choice strong {
+  font-size: 16px;
+}
+.start-choice span {
+  font-size: 13px;
+  color: var(--muted);
+}
 
 /* Editor */
 
