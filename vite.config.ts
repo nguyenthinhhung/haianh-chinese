@@ -21,5 +21,8 @@ export default defineConfig({
     // The on-disk module cache keeps a stale result for import.meta.glob when a
     // folder is added (e.g. a new template), so new templates went untested.
     fsModuleCache: false,
+    // Templates and themes import their CSS with ?raw; without this Vitest
+    // hands them an empty string and the CSS checks pass vacuously.
+    css: true,
   },
 });

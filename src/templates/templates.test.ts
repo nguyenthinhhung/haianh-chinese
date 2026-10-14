@@ -26,7 +26,9 @@ describe.each(env.templates.list().map((t) => [t.type, t] as const))("template %
   });
 
   it("scopes its CSS to its own slides", () => {
+    expect(template.css.length).toBeGreaterThan(0);
     const rules = template.css
+      .replace(/\/\*[\s\S]*?\*\//g, "")
       .split("}")
       .map((r) => r.trim())
       .filter(Boolean);
