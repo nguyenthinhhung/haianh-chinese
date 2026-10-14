@@ -58,6 +58,25 @@
 .ls-slide[data-slide-type="flashcard"] .ls-fc-image {
   border-radius: calc(16 * var(--u));
 }
+/* Characters first: the picture fills the back above pinyin and meaning. */
+.ls-slide[data-slide-type="flashcard"] .ls-fc-media {
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.ls-slide[data-slide-type="flashcard"] .ls-fc-num {
+  position: absolute;
+  top: calc(10 * var(--u));
+  left: calc(16 * var(--u));
+  font-size: calc(40 * var(--u));
+  font-weight: 800;
+  color: var(--ls-muted);
+}
+.ls-slide[data-slide-type="flashcard"]:is(.ls-presenting > *) .ls-fc-card {
+  cursor: pointer;
+}
 .ls-slide[data-slide-type="flashcard"] .ls-fc-hanzi {
   font-size: calc(var(--hanzi) * var(--u));
   font-weight: 700;
@@ -83,7 +102,7 @@
   height: calc(56 * var(--u));
 }
 
-/* Presenting: Next flips the card over. */
+/* Presenting: Next, a click or the card's number flips it over. */
 .ls-slide[data-slide-type="flashcard"] .ls-fc-card.ls-revealed .ls-fc-inner {
   transform: rotateY(180deg);
 }

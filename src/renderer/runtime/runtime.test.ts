@@ -199,6 +199,27 @@ describe("games", () => {
     }
   });
 
+  it("flashcards: any card flips by click or number; Next flips the rest, Back undoes in order", () => {
+    present([{ type: "flashcard" }, { type: "cover" }]); // three cards
+    const flipped = () => cards(".ls-fc-card.ls-revealed").map((c) => cards(".ls-fc-card").indexOf(c) + 1);
+    cards(".ls-fc-card")[2]!.click();
+    expect(flipped()).toEqual([3]);
+    expect(current().dataset.slideType).toBe("flashcard"); // the click did not move on
+    typeNumber(2);
+    expect(flipped()).toEqual([2, 3]);
+    press("ArrowRight");
+    expect(flipped()).toEqual([1, 2, 3]);
+    press("ArrowLeft");
+    expect(flipped()).toEqual([2, 3]);
+    cards(".ls-fc-card")[1]!.click(); // flips it back
+    expect(flipped()).toEqual([3]);
+    press("ArrowRight");
+    press("ArrowRight");
+    expect(current().dataset.slideType).toBe("flashcard");
+    press("ArrowRight");
+    expect(current().dataset.slideType).toBe("cover");
+  });
+
   it("memory: a matching pair stays open and scores; a miss passes the turn", () => {
     const c = present([{ type: "memory" }]);
     const all = cards(".ls-mm-card");

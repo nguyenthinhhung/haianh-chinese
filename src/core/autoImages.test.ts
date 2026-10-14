@@ -41,9 +41,12 @@ describe("imageSlots / imageJobs", () => {
     ]);
   });
 
-  it("leaves out pictures that stand in for text or that the slide does not show", () => {
+  it("leaves out pictures that stand in for text", () => {
     expect(imageSlots(matching, templates)).toEqual([]);
-    expect(imageSlots(cards("hanzi"), templates)).toEqual([]);
+  });
+
+  it("fills flashcard pictures whichever face shows first", () => {
+    expect(imageSlots(cards("hanzi"), templates)).toHaveLength(1);
     expect(imageSlots(cards("image"), templates)).toHaveLength(1);
   });
 

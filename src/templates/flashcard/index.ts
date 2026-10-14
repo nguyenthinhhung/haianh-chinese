@@ -2,6 +2,7 @@ import { z } from "zod";
 import { AssetIdRef } from "../../core/schema";
 import type { SlideTemplate } from "../../core/template";
 import { audioButton, image, pinyin, vi, zh } from "../../renderer/helpers";
+import interaction from "./interaction.js?raw";
 import css from "./style.css?raw";
 
 const card = z.object({
@@ -30,7 +31,7 @@ export const flashcard: SlideTemplate<FlashcardContent> = {
   order: 40,
   schema,
   aiSchemaHint:
-    '1–6 thẻ lật; mỗi lần bấm Tiếp lật một thẻ. {"heading"?: tiêu đề tiếng Việt, "front": "image" (mặt trước là ảnh) hoặc "hanzi" (mặt trước là chữ Hán), "cards": [{"hanzi", "pinyin": có dấu thanh, "meaning": nghĩa tiếng Việt}]}',
+    '1–6 thẻ lật; bấm Tiếp lật lần lượt, hoặc giáo viên bấm vào thẻ bất kỳ để lật. {"heading"?: tiêu đề tiếng Việt, "front": "image" (mặt trước là ảnh, lật ra chữ) hoặc "hanzi" (mặt trước là chữ Hán, lật ra ảnh), "cards": [{"hanzi", "pinyin": có dấu thanh, "meaning": nghĩa tiếng Việt}]}',
   defaults: () => ({
     heading: "Đoán xem",
     front: "hanzi",
@@ -49,17 +50,20 @@ export const flashcard: SlideTemplate<FlashcardContent> = {
   render(c, ctx) {
     const cards = c.cards
       .map((k, i) => {
-        const img = c.front === "image" ? image(ctx, k.image, "ls-fc-image") : "";
+        const img = image(ctx, k.image, "ls-fc-image");
         // A card set to show its picture first but without one falls back to the characters.
-        const front = img || zh(k.hanzi, "span", "ls-fc-hanzi");
+        const pictureFirst = c.front === "image" && img;
+        const front = pictureFirst ? img : zh(k.hanzi, "span", "ls-fc-hanzi");
         const back =
-          (img ? zh(k.hanzi, "span", "ls-fc-hanzi ls-fc-hanzi--back") : "") +
+          (pictureFirst ? zh(k.hanzi, "span", "ls-fc-hanzi ls-fc-hanzi--back") : img ? `<span class="ls-fc-media">${img}</span>` : "") +
           (k.pinyin ? pinyin(k.pinyin, "span", "ls-fc-pinyin") : "") +
           (k.meaning ? vi(k.meaning, "span", "ls-fc-meaning") : "");
+        // The number lets the teacher flip a card by typing it.
+        const number = c.cards.length > 1 ? `<span class="ls-fc-num">${i + 1}</span>` : "";
         return (
-          `<li class="ls-fc-card" data-ls-reveal data-ls-sound="flip">` +
+          `<li class="ls-fc-card">` +
           `<div class="ls-fc-inner">` +
-          `<div class="ls-fc-face ls-fc-front">${front}</div>` +
+          `<div class="ls-fc-face ls-fc-front">${number}${front}</div>` +
           `<div class="ls-fc-face ls-fc-back">${back}</div>` +
           `</div>` +
           audioButton(ctx, k.audio, `${ctx.slideId}-audio-${i}`, `Nghe ${k.hanzi}`) +
@@ -73,6 +77,7 @@ export const flashcard: SlideTemplate<FlashcardContent> = {
     );
   },
   css,
+  interaction: { source: interaction },
   editor: [
     { kind: "text", key: "heading", label: "Tiêu đề", lang: "vi" },
     {
@@ -81,7 +86,7 @@ export const flashcard: SlideTemplate<FlashcardContent> = {
       label: "Mặt trước",
       options: [
         { value: "image", label: "Ảnh (lật ra chữ Hán, pinyin, nghĩa)" },
-        { value: "hanzi", label: "Chữ Hán (lật ra pinyin, nghĩa)" },
+        { value: "hanzi", label: "Chữ Hán (lật ra ảnh, pinyin, nghĩa)" },
       ],
     },
     {
@@ -102,7 +107,7 @@ export const flashcard: SlideTemplate<FlashcardContent> = {
           label: "Ảnh",
           assetKind: "image",
           searchFrom: ["meaning", "hanzi"],
-          autoImage: (c: FlashcardContent) => c.front === "image",
+          autoImage: true,
         },
         { kind: "asset", key: "audio", label: "Âm thanh", assetKind: "audio", speakFrom: "hanzi" },
       ],
