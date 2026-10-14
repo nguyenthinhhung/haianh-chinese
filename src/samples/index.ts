@@ -22,10 +22,10 @@ export function createFromSample(sample: SampleId, title: string, appVersion: st
   const words: VocabularyContent = {
     heading: "Từ vựng",
     words: [
-      { hanzi: "苹果", pinyin: "píng guǒ", meaning: "quả táo" },
-      { hanzi: "香蕉", pinyin: "xiāng jiāo", meaning: "quả chuối" },
-      { hanzi: "西瓜", pinyin: "xī guā", meaning: "dưa hấu" },
-      { hanzi: "橙子", pinyin: "chéng zi", meaning: "quả cam" },
+      { hanzi: "苹果", pinyin: "píng guǒ", meaning: "quả táo", pos: "" },
+      { hanzi: "香蕉", pinyin: "xiāng jiāo", meaning: "quả chuối", pos: "" },
+      { hanzi: "西瓜", pinyin: "xī guā", meaning: "dưa hấu", pos: "" },
+      { hanzi: "橙子", pinyin: "chéng zi", meaning: "quả cam", pos: "" },
     ],
     hideMeaning: true,
   };

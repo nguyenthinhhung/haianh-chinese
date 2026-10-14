@@ -60,6 +60,12 @@
   color: var(--ls-pinyin);
   font-weight: 700;
 }
+/* Part of speech ("động từ") under a word, for older learners; sized from the template's --hanzi. */
+.ls-slide .ls-pos {
+  font-size: calc(var(--hanzi, 120) * 0.26 * var(--u));
+  font-style: italic;
+  color: var(--ls-accent-2);
+}
 /* The tone exercise's pinyin is its answer, so it stays. */
 .ls-deck[data-pinyin="off"] .ls-slide:not([data-slide-type="tone-pick"]) .ls-pinyin {
   display: none;

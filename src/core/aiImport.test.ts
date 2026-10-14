@@ -148,7 +148,15 @@ describe("buildAiPrompt", () => {
   it("states the tight character limits, read from each template's schema", () => {
     // The wheel accepts 16 characters but only 8 read well on a wedge.
     expect(lengthLimits(templates.require("lucky-wheel"))).toEqual(["segments[].text ≤ 8"]);
-    expect(lengthLimits(templates.require("picture-card"))).toEqual(["hanzi ≤ 4", "pinyin ≤ 24", "meaning ≤ 30"]);
+    expect(lengthLimits(templates.require("picture-card"))).toEqual([
+      "hanzi ≤ 4",
+      "pinyin ≤ 24",
+      "meaning ≤ 30",
+      "pos ≤ 12",
+      "usage ≤ 40",
+      "examples[].hanzi ≤ 16",
+      "examples[].meaning ≤ 40",
+    ]);
     for (const t of templates.list()) expect(lengthLimits(t).some((l) => l.startsWith("heading ")), t.type).toBe(false);
     const prompt = buildAiPrompt(templates, { ...request, kind: "review", activities: ["lucky-wheel"] });
     expect(prompt).toContain("Tối đa ký tự: segments[].text ≤ 8.");

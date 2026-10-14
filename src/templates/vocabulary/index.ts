@@ -9,6 +9,8 @@ const word = z.object({
   hanzi: z.string().regex(/\S/, "Không được để trống").max(16),
   pinyin: z.string().max(60).default(""),
   meaning: z.string().max(80).default(""),
+  /** Part of speech for older learners: "động từ", "danh từ"… */
+  pos: z.string().max(16).default(""),
   image: AssetIdRef.optional(),
   audio: AssetIdRef.optional(),
 });
@@ -22,7 +24,7 @@ const schema = z.object({
 export type VocabularyContent = z.output<typeof schema>;
 type Word = VocabularyContent["words"][number];
 
-const newWord = (): Word => ({ hanzi: "字", pinyin: "zì", meaning: "chữ" });
+const newWord = (): Word => ({ hanzi: "字", pinyin: "zì", meaning: "chữ", pos: "" });
 
 export const vocabulary: SlideTemplate<VocabularyContent> = {
   type: "vocabulary",
@@ -32,12 +34,12 @@ export const vocabulary: SlideTemplate<VocabularyContent> = {
   order: 20,
   schema,
   aiSchemaHint:
-    '1–8 từ. {"heading"?: tiêu đề tiếng Việt, "words": [{"hanzi", "pinyin": có dấu thanh, "meaning": nghĩa tiếng Việt}], "hideMeaning"?: true để hiện nghĩa từng từ khi bấm Tiếp}',
+    '1–8 từ. {"heading"?: tiêu đề tiếng Việt, "words": [{"hanzi", "pinyin": có dấu thanh, "meaning": nghĩa tiếng Việt, "pos"?: từ loại ngắn bằng tiếng Việt (động từ, danh từ…), chỉ cho học sinh từ 9 tuổi}], "hideMeaning"?: true để hiện nghĩa từng từ khi bấm Tiếp}',
   defaults: () => ({
     heading: "Từ vựng",
     words: [
-      { hanzi: "你好", pinyin: "nǐ hǎo", meaning: "xin chào" },
-      { hanzi: "谢谢", pinyin: "xiè xie", meaning: "cảm ơn" },
+      { hanzi: "你好", pinyin: "nǐ hǎo", meaning: "xin chào", pos: "" },
+      { hanzi: "谢谢", pinyin: "xiè xie", meaning: "cảm ơn", pos: "" },
     ],
     hideMeaning: false,
   }),
@@ -46,6 +48,7 @@ export const vocabulary: SlideTemplate<VocabularyContent> = {
     "words.*.hanzi": { maxChars: 4 },
     "words.*.pinyin": { maxChars: 20 },
     "words.*.meaning": { maxChars: 24 },
+    "words.*.pos": { maxChars: 12 },
   },
   render(c, ctx) {
     const cards = c.words
@@ -57,6 +60,7 @@ export const vocabulary: SlideTemplate<VocabularyContent> = {
           (img ? `<div class="ls-vocab-media">${img}</div>` : "") +
           zh(w.hanzi, "span", "ls-vocab-hanzi") +
           (w.pinyin ? pinyin(w.pinyin, "span", "ls-vocab-pinyin") : "") +
+          (w.pos ? vi(w.pos, "span", "ls-pos") : "") +
           (w.meaning
             ? `<span class="ls-vocab-meaning${c.hideMeaning ? " ls-hide" : ""}"${c.hideMeaning ? " data-ls-reveal" : ""} lang="vi">${esc(w.meaning)}</span>`
             : "") +
@@ -85,6 +89,7 @@ export const vocabulary: SlideTemplate<VocabularyContent> = {
         { kind: "text", key: "hanzi", label: "Chữ Hán", lang: "zh" },
         { kind: "text", key: "pinyin", label: "Pinyin", lang: "pinyin" },
         { kind: "text", key: "meaning", label: "Nghĩa", lang: "vi" },
+        { kind: "text", key: "pos", label: "Từ loại (nếu cần)", lang: "vi", placeholder: "động từ" },
         { kind: "asset", key: "image", label: "Ảnh", assetKind: "image", searchFrom: ["meaning", "hanzi"], autoImage: true },
         { kind: "asset", key: "audio", label: "Âm thanh", assetKind: "audio", speakFrom: "hanzi" },
       ],
