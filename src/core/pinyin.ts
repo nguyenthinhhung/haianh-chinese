@@ -81,6 +81,7 @@ const PUNCTUATION: Record<string, string> = {
  * "wǒ [shì] xué sheng." and "我 / 是 / 学生" gives "wǒ / shì / xué sheng".
  */
 export function hanziToPinyin(text: string): string {
+  if (!HAN.test(text)) return "";
   let out = "";
   const space = () => {
     if (out && !/[\s[(/"]$/.test(out)) out += " ";

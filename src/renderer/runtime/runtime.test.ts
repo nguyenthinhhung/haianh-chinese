@@ -199,6 +199,18 @@ describe("games", () => {
     }
   });
 
+  it("questions: each Next shows the next answer, then moves on", () => {
+    present([{ type: "qa-list" }, { type: "cover" }]); // two questions
+    const shown = () => cards(".ls-qa-answer.ls-revealed").length;
+    expect(shown()).toBe(0);
+    press("ArrowRight");
+    expect(shown()).toBe(1);
+    press("ArrowRight");
+    expect(shown()).toBe(2);
+    press("ArrowRight");
+    expect(current().dataset.slideType).toBe("cover");
+  });
+
   it("flashcards: any card flips by click or number; Next flips the rest, Back undoes in order", () => {
     present([{ type: "flashcard" }, { type: "cover" }]); // three cards
     const flipped = () => cards(".ls-fc-card.ls-revealed").map((c) => cards(".ls-fc-card").indexOf(c) + 1);

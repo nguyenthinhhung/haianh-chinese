@@ -26,6 +26,8 @@ describe("hanziToPinyin", () => {
     expect(hanziToPinyin("我 / 是 / 学生")).toBe("wǒ / shì / xué sheng");
     expect(hanziToPinyin("你好！这是什么？")).toBe("nǐ hǎo! zhè shì shén me?");
     expect(hanziToPinyin("")).toBe("");
+    // A Vietnamese question has no pinyin, rather than a copy of itself.
+    expect(hanziToPinyin("Bạn tên là gì?")).toBe("");
   });
 });
 

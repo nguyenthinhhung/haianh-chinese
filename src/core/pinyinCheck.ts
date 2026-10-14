@@ -11,8 +11,9 @@ import type { TemplateRegistry } from "./templateRegistry";
 
 /** Pinyin field → the field holding the characters it spells, in order of preference. */
 const PAIRS: [string, string[]][] = [
-  ["pinyin", ["hanzi", "title", "text", "words"]],
+  ["pinyin", ["hanzi", "title", "text", "words", "question"]],
   ["leftPinyin", ["left"]],
+  ["answerPinyin", ["answer"]],
 ];
 
 const HAN = /\p{Script=Han}/gu;

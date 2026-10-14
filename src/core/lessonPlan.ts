@@ -87,7 +87,7 @@ interface Blueprint {
 }
 
 const TEACH_WORDS = ["vocabulary", "picture-card", "flashcard"];
-const PRACTICE = ["quiz", "matching", "fill-blank", "sentence-order", "tone-pick", "sort-groups"];
+const PRACTICE = ["quiz", "qa-list", "matching", "fill-blank", "sentence-order", "tone-pick", "sort-groups"];
 const GAMES = ["whats-missing", "guess-picture", "box-pick", "lucky-wheel", "memory"];
 
 const COVER: BlueprintStep = { role: "Mở đầu: tên bài", types: ["cover"], count: [1, 1, 1] };
@@ -116,7 +116,7 @@ export const BLUEPRINTS: Blueprint[] = [
       { role: "Từ và cụm từ trọng tâm của hội thoại", types: ["vocabulary", "flashcard"], count: [1, 1, 2] },
       { role: "Hội thoại mẫu theo tình huống", types: ["dialogue"], count: [1, 2, 3] },
       { role: "Giải thích mẫu câu chính trong hội thoại", types: ["grammar"], count: [0, 1, 1] },
-      { role: "Luyện tập", types: ["sentence-order", "fill-blank", "quiz", "matching"], count: [1, 2, 2], activity: true },
+      { role: "Luyện tập", types: ["qa-list", "sentence-order", "fill-blank", "quiz", "matching"], count: [1, 2, 2], activity: true },
       { role: "Trò chơi cả lớp", types: GAMES, count: [0, 1, 2], activity: true },
       SUMMARY,
     ],
