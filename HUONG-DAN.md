@@ -61,8 +61,8 @@ Hán. Pinyin tự điền nên được xem lại với từ đọc nhẹ hoặc
 
 | Nhóm | Loại |
 | --- | --- |
-| Dạy | Trang bìa, Từ vựng, Thẻ hình, Thẻ lật, Hội thoại, Ngữ pháp, Tổng kết |
-| Hỏi đáp | Trắc nghiệm (cả Đúng/Sai), Ghép cặp, Điền chỗ trống, Sắp xếp câu, Chọn thanh điệu, Phân nhóm |
+| Dạy | Trang bìa, Từ vựng, Thẻ hình (có thể thêm từ loại, cách dùng, câu ví dụ cho học sinh lớn), Thẻ lật, Hội thoại, Ngữ pháp, Tổng kết |
+| Hỏi đáp | Hỏi đáp (câu hỏi bài khoá, đáp án hiện dần), Trắc nghiệm (cả Đúng/Sai), Ghép cặp, Điền chỗ trống, Sắp xếp câu, Chọn thanh điệu, Phân nhóm |
 | Trò chơi | Cái gì biến mất?, Đoán hình, Hộp bí mật, Vòng quay may mắn, Lật cặp |
 
 Một vài cách nhập đặc biệt:

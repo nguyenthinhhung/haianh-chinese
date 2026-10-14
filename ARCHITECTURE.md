@@ -12,7 +12,7 @@ phải chạm vào HTML.
 **Người dùng duy nhất của ứng dụng là giáo viên.** Học sinh chỉ xem màn hình chiếu
 và trả lời bằng lời; giáo viên là người điều khiển mọi thứ trên màn hình.
 
-> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 12).
+> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 13).
 
 ---
 
@@ -275,8 +275,8 @@ thể bổ sung dần mà không ảnh hưởng các loại đã có.
 | Template | Nội dung |
 | --- | --- |
 | `cover` | Tiêu đề, phụ đề, ảnh/hình trang trí. Dùng cả làm trang mở đầu phần. |
-| `vocabulary` | 1–8 từ: chữ Hán, pinyin, nghĩa, ảnh, audio; bật/tắt ẩn nghĩa. |
-| `picture-card` | Một từ chiếm cả slide: ảnh lớn, chữ Hán lớn, pinyin, bấm để nghe. |
+| `vocabulary` | 1–8 từ: chữ Hán, pinyin, nghĩa, từ loại (tuỳ chọn), ảnh, audio; bật/tắt ẩn nghĩa. |
+| `picture-card` | Một từ chiếm cả slide: ảnh lớn, chữ Hán lớn, pinyin, bấm để nghe. Tuỳ chọn cho học sinh lớn: từ loại, cách dùng (cách kết hợp) và tối đa 2 câu ví dụ, hiện trong khung bên cạnh, sau chữ một bước khi đoán hình trước. |
 | `flashcard` | Thẻ lật: mặt trước ảnh (lật ra chữ Hán) hoặc chữ Hán (lật ra ảnh), mặt sau kèm pinyin và nghĩa. Tiếp lật thẻ kế tiếp còn úp; giáo viên cũng bấm chuột hoặc gõ số để lật thẻ bất kỳ, bấm lại thì úp xuống; Lùi úp lại theo thứ tự đã lật. |
 | `dialogue` | Các lượt thoại theo vai, có ảnh nhân vật. |
 | `grammar` | Cấu trúc, giải thích, câu ví dụ có tô màu thành phần. |
@@ -289,6 +289,7 @@ Giáo viên đặt câu hỏi, học sinh trả lời bằng lời, giáo viên 
 
 | Template | Giáo viên dùng thế nào | Các bước khi bấm Tiếp |
 | --- | --- | --- |
+| `qa-list` | Hỏi đáp về bài khoá/hội thoại: 1–6 câu hỏi (chữ Hán hoặc tiếng Việt), đáp án ẩn bên cạnh. | Mỗi lần Tiếp hiện đáp án một câu. |
 | `quiz` | Hỏi cả lớp; đề là chữ, ảnh hoặc audio ("nghe và chọn hình"); 2–4 lựa chọn đánh số/chữ cái để trẻ gọi tên; có biến thể Đúng/Sai. | Hiện câu hỏi → hiện đáp án đúng (sáng lên + âm thanh). |
 | `matching` | Hai cột chữ Hán ↔ nghĩa, hoặc ↔ hình khi `rightAs: "image"` (ảnh tự tìm theo nghĩa); trẻ nói cặp nào đi với nhau. | Mỗi lần Tiếp nối thêm một cặp. |
 | `fill-blank` | Câu có chỗ trống, kèm ô gợi ý từ. | Mỗi lần Tiếp điền một chỗ trống. |
@@ -725,6 +726,14 @@ Chưa làm:
 ---
 
 ## 12. Lịch sử thay đổi
+
+### Rev 13
+
+| Thay đổi | Lý do |
+| --- | --- |
+| Thêm `qa-list` (Hỏi đáp), có trong bước luyện tập của blueprint | Câu hỏi đọc hiểu sau bài khoá/hội thoại là dạng bài phổ biến mà chưa loại slide nào làm được. |
+| Từ loại (tuỳ chọn) cho `vocabulary`, `flashcard`, `picture-card`; cách dùng và câu ví dụ cho `picture-card` | Bài theo giáo trình cho học sinh lớn trình bày từ mới kèm từ loại, cách kết hợp và ví dụ. Mở rộng `picture-card` thay vì thêm loại slide mới. Trường có mặc định nên `schemaVersion` giữ nguyên 1. |
+| Không sinh pinyin cho chữ không có chữ Hán | Câu hỏi tiếng Việt trong `qa-list` không được chép sang ô pinyin. |
 
 ### Rev 12
 
