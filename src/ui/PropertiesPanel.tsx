@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AGE_PROFILES, ageRangeLabel } from "../core/ages";
 import { markReviewed } from "../core/autoImages";
 import { addAsset, setSettings, setSlideField, setTheme } from "../core/document";
@@ -236,51 +236,112 @@ function AssetField({ field, path, content, session, slide }: FieldProps & { fie
   );
 }
 
+/** One line standing for a list item while it is closed: its text, and marks for picture and sound. */
+function itemSummary(item: unknown, fields: EditorFieldSpec): string {
+  if (!item || typeof item !== "object") return "";
+  const obj = item as Record<string, unknown>;
+  const texts = fields.flatMap((f) => (f.kind === "text" && typeof obj[f.key] === "string" && (obj[f.key] as string).trim() ? [(obj[f.key] as string).trim()] : []));
+  const media = fields.flatMap((f) => (f.kind === "asset" && obj[f.key] ? [f.assetKind === "image" ? "có ảnh" : "có âm thanh"] : []));
+  const line = [...texts, ...[...new Set(media)]].join(" · ");
+  return line.length > 80 ? `${line.slice(0, 79)}…` : line;
+}
+
+/** Lists longer than this start closed, one line per item, so a slide's form stays short. */
+const OPEN_LIST_MAX = 2;
+
 function ListField(props: FieldProps & { field: Extract<EditorField, { kind: "list" }> }) {
-  const { field, path, content, session, slide } = props;
+  const { field, path, content, session, slide, messages } = props;
   const items = (getIn(content, path) as unknown[] | undefined) ?? [];
   const setItems = (next: unknown[]) => session.update((d) => setSlideField(d, slide.id, path, next));
+  const startOpen = () => new Set(items.length <= OPEN_LIST_MAX ? items.map((_, i) => i) : []);
+  const [open, setOpen] = useState(startOpen);
+  // Another slide's list starts again from its own default.
+  useEffect(() => setOpen(startOpen()), [slide.id]);
+
+  const prefix = (i: number) => pathKey([...path, i]);
+  const hasError = (i: number) =>
+    [...messages].some(([key, m]) => m.errors.length > 0 && (key === prefix(i) || key.startsWith(`${prefix(i)}.`)));
+  const toggle = (i: number) =>
+    setOpen((s) => {
+      const next = new Set(s);
+      if (!next.delete(i)) next.add(i);
+      return next;
+    });
 
   const move = (from: number, to: number) => {
     const next = [...items];
     const [item] = next.splice(from, 1);
     next.splice(to, 0, item);
     setItems(next);
+    // The open state travels with the item.
+    setOpen((s) => {
+      const out = new Set<number>();
+      for (const i of s) out.add(i === from ? to : i === to ? from : i);
+      return out;
+    });
+  };
+  const remove = (index: number) => {
+    setItems(items.filter((_, k) => k !== index));
+    setOpen((s) => new Set([...s].filter((i) => i !== index).map((i) => (i > index ? i - 1 : i))));
   };
 
   return (
     <div className="list-field">
-      {items.map((_, i) => (
-        <fieldset key={i} className="list-item">
-          <legend>
-            {field.itemLabel} {i + 1}
-          </legend>
-          <div className="list-item-actions">
-            <button type="button" title="Lên" disabled={i === 0} onClick={() => move(i, i - 1)}>
-              ↑
-            </button>
-            <button type="button" title="Xuống" disabled={i === items.length - 1} onClick={() => move(i, i + 1)}>
-              ↓
-            </button>
-            <button
-              type="button"
-              title={`Xoá ${field.itemLabel}`}
-              disabled={items.length <= field.min}
-              onClick={() => setItems(items.filter((_, k) => k !== i))}
-            >
-              ✕
-            </button>
-          </div>
-          {field.fields.map((sub) => (
-            <Field key={sub.key} {...props} field={sub} siblings={field.fields} path={[...path, i, sub.key]} />
-          ))}
-        </fieldset>
-      ))}
+      {items.length > OPEN_LIST_MAX && (
+        <button
+          type="button"
+          className="ghost list-toggle-all"
+          onClick={() => setOpen(open.size === items.length ? new Set() : new Set(items.map((_, i) => i)))}
+        >
+          {open.size === items.length ? "Thu gọn tất cả" : "Mở tất cả"}
+        </button>
+      )}
+      {items.map((item, i) => {
+        // An item with an error stays open so the error is seen.
+        const isOpen = open.has(i) || hasError(i);
+        return (
+          <fieldset key={i} className={`list-item${isOpen ? "" : " list-item--closed"}`}>
+            <legend>
+              <button type="button" className="list-item-toggle" aria-expanded={isOpen} onClick={() => toggle(i)}>
+                {isOpen ? "▾" : "▸"} {field.itemLabel} {i + 1}
+              </button>
+            </legend>
+            <div className="list-item-actions">
+              <button type="button" title="Lên" disabled={i === 0} onClick={() => move(i, i - 1)}>
+                ↑
+              </button>
+              <button type="button" title="Xuống" disabled={i === items.length - 1} onClick={() => move(i, i + 1)}>
+                ↓
+              </button>
+              <button
+                type="button"
+                title={`Xoá ${field.itemLabel}`}
+                disabled={items.length <= field.min}
+                onClick={() => remove(i)}
+              >
+                ✕
+              </button>
+            </div>
+            {isOpen ? (
+              field.fields.map((sub) => (
+                <Field key={sub.key} {...props} field={sub} siblings={field.fields} path={[...path, i, sub.key]} />
+              ))
+            ) : (
+              <button type="button" className="list-item-summary" onClick={() => toggle(i)} title="Bấm để sửa">
+                {itemSummary(item, field.fields) || <span className="muted">(trống)</span>}
+              </button>
+            )}
+          </fieldset>
+        );
+      })}
       <button
         type="button"
         className="add-item"
         disabled={items.length >= field.max}
-        onClick={() => setItems([...items, field.newItem()])}
+        onClick={() => {
+          setItems([...items, field.newItem()]);
+          setOpen((s) => new Set(s).add(items.length));
+        }}
       >
         + Thêm {field.itemLabel}
       </button>

@@ -627,6 +627,37 @@ textarea {
 .add-item {
   justify-self: start;
 }
+.list-item-toggle {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.list-item--closed {
+  padding-bottom: 8px;
+}
+.list-item-summary {
+  display: block;
+  width: 100%;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  font-size: 14px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.list-toggle-all {
+  justify-self: end;
+  margin-bottom: -6px;
+  padding: 0 4px;
+  font-size: 12px;
+}
 .asset-field {
   display: grid;
   gap: 6px;
