@@ -37,6 +37,7 @@ const sample = (text: string, reward: Reward) => ({ text, reward });
 export const boxPick: SlideTemplate<BoxPickContent> = {
   type: "box-pick",
   label: "Hộp bí mật",
+  description: "Đội gọi số mở hộp: câu hỏi, điểm thưởng hoặc bom",
   category: "game",
   order: 230,
   schema,

@@ -39,6 +39,7 @@ function cardBody(ctx: RenderContext, k: Card): string {
 export const sortGroups: SlideTemplate<SortGroupsContent> = {
   type: "sort-groups",
   label: "Phân nhóm",
+  description: "Đưa các thẻ vào đúng nhóm (2–3 nhóm)",
   category: "qa",
   order: 160,
   schema,

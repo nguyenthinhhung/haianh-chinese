@@ -35,6 +35,7 @@ export type FillBlankContent = z.output<typeof schema>;
 export const fillBlank: SlideTemplate<FillBlankContent> = {
   type: "fill-blank",
   label: "Điền chỗ trống",
+  description: "Câu có chỗ trống, điền lần lượt",
   category: "qa",
   order: 130,
   schema,

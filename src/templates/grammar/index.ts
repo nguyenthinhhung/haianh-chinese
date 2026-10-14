@@ -37,6 +37,7 @@ function coloredParts(text: string, lang: "zh-CN" | "zh-Latn-pinyin", cls: strin
 export const grammar: SlideTemplate<GrammarContent> = {
   type: "grammar",
   label: "Ngữ pháp",
+  description: "Mẫu câu tô màu từng thành phần, kèm ví dụ",
   category: "teach",
   order: 60,
   schema,

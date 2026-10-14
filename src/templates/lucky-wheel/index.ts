@@ -40,6 +40,7 @@ function wedge(text: string, i: number, n: number): string {
 export const luckyWheel: SlideTemplate<LuckyWheelContent> = {
   type: "lucky-wheel",
   label: "Vòng quay may mắn",
+  description: "Quay để chọn từ, câu hỏi hoặc học sinh",
   category: "game",
   order: 240,
   schema,

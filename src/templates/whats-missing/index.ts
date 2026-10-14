@@ -22,6 +22,7 @@ export type WhatsMissingContent = z.output<typeof schema>;
 export const whatsMissing: SlideTemplate<WhatsMissingContent> = {
   type: "whats-missing",
   label: "Cái gì biến mất?",
+  description: "Một hình biến mất, cả lớp đoán là hình gì",
   category: "game",
   order: 210,
   schema,

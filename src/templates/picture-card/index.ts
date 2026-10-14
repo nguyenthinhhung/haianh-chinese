@@ -18,6 +18,7 @@ export type PictureCardContent = z.output<typeof schema>;
 export const pictureCard: SlideTemplate<PictureCardContent> = {
   type: "picture-card",
   label: "Thẻ hình",
+  description: "Một từ với hình lớn cả slide",
   category: "teach",
   order: 30,
   schema,

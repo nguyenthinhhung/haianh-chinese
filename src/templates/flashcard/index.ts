@@ -27,6 +27,7 @@ const newCard = (): Card => ({ hanzi: "字", pinyin: "zì", meaning: "chữ" });
 export const flashcard: SlideTemplate<FlashcardContent> = {
   type: "flashcard",
   label: "Thẻ lật",
+  description: "Thẻ lật chữ ↔ hình; lật lần lượt hoặc bấm thẻ bất kỳ",
   category: "teach",
   order: 40,
   schema,

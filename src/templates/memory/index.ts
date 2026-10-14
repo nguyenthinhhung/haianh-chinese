@@ -41,6 +41,7 @@ function sides(ctx: RenderContext, p: Pair, secondAs: MemoryContent["secondAs"])
 export const memory: SlideTemplate<MemoryContent> = {
   type: "memory",
   label: "Lật cặp",
+  description: "Lật hai thẻ tìm cặp, chơi theo đội",
   category: "game",
   order: 250,
   schema,

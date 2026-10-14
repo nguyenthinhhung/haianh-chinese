@@ -27,6 +27,7 @@ const newWord = (): Word => ({ hanzi: "字", pinyin: "zì", meaning: "chữ" });
 export const vocabulary: SlideTemplate<VocabularyContent> = {
   type: "vocabulary",
   label: "Từ vựng",
+  description: "1–8 từ kèm hình, pinyin và nghĩa",
   category: "teach",
   order: 20,
   schema,

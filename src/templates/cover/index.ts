@@ -16,6 +16,7 @@ export type CoverContent = z.output<typeof schema>;
 export const cover: SlideTemplate<CoverContent> = {
   type: "cover",
   label: "Trang bìa",
+  description: "Tên bài hoặc mở đầu một phần",
   category: "teach",
   order: 10,
   schema,

@@ -26,6 +26,7 @@ export type SummaryContent = z.output<typeof schema>;
 export const summary: SlideTemplate<SummaryContent> = {
   type: "summary",
   label: "Tổng kết",
+  description: "Ý cần nhớ và từ chính cuối bài",
   category: "teach",
   order: 70,
   schema,

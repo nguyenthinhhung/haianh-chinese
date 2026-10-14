@@ -25,6 +25,7 @@ export type MatchingContent = z.output<typeof schema>;
 export const matching: SlideTemplate<MatchingContent> = {
   type: "matching",
   label: "Ghép cặp",
+  description: "Nối chữ Hán với nghĩa hoặc với hình",
   category: "qa",
   order: 120,
   schema,

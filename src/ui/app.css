@@ -473,20 +473,22 @@ textarea {
 .add-menu {
   position: relative;
 }
+/* Three columns (teach, Q&A, games) reaching over the stage, so every slide
+   type with its description fits without scrolling. */
 .menu {
   position: absolute;
   bottom: calc(100% + 6px);
   left: 0;
-  right: 0;
   z-index: 10;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  width: min(820px, calc(100vw - 40px));
   padding: 6px;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--panel);
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
-}
-.menu-group + .menu-group {
-  margin-top: 6px;
 }
 .menu-group-label {
   display: block;
@@ -501,6 +503,15 @@ textarea {
   width: 100%;
   border: 0;
   text-align: left;
+}
+.menu-item-label {
+  display: block;
+  font-weight: 600;
+}
+.menu-item-desc {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
 }
 
 .workspace {

@@ -185,7 +185,8 @@ export function SlideNavigator({ session, env, selectedId, onSelect, toReview }:
                     <span className="menu-group-label">{CATEGORY_LABELS[cat]}</span>
                     {list.map((t) => (
                       <button key={t.type} type="button" role="menuitem" onClick={() => add(t.type)}>
-                        {t.label}
+                        <span className="menu-item-label">{t.label}</span>
+                        <span className="menu-item-desc">{t.description}</span>
                       </button>
                     ))}
                   </div>

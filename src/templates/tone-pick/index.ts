@@ -77,6 +77,7 @@ export type TonePickContent = z.output<typeof schema>;
 export const tonePick: SlideTemplate<TonePickContent> = {
   type: "tone-pick",
   label: "Chọn thanh điệu",
+  description: "Nghe hoặc nhìn chữ, giơ ngón tay chọn thanh điệu",
   category: "qa",
   order: 150,
   schema,

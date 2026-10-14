@@ -23,6 +23,7 @@ export type SentenceOrderContent = z.output<typeof schema>;
 export const sentenceOrder: SlideTemplate<SentenceOrderContent> = {
   type: "sentence-order",
   label: "Sắp xếp câu",
+  description: "Xếp các thẻ từ thành câu đúng",
   category: "qa",
   order: 140,
   schema,

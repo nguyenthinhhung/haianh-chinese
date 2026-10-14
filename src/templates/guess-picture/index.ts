@@ -24,6 +24,7 @@ export type GuessPictureContent = z.output<typeof schema>;
 export const guessPicture: SlideTemplate<GuessPictureContent> = {
   type: "guess-picture",
   label: "Đoán hình",
+  description: "Đoán từ qua hình bị che, làm mờ hoặc mở từng ô",
   category: "game",
   order: 220,
   schema,

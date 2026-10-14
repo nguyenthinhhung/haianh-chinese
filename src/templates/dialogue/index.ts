@@ -46,6 +46,7 @@ function avatar(ctx: RenderContext, name: string, assetId: string | undefined, s
 export const dialogue: SlideTemplate<DialogueContent> = {
   type: "dialogue",
   label: "Hội thoại",
+  description: "Hội thoại hai nhân vật, hiện từng câu",
   category: "teach",
   order: 50,
   schema,

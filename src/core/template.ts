@@ -85,6 +85,8 @@ export interface SlideTemplate<C = unknown> {
   type: string;
   /** Name shown to the teacher. */
   label: string;
+  /** One line telling the teacher what the slide is for, shown in the "add slide" menu. */
+  description: string;
   category: TemplateCategory;
   /** Position in the "add slide" menu; lower first, unset last. */
   order?: number;

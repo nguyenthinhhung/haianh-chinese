@@ -43,6 +43,7 @@ const CROSS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M1
 export const quiz: SlideTemplate<QuizContent> = {
   type: "quiz",
   label: "Trắc nghiệm",
+  description: "Câu hỏi 2–4 lựa chọn hoặc Đúng/Sai",
   category: "qa",
   order: 110,
   schema,

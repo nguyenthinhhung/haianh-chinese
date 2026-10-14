@@ -23,6 +23,9 @@ describe.each(env.templates.list().map((t) => [t.type, t] as const))("template %
 
   it("describes itself for AI import", () => {
     expect(template.aiSchemaHint.length).toBeGreaterThan(20);
+    // Shown under the name in the "add slide" menu: one short line.
+    expect(template.description.length).toBeGreaterThan(10);
+    expect(template.description.length).toBeLessThanOrEqual(60);
   });
 
   it("scopes its CSS to its own slides", () => {
