@@ -1,4 +1,5 @@
 mod assets;
+mod closing;
 mod error;
 mod fsutil;
 mod library;
@@ -15,6 +16,7 @@ use tauri::Manager;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .on_window_event(closing::on_window_event)
         .setup(|app| {
             // Resolved through Tauri's path API so each OS gets its own
             // conventional location (Documents, AppData / Application Support).
@@ -29,6 +31,8 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            closing::close_ack,
+            closing::close_window,
             library::library_dir,
             library::list_lessons,
             library::create_lesson_dir,

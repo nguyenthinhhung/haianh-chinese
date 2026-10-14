@@ -1,4 +1,5 @@
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
   PersistenceError,
@@ -24,7 +25,32 @@ async function call<T>(command: string, args?: Record<string, unknown> | Uint8Ar
   }
 }
 
+/** What the open lesson does before the window closes (save); the window closes when every handler agrees. */
+const closeHandlers = new Set<() => Promise<boolean>>();
+
+/**
+ * Answers the backend's close request: acknowledge at once, run the handlers,
+ * then close. Installed at startup so the library closes without delay; the
+ * backend closes the window by itself when no page answers (see closing.rs).
+ */
+function listenForClose(): void {
+  void listen("app-close-requested", async () => {
+    await call("close_ack");
+    let close = true;
+    for (const handler of closeHandlers) {
+      try {
+        if (!(await handler())) close = false;
+      } catch (e) {
+        // A handler that breaks must not trap the window; the draft keeps the lesson.
+        console.error("Close handler failed", e);
+      }
+    }
+    if (close) await call("close_window");
+  });
+}
+
 export function createTauriPersistence(): Persistence {
+  listenForClose();
   return {
     kind: "tauri",
     libraryDir: () => call("library_dir"),
@@ -63,10 +89,8 @@ export function createTauriPersistence(): Persistence {
     setFullscreen: (on) => getCurrentWindow().setFullscreen(on),
     isFullscreen: () => getCurrentWindow().isFullscreen(),
     onCloseRequested(handler) {
-      const unlisten = getCurrentWindow().onCloseRequested(async (event) => {
-        if (!(await handler())) event.preventDefault();
-      });
-      return () => void unlisten.then((f) => f());
+      closeHandlers.add(handler);
+      return () => void closeHandlers.delete(handler);
     },
   };
 }
