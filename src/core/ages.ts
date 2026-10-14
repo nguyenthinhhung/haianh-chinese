@@ -18,6 +18,8 @@ export interface AgeProfile {
   words: [number, number];
   /** Theme a lesson made for this age starts with. */
   theme: string;
+  /** Pictures found automatically are drawings rather than photos. */
+  clipart: boolean;
 }
 
 export const AGE_PROFILES: AgeProfile[] = [
@@ -30,6 +32,7 @@ export const AGE_PROFILES: AgeProfile[] = [
     avoid: ["grammar", "fill-blank", "sentence-order"],
     words: [4, 6],
     theme: "panda",
+    clipart: true,
   },
   {
     id: "lower-primary",
@@ -40,6 +43,7 @@ export const AGE_PROFILES: AgeProfile[] = [
     avoid: [],
     words: [5, 8],
     theme: "garden",
+    clipart: true,
   },
   {
     id: "upper-primary",
@@ -50,6 +54,7 @@ export const AGE_PROFILES: AgeProfile[] = [
     avoid: [],
     words: [6, 10],
     theme: "notebook",
+    clipart: false,
   },
   {
     id: "secondary",
@@ -60,6 +65,7 @@ export const AGE_PROFILES: AgeProfile[] = [
     avoid: [],
     words: [8, 12],
     theme: "ink",
+    clipart: false,
   },
 ];
 

@@ -40,6 +40,13 @@ export type EditorField = (
       assetKind: "image" | "audio";
       /** Sibling text fields, in order of preference, that prefill the image search. */
       searchFrom?: string[];
+      /**
+       * The slide is incomplete without this picture, so it is filled in
+       * automatically after an AI import or on request. Pictures that stand in
+       * for text (a matching column, quiz options) stay opt-in. A function
+       * decides from the whole slide content, e.g. only when cards show pictures.
+       */
+      autoImage?: boolean | ((slideContent: any) => boolean);
       /** Sibling field whose Chinese text the "read aloud" button speaks. */
       speakFrom?: string;
     }

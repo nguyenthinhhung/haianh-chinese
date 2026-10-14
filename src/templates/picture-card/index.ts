@@ -50,7 +50,7 @@ export const pictureCard: SlideTemplate<PictureCardContent> = {
     { kind: "text", key: "hanzi", label: "Chữ Hán", lang: "zh" },
     { kind: "text", key: "pinyin", label: "Pinyin", lang: "pinyin" },
     { kind: "text", key: "meaning", label: "Nghĩa", lang: "vi" },
-    { kind: "asset", key: "image", label: "Ảnh", assetKind: "image", searchFrom: ["meaning", "hanzi"] },
+    { kind: "asset", key: "image", label: "Ảnh", assetKind: "image", searchFrom: ["meaning", "hanzi"], autoImage: true },
     { kind: "asset", key: "audio", label: "Âm thanh", assetKind: "audio", speakFrom: "hanzi" },
     { kind: "toggle", key: "hideWord", label: "Hiện hình trước, bấm Tiếp mới hiện chữ" },
   ],

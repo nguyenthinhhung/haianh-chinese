@@ -28,7 +28,7 @@ export const guessPicture: SlideTemplate<GuessPictureContent> = {
   order: 220,
   schema,
   aiSchemaHint:
-    'Đoán từ qua hình bị che. {"heading"?: tiêu đề, "hanzi": đáp án chữ Hán, "pinyin"?, "meaning"?: nghĩa tiếng Việt, "mode": "flash" (chớp nhanh) | "zoom" (phóng to rồi thu dần) | "blur" (mờ dần rõ) | "tiles" (mở từng ô), "grid"?: "3" hoặc "4" ô mỗi cạnh khi "tiles"}. Ảnh do giáo viên thêm sau.',
+    'Đoán từ qua hình bị che. {"heading"?: tiêu đề, "hanzi": đáp án chữ Hán, "pinyin"?, "meaning"?: nghĩa tiếng Việt, "mode": "flash" (chớp nhanh) | "zoom" (phóng to rồi thu dần) | "blur" (mờ dần rõ) | "tiles" (mở từng ô), "grid"?: "3" hoặc "4" ô mỗi cạnh khi "tiles"}',
   defaults: () => ({
     heading: "Đây là gì?",
     hanzi: "熊猫",
@@ -68,7 +68,7 @@ export const guessPicture: SlideTemplate<GuessPictureContent> = {
   css,
   editor: [
     { kind: "text", key: "heading", label: "Tiêu đề", lang: "vi" },
-    { kind: "asset", key: "image", label: "Ảnh cần đoán", assetKind: "image", searchFrom: ["meaning", "hanzi"] },
+    { kind: "asset", key: "image", label: "Ảnh cần đoán", assetKind: "image", searchFrom: ["meaning", "hanzi"], autoImage: true },
     { kind: "text", key: "hanzi", label: "Đáp án (chữ Hán)", lang: "zh" },
     { kind: "text", key: "pinyin", label: "Pinyin", lang: "pinyin" },
     { kind: "text", key: "meaning", label: "Nghĩa", lang: "vi" },

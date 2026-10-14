@@ -42,6 +42,20 @@ export function replacePresent(h: History, doc: LessonDocument): History {
   return { ...h, present: doc, last: undefined };
 }
 
+/**
+ * Applies a change to every snapshot instead of recording a step, for work
+ * that finishes in the background (a picture found for an empty slot). Undo
+ * then neither removes it nor skips over it; `change` must leave snapshots it
+ * does not apply to untouched.
+ */
+export function applyEverywhere(h: History, change: (doc: LessonDocument) => LessonDocument): History {
+  const present = change(h.present);
+  const past = h.past.map(change);
+  const future = h.future.map(change);
+  if (present === h.present && past.every((d, i) => d === h.past[i]) && future.every((d, i) => d === h.future[i])) return h;
+  return { ...h, past, present, future };
+}
+
 export function undo(h: History): History {
   const prev = h.past[h.past.length - 1];
   if (!prev) return h;

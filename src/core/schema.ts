@@ -23,6 +23,10 @@ export const AssetSchema = z.object({
   alt: z.string().max(200).optional(),
   /** Web page or URL the file was taken from, so the teacher can find it again. */
   source: z.string().max(2000).regex(/^https?:\/\//, "Nguồn phải là địa chỉ web").optional(),
+  /** Picked automatically and not yet looked at by the teacher. */
+  needsReview: z.literal(true).optional(),
+  /** Search words the picture was found with, so swapping it starts there. */
+  query: z.string().max(100).optional(),
 });
 
 /** Only colour values may override theme variables; free-form CSS is never injected. */

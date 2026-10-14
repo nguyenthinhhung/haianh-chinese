@@ -1,4 +1,5 @@
 import { ageProfile } from "./ages";
+import { slotKey } from "./autoImages";
 import { describeContentPath, type Path } from "./fields";
 import { newId } from "./ids";
 import {
@@ -45,7 +46,34 @@ export function extractJson(text: string): string | null {
   return null;
 }
 
-/** Removes picture and sound fields: the AI cannot supply files, the teacher adds them later. */
+/**
+ * Picture search words the AI wrote into picture fields ("image": "orange
+ * fruit"), by path. Links and file names are not search words and are skipped.
+ */
+function imageKeywords(content: unknown, fields: EditorFieldSpec, base: Path = []): [Path, string][] {
+  if (!content || typeof content !== "object" || Array.isArray(content)) return [];
+  const obj = content as Record<string, unknown>;
+  return fields.flatMap((field): [Path, string][] => {
+    const value = obj[field.key];
+    if (field.kind === "list" && Array.isArray(value)) {
+      return value.flatMap((item, i) => imageKeywords(item, field.fields, [...base, field.key, i]));
+    }
+    if (field.kind !== "asset" || field.assetKind !== "image" || typeof value !== "string") return [];
+    const words = value.trim();
+    const usable = words.length > 0 && words.length <= 60 && !/[/\\]|^\w+:|\.(png|jpe?g|gif|webp|svg)$/i.test(words);
+    return usable ? [[[...base, field.key], words]] : [];
+  });
+}
+
+/** Picture fields filled in automatically, written as paths for the prompt: `words[].image`. */
+function autoImageFields(fields: EditorFieldSpec, base = ""): string[] {
+  return fields.flatMap((f) => {
+    if (f.kind === "list") return autoImageFields(f.fields, `${base}${f.key}[].`);
+    return f.kind === "asset" && f.autoImage ? [`${base}${f.key}`] : [];
+  });
+}
+
+/** Removes picture and sound fields: the AI cannot supply files; pictures are searched for afterwards. */
 function withoutAssets(content: unknown, fields: EditorFieldSpec): unknown {
   if (!content || typeof content !== "object" || Array.isArray(content)) return content;
   const out: Record<string, unknown> = { ...(content as Record<string, unknown>) };
@@ -59,7 +87,13 @@ function withoutAssets(content: unknown, fields: EditorFieldSpec): unknown {
 }
 
 export type AiImportResult =
-  | { ok: true; title: string; slides: Slide[] }
+  | {
+      ok: true;
+      title: string;
+      slides: Slide[];
+      /** The AI's picture search words, by `slotKey` of the new slides. */
+      imageQueries: Map<string, string>;
+    }
   | { ok: false; errors: string[] };
 
 /**
@@ -84,6 +118,7 @@ export function parseAiLesson(text: string, registry: TemplateRegistry): AiImpor
 
   const errors: string[] = [];
   const slides: Slide[] = [];
+  const imageQueries = new Map<string, string>();
   envelope.slides.forEach((entry: unknown, i) => {
     const where = `Slide ${i + 1}`;
     const item = entry as { type?: unknown; content?: unknown; notes?: unknown } | null;
@@ -102,11 +137,13 @@ export function parseAiLesson(text: string, registry: TemplateRegistry): AiImpor
       return;
     }
     const notes = typeof item?.notes === "string" ? item.notes.trim().slice(0, 5000) : "";
-    slides.push({ id: newId("s"), type, content: parsed.data, ...(notes ? { notes } : {}) });
+    const id = newId("s");
+    for (const [path, words] of imageKeywords(item?.content, template.editor)) imageQueries.set(slotKey(id, path), words);
+    slides.push({ id, type, content: parsed.data, ...(notes ? { notes } : {}) });
   });
   if (errors.length) return { ok: false, errors };
   const title = typeof envelope.title === "string" && envelope.title.trim() ? envelope.title.trim().slice(0, 120) : "";
-  return { ok: true, title, slides };
+  return { ok: true, title, slides, imageQueries };
 }
 
 /** The prompt the teacher pastes into an AI chat: the lesson they asked for, in the order the blueprint sets. */
@@ -145,6 +182,11 @@ export function buildAiPrompt(registry: TemplateRegistry, request: LessonRequest
     .filter((t) => used.has(t.type))
     .map((t) => `- "${t.type}" (${t.label}): ${t.aiSchemaHint}`)
     .join("\n");
+  const pictureFields = registry
+    .list()
+    .filter((t) => used.has(t.type))
+    .flatMap((t) => autoImageFields(t.editor).map((f) => `"${t.type}": ${f}`))
+    .join("; ");
 
   const example = {
     title: "Hoa quả",
@@ -155,8 +197,8 @@ export function buildAiPrompt(registry: TemplateRegistry, request: LessonRequest
         content: {
           heading: "Từ vựng",
           words: [
-            { hanzi: "苹果", pinyin: "píng guǒ", meaning: "quả táo" },
-            { hanzi: "香蕉", pinyin: "xiāng jiāo", meaning: "quả chuối" },
+            { hanzi: "苹果", pinyin: "píng guǒ", meaning: "quả táo", image: "red apple" },
+            { hanzi: "香蕉", pinyin: "xiāng jiāo", meaning: "quả chuối", image: "banana" },
           ],
           hideMeaning: true,
         },
@@ -188,7 +230,11 @@ Quy tắc:
 - Nghĩa, câu hỏi và giải thích bằng tiếng Việt, ngắn gọn, hợp lứa tuổi.
 - Slide luyện tập và trò chơi chỉ dùng từ và mẫu câu đã dạy trong bài.
 - Thêm "notes" cho slide hoạt động: cách tổ chức cho cả lớp hoặc theo đội.
-- Không đưa ảnh hay âm thanh: giáo viên sẽ tự thêm.
+${
+  pictureFields
+    ? `- Ảnh: ứng dụng tự tìm ảnh theo từ khoá bạn ghi vào các trường ${pictureFields}. Ghi một từ khoá TIẾNG ANH ngắn (1–3 từ) tả đúng vật cần minh hoạ, ví dụ "image": "orange fruit" (không ghi "orange" vì dễ ra màu cam). Không ghi link hay tên file.\n`
+    : ""
+}- Không đưa âm thanh: giáo viên sẽ tự thêm.
 
 Ví dụ về định dạng (nội dung chỉ để minh hoạ):
 ${JSON.stringify(example, null, 2)}`;

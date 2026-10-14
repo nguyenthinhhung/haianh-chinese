@@ -75,7 +75,7 @@ export const whatsMissing: SlideTemplate<WhatsMissingContent> = {
       fields: [
         { kind: "text", key: "hanzi", label: "Chữ Hán", lang: "zh" },
         { kind: "text", key: "pinyin", label: "Pinyin", lang: "pinyin" },
-        { kind: "asset", key: "image", label: "Ảnh", assetKind: "image", searchFrom: ["hanzi"] },
+        { kind: "asset", key: "image", label: "Ảnh", assetKind: "image", searchFrom: ["hanzi"], autoImage: true },
       ],
     },
     {

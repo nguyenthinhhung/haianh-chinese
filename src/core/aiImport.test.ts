@@ -46,6 +46,28 @@ describe("parseAiLesson", () => {
     expect(result.ok && result.slides).toHaveLength(2);
   });
 
+  it("keeps the AI's picture keywords by slot, ignoring links and file names", () => {
+    const withWords = {
+      slides: [
+        {
+          type: "vocabulary",
+          content: {
+            words: [
+              { hanzi: "猫", pinyin: "māo", meaning: "con mèo", image: "cat" },
+              { hanzi: "狗", pinyin: "gǒu", meaning: "con chó", image: "https://x.com/dog.png" },
+              { hanzi: "鱼", pinyin: "yú", meaning: "con cá", image: "fish.jpg" },
+            ],
+          },
+        },
+      ],
+    };
+    const result = parseAiLesson(JSON.stringify(withWords), templates);
+    if (!result.ok) throw new Error(result.errors.join("; "));
+    const id = result.slides[0]!.id;
+    expect([...result.imageQueries]).toEqual([[`${id}:words.0.image`, "cat"]]);
+    expect((result.slides[0]!.content as { words: object[] }).words[0]).not.toHaveProperty("image");
+  });
+
   it("drops pictures and sounds the AI made up", () => {
     const withImage = { slides: [{ type: "cover", content: { title: "猫", image: "cat.png" } }] };
     const result = parseAiLesson(JSON.stringify(withImage), templates);
@@ -98,6 +120,13 @@ describe("buildAiPrompt", () => {
     for (const t of templates.list()) {
       expect(prompt.includes(`- "${t.type}" (`), t.type).toBe(used.has(t.type));
     }
+  });
+
+  it("asks for English picture keywords in the picture fields the plan uses", () => {
+    const prompt = buildAiPrompt(templates, request);
+    expect(prompt).toContain('"vocabulary": words[].image');
+    expect(prompt).toContain("TIẾNG ANH");
+    expect(prompt).not.toContain('"matching": ');
   });
 
   it("asks a review lesson not to add new words", () => {
