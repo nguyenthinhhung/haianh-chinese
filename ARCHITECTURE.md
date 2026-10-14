@@ -337,8 +337,9 @@ Quy ước chung cho slide hoạt động:
 
 ### 4.4. Theme
 
-MVP có 5 theme, mỗi theme gồm bảng màu, hình trang trí SVG, kiểu khung slide và
-bộ âm thanh phản hồi:
+MVP có 5 theme, mỗi theme gồm bảng màu (kể cả 6 màu phân loại `--ls-c1`…`--ls-c6`
+dùng cho cặp ghép, thành phần ngữ pháp, thanh điệu, nhóm), hình trang trí SVG và
+kiểu khung slide:
 
 | Theme | Phong cách |
 | --- | --- |
@@ -493,7 +494,7 @@ cắt validation, ghi file an toàn, backup, recovery, hay hỗ trợ macOS.
 | 1. Lát cắt dọc | 🟡 Còn macOS | Phần TypeScript: schema v1 (Zod), `LessonCodec`, migration, hợp đồng plugin tự phát hiện theo thư mục, `cover` + `vocabulary`, theme `classic`, font Nunito nhúng. Phần Rust đã viết: ghi nguyên tử, kiểm tra hash, backup xoay vòng, draft, lock, nhập asset. 57 unit test đạt. Đã kiểm tra trong trình duyệt (bản giả lập lưu trữ): tạo → sửa → Lưu → mở lại; `lesson.html` mở bằng Chrome trình chiếu đúng. | Chưa thử trên macOS. *(Windows: Rust đã biên dịch, clippy sạch, 7 test Rust đạt; đã chạy app thật và kiểm tra lưu, backup, draft, xung đột khi file bị sửa bên ngoài, lock giữa hai tiến trình, phục hồi sau khi kill, lưu khi đóng cửa sổ.)* |
 | 2. Editor | 🟢 Xong (Windows) | Library (tạo, mở, đổi tên, nhân bản, xoá vào Thùng rác; hiện tiêu đề bài); SlideNavigator (thêm, xoá, nhân bản, lên/xuống, kéo thả); PropertiesPanel tự dựng form từ `editor` spec, báo lỗi và cảnh báo giới hạn theo từng trường; nút Lưu + Ctrl+S/⌘S + trạng thái + xử lý xung đột; undo/redo (nút + Ctrl+Z/Ctrl+Y, ⌘Z/⇧⌘Z, gộp lần gõ); draft sau 1 giây + hỏi phục hồi khi mở bài; tự lưu sau 30 giây rảnh và khi đóng cửa sổ; thu nhỏ ảnh ≤ 1920 px khi nhập (giữ đúng chiều xoay EXIF); dọn asset không dùng khi đóng bài. Đã kiểm tra trong app thật trên Windows. | Chọn ảnh/audio qua hộp thoại chưa thử trong app thật. |
 | 3. Dạy + Present | 🟢 Xong (Windows) | Đủ 7 loại slide nhóm 1 (`cover`, `vocabulary`, `picture-card`, `flashcard`, `dialogue`, `grammar`, `summary`). Present trong app dùng chung runtime với `lesson.html`: F5 từ đầu, Shift+F5 / nút "Trình chiếu" từ slide đang chọn, toàn màn hình, Esc thoát về đúng slide. Runtime: bước Tiếp/Lùi, `A`/`R`, Home/End, hiện từng phần chung cho mọi slide (`data-ls-reveal`), âm thanh phản hồi tổng hợp (WebAudio), pháo giấy. Đã kiểm tra trong app thật: chạy các bước của thẻ lật, hội thoại, ngữ pháp. | Thử bút trình chiếu thật; trình chiếu trọn một bài 15 slide. |
-| 4. Hỏi đáp + theme | ⚪ Chưa bắt đầu | Tuỳ chọn chữ Khải đã có. | Nhóm 2; 4 theme còn lại. |
+| 4. Hỏi đáp + theme | 🟢 Xong (Windows) | Đủ 6 loại slide nhóm 2 (`quiz` có biến thể Đúng/Sai và đề bằng ảnh/âm thanh, `matching`, `fill-blank`, `sentence-order`, `tone-pick` tự lấy thanh từ dấu pinyin, `sort-groups`); thứ tự xáo trộn cố định theo ID slide nên Editor, Present và file giống nhau; hoàn thành có pháo giấy. 5 theme (`classic`, `garden`, `ocean`, `space` nền tối, `panda`); tuỳ chọn chữ Khải. Trường form hiện theo điều kiện. Chữ Hán lẫn trong câu tiếng Việt được gắn `lang="zh-CN"` riêng. Đã kiểm tra trong app thật: chạy các bước của cả 6 loại và xem 5 theme. | Thử trên lớp thật. |
 | 5. Trò chơi + công cụ lớp học | ⚪ Chưa bắt đầu | | |
 | Ảnh và giọng đọc từ web (thêm ở Rev 6) | 🟢 Xong (Windows) | Tìm ảnh Bing, dán/kéo ảnh, giọng đọc Google Dịch, ghi nguồn ảnh. Đã kiểm tra trong app thật: tìm "quả táo" ra 30 ảnh trong ~2,5 giây, chèn ảnh, tạo giọng đọc 苹果, dán ảnh, kéo địa chỉ ảnh vào. | Kéo ảnh thật từ Chrome/Edge sang chưa thử bằng chuột thật. |
 | 6. Import/Export + phát hành | ⚪ Chưa bắt đầu | Icon ứng dụng; cấu hình đóng gói NSIS / `.dmg`. | Export độc lập, AI import, mở HTML ngoài, ký số + notarize, hướng dẫn. |
@@ -517,12 +518,12 @@ cắt validation, ghi file an toàn, backup, recovery, hay hỗ trợ macOS.
 - [x] Nút Lưu, Ctrl+S / ⌘S và trạng thái lưu hiển thị đúng.
 
 **Loại slide và theme**
-- [ ] Đủ các loại slide nhóm 1 và 2 (nhóm 3 nếu không bị cắt). *(Nhóm 1 đủ.)*
-- [ ] Mọi slide nhóm 1 và 2 chạy hết các bước chỉ bằng Tiếp/Lùi (bút trình chiếu). *(Nhóm 1 đạt với bàn phím; chưa thử bút thật.)*
-- [ ] Mỗi slide hoạt động có phản hồi âm thanh/hiệu ứng và phím `A`/`R`.
+- [ ] Đủ các loại slide nhóm 1 và 2 (nhóm 3 nếu không bị cắt). *(Nhóm 1 và 2 đủ; nhóm 3 chưa làm.)*
+- [ ] Mọi slide nhóm 1 và 2 chạy hết các bước chỉ bằng Tiếp/Lùi (bút trình chiếu). *(Nhóm 1 và 2 đạt với bàn phím; chưa thử bút thật.)*
+- [x] Mỗi slide hoạt động có phản hồi âm thanh/hiệu ứng và phím `A`/`R`.
 - [ ] Bảng điểm đội, đồng hồ đếm ngược dùng được trong Present và file export.
 - [x] Mỗi slide có ô ghi chú cho giáo viên, không hiện khi trình chiếu.
-- [ ] 5 theme; âm thanh và hiệu ứng tắt được.
+- [x] 5 theme; âm thanh và hiệu ứng tắt được.
 - [x] Thêm một loại slide mới chỉ cần thêm một thư mục trong `templates/`.
 
 **Contract và import**

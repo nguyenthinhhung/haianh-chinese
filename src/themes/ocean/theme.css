@@ -1,0 +1,36 @@
+.ls-deck[data-theme="ocean"] {
+  --ls-bg: #eef8fc;
+  --ls-fg: #12334a;
+  --ls-muted: #4a6b80;
+  --ls-accent: #0f6e9e;
+  --ls-accent-2: #e8743b;
+  --ls-surface: #ffffff;
+  --ls-surface-border: #c6e4f1;
+  --ls-pinyin: #0f6e9e;
+  --ls-good: #1f8a5a;
+  --ls-radius: 32;
+}
+.ls-deck[data-theme="ocean"] .ls-slide::before,
+.ls-deck[data-theme="ocean"] .ls-slide::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+.ls-deck[data-theme="ocean"] .ls-slide::before {
+  top: 2%;
+  right: 1.5%;
+  width: 11%;
+  aspect-ratio: 1.2;
+  background-image: var(--decor-fish);
+}
+.ls-deck[data-theme="ocean"] .ls-slide::after {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 5%;
+  background-image: var(--decor-waves);
+  background-repeat: repeat-x;
+  background-size: auto 100%;
+}

@@ -1,0 +1,34 @@
+.ls-deck[data-theme="garden"] {
+  --ls-bg: #fff7f0;
+  --ls-fg: #3a2e2a;
+  --ls-muted: #7a6158;
+  --ls-accent: #d94f70;
+  --ls-accent-2: #4f9a5f;
+  --ls-surface: #ffffff;
+  --ls-surface-border: #f4d7c8;
+  --ls-pinyin: #3e8a52;
+  --ls-good: #3e8a52;
+  --ls-radius: 36;
+}
+.ls-deck[data-theme="garden"] .ls-slide::before,
+.ls-deck[data-theme="garden"] .ls-slide::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+.ls-deck[data-theme="garden"] .ls-slide::before {
+  top: 1.5%;
+  left: 1%;
+  width: 11%;
+  aspect-ratio: 1;
+  background-image: var(--decor-flowers);
+}
+.ls-deck[data-theme="garden"] .ls-slide::after {
+  right: 1.5%;
+  bottom: 0;
+  width: 16%;
+  aspect-ratio: 2.5;
+  background-image: var(--decor-grass);
+}

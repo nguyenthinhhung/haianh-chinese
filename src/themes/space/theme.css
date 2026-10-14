@@ -1,0 +1,49 @@
+/* Dark theme: every colour that sits on the background or on cards is light,
+   including the shared categorical palette. */
+.ls-deck[data-theme="space"] {
+  --ls-bg: #151a3d;
+  --ls-fg: #f4f6ff;
+  --ls-muted: #b9c1e6;
+  --ls-accent: #ffcc4d;
+  --ls-accent-2: #6ea8ff;
+  --ls-surface: #222a5c;
+  --ls-surface-border: #3a4486;
+  --ls-pinyin: #8fd3ff;
+  --ls-good: #5fe08c;
+  --ls-radius: 28;
+  --ls-c1: #ff7a7a;
+  --ls-c2: #6ea8ff;
+  --ls-c3: #5fe08c;
+  --ls-c4: #ffcc4d;
+  --ls-c5: #c79bff;
+  --ls-c6: #ff8ac4;
+}
+.ls-deck[data-theme="space"] .ls-slide {
+  background: radial-gradient(circle at 80% 10%, #263070 0%, var(--ls-bg) 55%);
+}
+.ls-deck[data-theme="space"] .ls-slide::before,
+.ls-deck[data-theme="space"] .ls-slide::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+.ls-deck[data-theme="space"] .ls-slide::before {
+  top: 2%;
+  right: 1.5%;
+  width: 12%;
+  aspect-ratio: 1.2;
+  background-image: var(--decor-planet);
+}
+.ls-deck[data-theme="space"] .ls-slide::after {
+  left: 1%;
+  bottom: 2%;
+  width: 16%;
+  aspect-ratio: 1.9;
+  background-image: var(--decor-stars);
+}
+/* Text that sits on a filled accent turns dark so yellow stays readable. */
+.ls-deck[data-theme="space"] .ls-play {
+  color: #151a3d;
+}
