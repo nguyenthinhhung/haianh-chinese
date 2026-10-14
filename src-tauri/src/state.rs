@@ -11,11 +11,14 @@ pub struct AppState {
     pub data: PathBuf,
     /// Lock files held open by this process, keyed by lesson ID.
     pub locks: Mutex<HashMap<String, File>>,
+    /// Lesson file last chosen in the "open" dialog; only the assets beside
+    /// it may be copied into the library.
+    pub picked_lesson: Mutex<Option<PathBuf>>,
 }
 
 impl AppState {
     pub fn new(library: PathBuf, data: PathBuf) -> Self {
-        Self { library, data, locks: Mutex::new(HashMap::new()) }
+        Self { library, data, locks: Mutex::new(HashMap::new()), picked_lesson: Mutex::new(None) }
     }
 
     /// Resolves a lesson folder sent by the frontend, accepting only direct

@@ -4,6 +4,7 @@ mod fsutil;
 mod library;
 mod session;
 mod state;
+mod transfer;
 mod web;
 
 use state::AppState;
@@ -46,6 +47,11 @@ pub fn run() {
             web::import_image_url,
             web::import_image_bytes,
             web::speak_chinese,
+            transfer::read_assets_data,
+            transfer::save_export,
+            transfer::pick_lesson_file,
+            transfer::copy_sibling_assets,
+            transfer::write_asset,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Chinese Lesson Studio");
