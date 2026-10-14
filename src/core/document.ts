@@ -24,7 +24,7 @@ export function createLesson({ title, themeId = "classic", appVersion, now = new
     title,
     script: "simplified",
     theme: { id: themeId },
-    settings: { sound: true, animations: true, hanziFont: "sans" },
+    settings: { sound: true, animations: true, hanziFont: "sans", pinyin: true },
     slides: [],
     assets: [],
     metadata: { createdAt: ts, updatedAt: ts, appVersion },

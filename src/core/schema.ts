@@ -35,6 +35,8 @@ export const SettingsSchema = z.object({
   sound: z.boolean().default(true),
   animations: z.boolean().default(true),
   hanziFont: z.enum(["sans", "kai"]).default("sans"),
+  /** Off for classes that read characters without help; tone exercises keep theirs. */
+  pinyin: z.boolean().default(true),
 });
 
 export const SlideSchema = z.object({

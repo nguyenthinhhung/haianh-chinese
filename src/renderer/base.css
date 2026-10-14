@@ -60,6 +60,10 @@
   color: var(--ls-pinyin);
   font-weight: 700;
 }
+/* The tone exercise's pinyin is its answer, so it stays. */
+.ls-deck[data-pinyin="off"] .ls-slide:not([data-slide-type="tone-pick"]) .ls-pinyin {
+  display: none;
+}
 .ls-slide img {
   display: block;
   max-width: 100%;

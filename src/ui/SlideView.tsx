@@ -31,6 +31,7 @@ export function SlideView({ doc, slide, env }: Props) {
       className="ls-deck"
       data-theme={env.themes.resolve(doc.theme.id).id}
       data-hanzi-font={doc.settings.hanziFont}
+      data-pinyin={doc.settings.pinyin ? "on" : "off"}
       data-animations="off"
       style={doc.theme.overrides as CSSProperties | undefined}
       dangerouslySetInnerHTML={{ __html: html }}

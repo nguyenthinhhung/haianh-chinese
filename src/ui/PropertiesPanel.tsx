@@ -405,6 +405,16 @@ function LessonProperties({ session }: { session: LessonSession }) {
         </label>
       </div>
       <div className="field field-toggle">
+        <label title="Tắt cho lớp đã đọc được chữ Hán; slide luyện thanh điệu vẫn giữ pinyin.">
+          <input
+            type="checkbox"
+            checked={doc.settings.pinyin}
+            onChange={(e) => session.update((d) => setSettings(d, { pinyin: e.target.checked }))}
+          />{" "}
+          Hiện pinyin
+        </label>
+      </div>
+      <div className="field field-toggle">
         <label>
           <input
             type="checkbox"

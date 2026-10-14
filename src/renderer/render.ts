@@ -52,7 +52,7 @@ export function deckAttributes(doc: LessonDocument, env: RenderEnv): string {
     .join(";");
   return (
     `class="ls-deck" data-theme="${esc(theme.id)}" data-hanzi-font="${esc(doc.settings.hanziFont)}"` +
-    ` data-sound="${doc.settings.sound ? "on" : "off"}" data-animations="${doc.settings.animations ? "on" : "off"}"` +
+    ` data-pinyin="${doc.settings.pinyin ? "on" : "off"}" data-sound="${doc.settings.sound ? "on" : "off"}" data-animations="${doc.settings.animations ? "on" : "off"}"` +
     (style ? ` style="${esc(style)}"` : "")
   );
 }
