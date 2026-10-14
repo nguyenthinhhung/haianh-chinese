@@ -86,9 +86,11 @@
   };
 
   /* Steps for slides without their own interaction: every element marked
-   * data-ls-reveal appears in document order, one per step. Elements sharing
-   * a data-ls-reveal value appear together. data-ls-sound picks the feedback
-   * sound played as each appears. */
+   * data-ls-reveal appears, one group per step. Elements sharing a value
+   * appear together; numeric values set the order (so an answer slot and the
+   * card it comes from can sit anywhere on the slide), otherwise document
+   * order does. data-ls-sound picks the sound played as a group appears, and
+   * an element with data-ls-complete makes the last step a "complete" cheer. */
   function revealController(slide) {
     var items = slide.querySelectorAll("[data-ls-reveal]");
     if (!items.length) return null;
@@ -98,10 +100,20 @@
       var key = items[i].getAttribute("data-ls-reveal") || "#" + i;
       if (!byKey[key]) {
         byKey[key] = [];
+        byKey[key].key = key;
         groups.push(byKey[key]);
       }
       byKey[key].push(items[i]);
     }
+    var numeric = groups.every(function (g) {
+      return /^\d+$/.test(g.key);
+    });
+    if (numeric) {
+      groups.sort(function (a, b) {
+        return Number(a.key) - Number(b.key);
+      });
+    }
+    var cheer = !!slide.querySelector("[data-ls-complete]");
     var shown = 0;
     return {
       steps: groups.length,
@@ -109,7 +121,10 @@
         for (var g = 0; g < groups.length; g++) {
           for (var k = 0; k < groups[g].length; k++) groups[g][k].classList.toggle("ls-revealed", g < n);
         }
-        if (n > shown && n <= groups.length) LS.feedback(groups[n - 1][0].getAttribute("data-ls-sound") || "reveal", slide);
+        if (n > shown && n <= groups.length) {
+          var sound = groups[n - 1][0].getAttribute("data-ls-sound") || "reveal";
+          LS.feedback(cheer && n === groups.length ? "complete" : sound, slide);
+        }
         shown = n;
       },
     };
