@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { LessonLocation } from "../platform/persistence";
 import { SAMPLES, type SampleId } from "../samples";
+import { matchesQuery } from "../core/textSearch";
 import { DEFAULT_THEME_ID } from "../themes";
 import { AiImportDialog } from "./AiImportDialog";
 import { LessonCard } from "./LessonCard";
@@ -20,6 +21,8 @@ import { ThemeOptions } from "./ThemeOptions";
 
 // The theme last picked for a new lesson; a teacher's classes rarely change age.
 const THEME_KEY = "ls.newLessonTheme";
+/** The search box appears once the library is longer than a screenful of cards. */
+const SEARCH_FROM = 12;
 
 interface Props {
   onOpen(lesson: OpenLesson): void;
@@ -47,6 +50,8 @@ export function LibraryScreen({ onOpen }: Props) {
   const [busy, setBusy] = useState(false);
   const [recovery, setRecovery] = useState<{ lesson: OpenLesson; draft: PendingDraft } | null>(null);
   const [aiImport, setAiImport] = useState(false);
+  const [query, setQuery] = useState("");
+  const shown = (lessons ?? []).filter((l) => matchesQuery(l.title ?? l.folderName, query));
 
   const refresh = useCallback(async () => {
     try {
@@ -280,20 +285,33 @@ export function LibraryScreen({ onOpen }: Props) {
           </div>
         </div>
       ) : (
-        <ul className="lesson-list">
-          {lessons.map((l) => (
-            <li key={l.dir}>
-              <LessonCard
-                lesson={l}
-                disabled={busy || !!recovery}
-                onOpen={() => void open(l.dir)}
-                onRename={(title) => act("Không đổi tên được.", () => renameLesson(l.dir, title, services))}
-                onDuplicate={() => act("Không nhân bản được.", () => duplicateLesson(l.dir, services))}
-                onDelete={() => act("Không xoá được.", () => deleteLesson(l.dir, services))}
-              />
-            </li>
-          ))}
-        </ul>
+        <>
+          {lessons.length > SEARCH_FROM && (
+            <input
+              type="search"
+              className="library-search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Tìm bài theo tên, ví dụ: hoa qua"
+              aria-label="Tìm bài học"
+            />
+          )}
+          {shown.length === 0 && <p className="empty">Không có bài nào có tên khớp “{query.trim()}”.</p>}
+          <ul className="lesson-list">
+            {shown.map((l) => (
+              <li key={l.dir}>
+                <LessonCard
+                  lesson={l}
+                  disabled={busy || !!recovery}
+                  onOpen={() => void open(l.dir)}
+                  onRename={(title) => act("Không đổi tên được.", () => renameLesson(l.dir, title, services))}
+                  onDuplicate={() => act("Không nhân bản được.", () => duplicateLesson(l.dir, services))}
+                  onDelete={() => act("Không xoá được.", () => deleteLesson(l.dir, services))}
+                />
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </div>
   );

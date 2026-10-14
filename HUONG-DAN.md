@@ -132,6 +132,10 @@ hoặc file đã xuất. Bài được chép vào thư viện thành một bài 
 
 ## 8. Thư viện
 
+Bài sửa gần nhất đứng đầu. Khi có trên 12 bài, ô **Tìm bài** hiện phía trên danh
+sách: gõ vài chữ của tên bài, có dấu hay không dấu đều được ("hoa qua" tìm ra
+"Hoa quả – lớp 2"). Mẹo: đặt tên có lớp, ví dụ "Lớp 2 – Hoa quả", để tìm theo lớp.
+
 Mỗi bài có **Đổi tên**, **Nhân bản**, **Xoá**. Bài bị xoá nằm trong Thùng rác của
 Windows, khôi phục được từ đó. Mỗi lần lưu, bản cũ được sao lưu tự động (10 bản
 gần nhất và một bản mỗi ngày trong 7 ngày) trong

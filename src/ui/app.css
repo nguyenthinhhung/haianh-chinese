@@ -89,6 +89,7 @@ button.muted-button {
 }
 
 input[type="text"],
+input[type="search"],
 input:not([type]),
 select,
 textarea {
@@ -1008,4 +1009,8 @@ textarea {
   font-size: 12px;
   font-weight: 400;
   color: var(--focus);
+}
+input.library-search {
+  width: min(360px, 100%);
+  margin-bottom: 12px;
 }

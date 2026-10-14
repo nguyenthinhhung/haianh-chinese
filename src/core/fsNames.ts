@@ -1,3 +1,5 @@
+import { stripMarks } from "./textSearch";
+
 const WINDOWS_RESERVED = /^(con|prn|aux|nul|com[0-9]|lpt[0-9])$/i;
 const MAX_LENGTH = 80;
 const FALLBACK = "Bai-hoc";
@@ -8,11 +10,7 @@ const FALLBACK = "Bai-hoc";
  * every file system and sync service.
  */
 export function folderNameFromTitle(title: string): string {
-  const name = title
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/đ/g, "d")
-    .replace(/Đ/g, "D")
+  const name = stripMarks(title)
     .replace(/[^A-Za-z0-9]+/g, "-")
     .slice(0, MAX_LENGTH)
     .replace(/^-+|-+$/g, "");
