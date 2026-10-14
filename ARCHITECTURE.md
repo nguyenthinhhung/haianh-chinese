@@ -12,7 +12,7 @@ phải chạm vào HTML.
 **Người dùng duy nhất của ứng dụng là giáo viên.** Học sinh chỉ xem màn hình chiếu
 và trả lời bằng lời; giáo viên là người điều khiển mọi thứ trên màn hình.
 
-> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 15).
+> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 16).
 
 ---
 
@@ -358,7 +358,7 @@ Quy ước chung cho slide hoạt động:
 
 ### 4.4. Theme
 
-Có 7 theme, mỗi theme gồm bảng màu (kể cả 6 màu phân loại `--ls-c1`…`--ls-c6`
+Có 15 theme, mỗi theme gồm bảng màu (kể cả 6 màu phân loại `--ls-c1`…`--ls-c6`
 dùng cho cặp ghép, thành phần ngữ pháp, thanh điệu, nhóm), hình trang trí SVG và
 kiểu khung slide:
 
@@ -371,6 +371,17 @@ kiểu khung slide:
 | `classic` | Gọn gàng. | 9+ |
 | `notebook` | Vở ô ly: giấy kẻ ô, lề đỏ, ô 田字格. | 9+ |
 | `ink` | Thuỷ mặc: giấy dó, núi mực, con dấu đỏ; màu trầm. | 9+ |
+| `spring` | Mùa xuân (Tết): hồng đào, đèn lồng đỏ. | 3–11 |
+| `summer` | Mùa hè: trời xanh, mặt trời, dưa hấu. | 3–11 |
+| `autumn` | Mùa thu (Trung thu): trăng rằm, lá phong. | 3–11 |
+| `winter` | Mùa đông: bông tuyết, người tuyết. | 3–11 |
+| `greatwall` | Vạn Lý Trường Thành: tường thành trên đồi, mây cát tường. | 6+ |
+| `porcelain` | Sứ Thanh Hoa: trắng sứ, xanh cobalt, viền slide như đĩa men. | 9+ |
+| `papercut` | Tranh cắt giấy: hai bông song hoa đỏ. | 3–11 |
+| `tea` | Trà: xanh lá trà, ấm gốm. | 9+ |
+
+Trang trí của các theme mới đặt hai bên dòng tiêu đề: các slide nhiều thẻ (từ
+vựng, thẻ lật) chiếm gần hết chiều cao nên góc dưới bị che.
 
 Mỗi theme khai báo `ages`. Đây chỉ là gợi ý: ô chọn theme xếp theo tuổi và ghi
 khoảng tuổi bên cạnh tên, không khoá lựa chọn. Bài tạo bằng AI nhận theme gợi ý
@@ -648,7 +659,7 @@ cắt validation, ghi file an toàn, backup, recovery, hay hỗ trợ macOS.
 - [x] Mỗi slide hoạt động có phản hồi âm thanh/hiệu ứng và phím `A`/`R`.
 - [x] Bảng điểm đội, đồng hồ đếm ngược dùng được trong Present và file export.
 - [x] Mỗi slide có ô ghi chú cho giáo viên, không hiện khi trình chiếu.
-- [x] 7 theme (gợi ý theo lứa tuổi); âm thanh, hiệu ứng và pinyin tắt được.
+- [x] 15 theme (gợi ý theo lứa tuổi; theo mùa và văn hoá Trung Hoa); âm thanh, hiệu ứng và pinyin tắt được.
 - [x] Thêm một loại slide mới chỉ cần thêm một thư mục trong `templates/`.
 
 **Contract và import**
@@ -733,6 +744,12 @@ Chưa làm:
 ---
 
 ## 12. Lịch sử thay đổi
+
+### Rev 16
+
+| Thay đổi | Lý do |
+| --- | --- |
+| 8 theme mới: 4 theo mùa (xuân/Tết, hè, thu/Trung thu, đông) và 4 văn hoá Trung Hoa (Trường Thành, sứ Thanh Hoa, cắt giấy, trà) | Giáo viên đổi không khí bài theo dịp trong năm và theo chủ đề văn hoá. Hình trang trí tự vẽ bằng SVG, không dùng ảnh có bản quyền. |
 
 ### Rev 15
 

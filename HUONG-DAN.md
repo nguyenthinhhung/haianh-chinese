@@ -31,7 +31,8 @@ Bài học nằm trong thư mục **Tài liệu → Chinese Lesson Studio**, m�
 - **Ctrl+Z / Ctrl+Y**: hoàn tác / làm lại. **Ctrl+S** hoặc nút **Lưu** để lưu.
   Ứng dụng cũng tự lưu sau 30 giây không sửa và khi đóng. Nếu máy tắt đột ngột,
   lần sau mở bài ứng dụng sẽ hỏi có khôi phục phần chưa lưu không.
-- Tab **Bài học** ở cột phải: đổi theme (bên cạnh tên có ghi lứa tuổi phù hợp),
+- Tab **Bài học** ở cột phải: đổi theme (bên cạnh tên có ghi lứa tuổi phù hợp; có
+  theme theo mùa như Tết, Trung thu và theme văn hoá như Sứ Thanh Hoa, Trà),
   kiểu chữ Hán (thường hoặc chữ Khải), bật/tắt âm thanh và hiệu ứng, và bật/tắt
   **Hiện pinyin** cho lớp đã đọc được chữ Hán (slide luyện thanh điệu vẫn giữ
   pinyin vì đó là đáp án).
