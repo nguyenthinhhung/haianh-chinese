@@ -4,7 +4,8 @@ import { markReviewed } from "../core/autoImages";
 import { addAsset, setSettings, setSlideField, setTheme } from "../core/document";
 import { checkLimits, getIn, type Path } from "../core/fields";
 import type { LessonDocument, Slide } from "../core/schema";
-import type { AnySlideTemplate, EditorField } from "../core/template";
+import { hanziToPinyin, pinyinFits, pinyinPairs } from "../core/pinyin";
+import type { AnySlideTemplate, EditorField, EditorFieldSpec } from "../core/template";
 import type { ImportedAsset } from "../platform/persistence";
 import { ImageSearchDialog } from "./ImageSearchDialog";
 import { prefersClipart } from "./useImageFill";
@@ -35,6 +36,8 @@ function slideMessages(template: AnySlideTemplate, content: unknown): Messages {
 
 interface FieldProps {
   field: EditorField;
+  /** The fields next to this one (the slide's, or a list item's), to find its pinyin partner. */
+  siblings: EditorFieldSpec;
   path: Path;
   content: unknown;
   messages: Messages;
@@ -269,7 +272,7 @@ function ListField(props: FieldProps & { field: Extract<EditorField, { kind: "li
             </button>
           </div>
           {field.fields.map((sub) => (
-            <Field key={sub.key} {...props} field={sub} path={[...path, i, sub.key]} />
+            <Field key={sub.key} {...props} field={sub} siblings={field.fields} path={[...path, i, sub.key]} />
           ))}
         </fieldset>
       ))}
@@ -287,22 +290,49 @@ function ListField(props: FieldProps & { field: Extract<EditorField, { kind: "li
 }
 
 function Field(props: FieldProps) {
-  const { field, path, content, session, slide, messages } = props;
+  const { field, siblings, path, content, session, slide, messages } = props;
   if (field.when && !field.when(getIn(content, path.slice(0, -1)))) return null;
   const value = getIn(content, path);
   const id = `f-${slide.id}-${pathKey(path)}`;
   const set = (v: unknown) => session.update((d) => setSlideField(d, slide.id, path, v), { coalesce: id });
+  const sibling = (key: string) => [...path.slice(0, -1), key];
+  const pair = pinyinPairs(siblings).find((p) => p.hanzi === field.key || p.pinyin === field.key);
+  let fill: React.ReactNode = null;
 
   let control: React.ReactNode;
   switch (field.kind) {
     case "text": {
+      let onChange = (text: string) => set(text);
+      if (pair?.hanzi === field.key) {
+        // Pinyin follows the characters while it is empty or still what was filled in for them.
+        onChange = (text: string) => {
+          const old = getIn(content, sibling(pair.pinyin));
+          const follows = !old || old === hanziToPinyin(typeof value === "string" ? value : "");
+          session.update((d) => {
+            const next = setSlideField(d, slide.id, path, text);
+            return follows ? setSlideField(next, slide.id, sibling(pair.pinyin), hanziToPinyin(text)) : next;
+          }, { coalesce: id });
+        };
+      } else if (pair?.pinyin === field.key) {
+        const hanzi = getIn(content, sibling(pair.hanzi));
+        const suggested = typeof hanzi === "string" ? hanziToPinyin(hanzi) : "";
+        // Offered only when the pinyin is missing or cannot be right, not for every difference in style.
+        const current = typeof value === "string" ? value : "";
+        if (suggested && suggested !== current && (!current.trim() || !pinyinFits(hanzi as string, current))) {
+          fill = (
+            <button type="button" className="ghost field-fill" title={`Điền "${suggested}" theo chữ Hán`} onClick={() => set(suggested)}>
+              Tự điền
+            </button>
+          );
+        }
+      }
       const common = {
         id,
         value: typeof value === "string" ? value : "",
         placeholder: field.placeholder,
         lang: field.lang ? LANG_ATTR[field.lang] : undefined,
         className: field.lang === "zh" ? "input-zh" : undefined,
-        onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => set(e.target.value),
+        onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => onChange(e.target.value),
       };
       control = field.multiline ? <textarea rows={3} {...common} /> : <input type="text" {...common} />;
       break;
@@ -343,6 +373,7 @@ function Field(props: FieldProps) {
     <div className="field">
       <label className="field-label" htmlFor={id}>
         {field.label}
+        {fill}
       </label>
       {control}
       <FieldMessages messages={messages} path={path} />
@@ -361,6 +392,7 @@ function SlideProperties({ session, slide }: { session: LessonSession; slide: Sl
         <Field
           key={field.key}
           field={field}
+          siblings={template.editor}
           path={[field.key]}
           content={slide.content}
           messages={messages}
