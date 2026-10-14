@@ -31,7 +31,13 @@ Bài học nằm trong thư mục **Tài liệu → Chinese Lesson Studio**, m�
 ### Ảnh và âm thanh
 
 - **Tìm ảnh…**: tìm trên mạng (từ khoá điền sẵn theo nghĩa của từ), bấm vào ảnh
-  để chèn. Mẹo: thêm "hoạt hình" hoặc "clipart" để có hình đơn giản.
+  để chèn. Đánh dấu **Chỉ hình vẽ** để có hình đơn giản cho trẻ nhỏ. Tìm bằng
+  tiếng Anh thường ra ảnh đúng hơn (ví dụ "orange fruit" thay vì "quả cam").
+- **Tìm ảnh ô trống** (thanh trên cùng): ứng dụng tự tìm ảnh cho mọi ô ảnh còn
+  trống ở các slide từ vựng, thẻ hình, thẻ lật, đoán hình, "Cái gì biến mất?".
+  Bài vừa tạo bằng AI được tự tìm ảnh ngay. Ảnh tự chọn có **chấm cam** ở danh
+  sách slide; bấm **Duyệt ảnh** để xem tất cả, **Đổi** ảnh chưa đúng hoặc **Giữ**.
+  Nếu Bing tạm chặn vì tìm nhiều, chờ vài phút rồi bấm **Thử lại**.
 - Hoặc copy ảnh trên trình duyệt rồi bấm vào ô Ảnh và **Ctrl+V**, hoặc kéo ảnh thả
   vào ô Ảnh, hoặc **Chọn file…** từ máy.
 - **🔊 Tạo giọng đọc**: tạo file đọc chữ Hán bằng giọng Google Dịch.

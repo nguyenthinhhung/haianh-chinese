@@ -12,7 +12,7 @@ phải chạm vào HTML.
 **Người dùng duy nhất của ứng dụng là giáo viên.** Học sinh chỉ xem màn hình chiếu
 và trả lời bằng lời; giáo viên là người điều khiển mọi thứ trên màn hình.
 
-> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 8).
+> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 9).
 
 ---
 
@@ -252,7 +252,7 @@ Lưu cũng không mất bài.
 | `theme` | `{ id, overrides? }`. |
 | `settings` | `{ sound: boolean, animations: boolean, hanziFont: "sans" \| "kai", pinyin: boolean }`. `pinyin: false` ẩn pinyin khi soạn và chiếu, trừ slide `tone-pick` (pinyin là đáp án). |
 | `slides[]` | `{ id, type, content, layout?, notes? }` — `content` validate theo schema của `type`. `notes` là ghi chú riêng của giáo viên (gợi ý câu hỏi, cách dẫn dắt), không hiện khi trình chiếu. |
-| `assets[]` | `{ id, file, kind: "image" \| "audio", mime, alt?, source? }` — `source` là trang web nơi lấy ảnh, để giáo viên tìm lại. |
+| `assets[]` | `{ id, file, kind: "image" \| "audio", mime, alt?, source?, needsReview?, query? }` — `source` là trang web nơi lấy ảnh, để giáo viên tìm lại. `needsReview: true` đánh dấu ảnh ứng dụng tự chọn mà giáo viên chưa duyệt; `query` là từ khoá đã tìm ra ảnh, để nút Đổi bắt đầu từ đó. |
 | `metadata` | `createdAt`, `updatedAt`, `appVersion`. |
 
 Schema định nghĩa một lần bằng Zod. Prompt cho AI mô tả từng loại slide bằng
@@ -412,7 +412,9 @@ và loại slide; AI chỉ viết phần ngôn ngữ (chữ Hán, pinyin, nghĩa
    bắt buộc, `aiSchemaHint` của **chỉ những loại slide trình tự dùng**, quy tắc và
    một ví dụ định dạng (có test bảo đảm ví dụ hợp lệ). AI luôn ghi đủ pinyin và
    nghĩa; ẩn hay hiện là việc của `settings.pinyin`, nên một bài dùng được cho
-   nhiều lớp. Trường ảnh/âm thanh AI tự thêm bị bỏ, giáo viên thêm sau.
+   nhiều lớp. Ở các trường ảnh tự điền (mục 5.E), AI ghi một từ khoá tiếng Anh
+   ngắn; ứng dụng giữ từ khoá để tìm ảnh rồi bỏ khỏi nội dung. Link, tên file và
+   âm thanh AI tự thêm bị bỏ.
 5. Người dùng dán kết quả vào hộp thoại nhập; ứng dụng tự bỏ khung ```` ```json ````
    và đoạn văn thừa.
 6. Validate theo schema Zod; lỗi hiển thị theo vị trí ("Slide 3, từ 2: thiếu
@@ -424,7 +426,8 @@ và loại slide; AI chỉ viết phần ngôn ngữ (chữ Hán, pinyin, nghĩa
    đúng hay sai âm. Lỗi và cảnh báo đều có nút sao chép thành lời nhắn để AI sửa.
 8. Xem trước → **Tạo bài mới** (theme theo lứa tuổi) hoặc **Thêm vào cuối bài
    hiện tại** (giữ theme của bài).
-9. ID do ứng dụng gán; slide cần ảnh nhận ô placeholder.
+9. ID do ứng dụng gán; slide cần ảnh nhận ô placeholder cho tới khi ảnh được tự
+   tìm xong (mục 5.E).
 10. Một lần nhập = một bước undo.
 
 Không gọi AI API trong MVP.
@@ -463,6 +466,41 @@ sao chép vào Library → mở Editor`. Không có chuyển đổi HTML tuỳ �
   (`speakFrom`), lưu MP3 vào `assets/`.
 - Mọi ảnh đều qua cùng một bước: nhận diện định dạng theo nội dung file (chỉ
   PNG/JPEG/WebP/GIF, không SVG), thu nhỏ ≤ 1920 px, đặt tên theo hash.
+- **Bộ lọc hình vẽ** (`qft=+filterui:photo-clipart`): bật sẵn cho bài của trẻ
+  dưới 9 tuổi (theo lứa tuổi khi tạo bằng AI, theo `ages` của theme khi tìm tay).
+  Từ khoá tiếng Việt cho kết quả kém hơn hẳn: ngay cả khi bật SafeSearch nghiêm
+  ngặt, ảnh đầu tiên khi tìm "con mèo" là "con mèo cầm súng", còn tìm "quả cam"
+  thì ra ảnh minh hoạ bài báo dinh dưỡng.
+
+**Tự điền ảnh.** Template đánh dấu `autoImage` ở các ô ảnh mà thiếu thì slide hỏng
+hoặc kém hẳn: `vocabulary`, `picture-card`, `flashcard` (chỉ khi mặt trước là
+ảnh), `guess-picture`, `whats-missing`. Ảnh thay cho chữ (`matching`, `memory`,
+lựa chọn của `quiz`, `sort-groups`, `box-pick`) và ảnh không bắt buộc (`cover`,
+nhân vật `dialogue`) không tự điền, vì điền vào sẽ đổi cách chơi của slide.
+
+1. Sau khi nhập bài từ AI, hoặc khi bấm **Tìm ảnh ô trống**, `imageJobs` gom các
+   ô trống. Từ khoá là từ khoá AI ghi, nếu không có thì dùng chữ của ô.
+2. Hàng đợi (`useImageFill`) chạy nền, mỗi lần một việc. Cùng một từ khoá chỉ tìm
+   và tải một lần. Với mỗi từ khoá: **1 request tới Bing** (`search_image_candidates`,
+   không tải ảnh xem trước), rồi tải ảnh gốc của kết quả đầu tiên. Nếu không tải
+   được thì thử kết quả kế tiếp, tối đa 3. Không có hình vẽ thì tìm lại không lọc.
+3. Rust cho các lần gọi trang tìm của Bing cách nhau ít nhất 0,7 s cộng thêm tối
+   đa 0,3 s ngẫu nhiên, và chỉ chạy một lần tìm tại một thời điểm. Ảnh xem trước
+   (CDN của Bing) và ảnh gốc (trang khác) không bị giãn cách. Mã lỗi 403/429/503
+   hoặc trang captcha trả về `rate-limited`; hàng đợi dừng và hiện **Thử lại**.
+4. Kết quả tìm được cache theo từ khoá + trang + bộ lọc trong
+   `image-search-cache.json` ở thư mục dữ liệu ứng dụng (7 ngày, tối đa 150 từ
+   khoá), nên **Đổi** mở ngay và bài sau dùng lại từ cũ không gọi Bing. Ảnh xem
+   trước xin cỡ 240 px (khoảng 8–10 KB thay vì khoảng 31 KB).
+5. Ảnh tìm xong được ghi bằng `applyInBackground`: thay đổi được áp lên mọi
+   snapshot của lịch sử thay vì thêm một bước, nên Ctrl+Z không xoá ảnh và không
+   phải lùi qua từng ảnh. `fillImageSlot` bỏ qua ô đã có ảnh, slide đã xoá, hoặc
+   ô nay chứa từ khác (danh sách bị sửa trong lúc tìm).
+6. Ảnh tự chọn mang `needsReview`: chấm cam ở danh sách slide, dòng "chưa duyệt"
+   ở ô ảnh, và màn hình **Duyệt ảnh** gom mọi ảnh như vậy (Đổi / Giữ / Giữ tất
+   cả). Ảnh giáo viên tự chọn không bao giờ mang dấu này.
+7. Đo ngày 2026-10-14: 20 lượt tìm liên tiếp không nghỉ đều trả 200. Bài thử có
+   10 ô ảnh nhưng chỉ 5 từ khoá, tìm xong trong vài giây.
 - Bing và Google Dịch là địa chỉ không chính thức, có thể đổi bất cứ lúc nào;
   mỗi nguồn nằm gọn trong một hàm của `web.rs` để sửa ở một chỗ. Google Images
   không dùng được vì chỉ trả trang đòi JavaScript cho ứng dụng.
@@ -656,6 +694,17 @@ Chưa làm:
 ---
 
 ## 12. Lịch sử thay đổi
+
+### Rev 9
+
+| Thay đổi | Lý do |
+| --- | --- |
+| Tự điền ảnh cho các ô `autoImage` sau khi nhập bài từ AI hoặc khi bấm "Tìm ảnh ô trống"; chọn kết quả đầu, đánh dấu chưa duyệt | Sau khi nhập bài từ AI, điền ảnh từng ô là việc tốn thời gian nhất. Đánh dấu để giáo viên không chiếu nhầm ảnh sai trước lớp. |
+| Tìm nền chỉ lấy danh sách kết quả; ảnh xem trước chỉ tải khi bấm Đổi, ở cỡ 240 px | Cách cũ tải thêm 30 ảnh xem trước cho mỗi lần tìm; với 20 từ là hơn 600 request. |
+| Giãn cách, chạy tuần tự và cache các lần tìm ở Rust; nhận biết khi bị Bing chặn | Tránh bị coi là spam; Đổi ảnh và dùng lại từ cũ không phải gọi lại Bing. |
+| AI ghi từ khoá tiếng Anh cho ô ảnh; bật bộ lọc hình vẽ cho trẻ nhỏ | Từ khoá tiếng Việt cho ảnh sai hoặc không hợp trẻ em (xem 5.E). |
+| `assets[].needsReview`, `assets[].query` | Lưu dấu chưa duyệt và từ khoá qua các lần mở bài. Trường tuỳ chọn nên `schemaVersion` giữ nguyên 1. |
+| Ảnh tự điền không tạo bước undo (áp lên cả lịch sử) | 20 bước "thêm ảnh" xen giữa các thao tác của giáo viên sẽ làm Ctrl+Z khó dùng. |
 
 ### Rev 8
 
