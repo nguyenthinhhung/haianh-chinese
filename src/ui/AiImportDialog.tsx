@@ -3,12 +3,14 @@ import { AGE_PROFILES, ageProfile } from "../core/ages";
 import { buildAiPrompt, parseAiLesson } from "../core/aiImport";
 import {
   activityChoices,
+  applyPreset,
   checkAgainstRequest,
   DURATIONS,
   lessonKindsFor,
   normalizeRequest,
-  planSlideCount,
-  resolvePlan,
+  planOutline,
+  presetOf,
+  type LessonPreset,
   type LessonRequest,
 } from "../core/lessonPlan";
 import { pinyinWarnings } from "../core/pinyinCheck";
@@ -36,6 +38,14 @@ function loadRequest(): LessonRequest {
   } catch {
     return normalizeRequest(null);
   }
+}
+
+/** The outline's steps and counts depend on these; the teacher's step counts no longer fit after a change. */
+const OUTLINE_INPUTS = ["age", "kind", "duration", "activities"] as const;
+
+function changeRequest(request: LessonRequest, patch: Partial<LessonRequest>): LessonRequest {
+  const reshaped = !("outline" in patch) && OUTLINE_INPUTS.some((k) => k in patch && patch[k] !== request[k]);
+  return normalizeRequest({ ...request, ...patch, ...(reshaped ? { outline: {} } : {}) });
 }
 
 /** First text found in slide content, to tell slides apart in the preview. */
@@ -94,17 +104,139 @@ function CopyButton({ text, label, primary, disabled }: { text: () => string; la
   );
 }
 
+// Ways of teaching the teacher saved by name, e.g. "Từ vựng mầm non 20 phút".
+const PRESETS_KEY = "ls.aiPresets";
+
+function loadPresets(): LessonPreset[] {
+  try {
+    const raw: unknown = JSON.parse(localStorage.getItem(PRESETS_KEY) ?? "[]");
+    return Array.isArray(raw)
+      ? raw.filter((p): p is LessonPreset => !!p && typeof p.name === "string" && !!p.name.trim() && !!p.settings && typeof p.settings === "object")
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function Presets({ request, onApply }: { request: LessonRequest; onApply(preset: LessonPreset): void }) {
+  const [presets, setPresets] = useState(loadPresets);
+  const [name, setName] = useState("");
+  const [picked, setPicked] = useState("");
+
+  function store(next: LessonPreset[]) {
+    setPresets(next);
+    try {
+      localStorage.setItem(PRESETS_KEY, JSON.stringify(next));
+    } catch {
+      // Presets are a convenience; failing to keep one loses nothing else.
+    }
+  }
+
+  return (
+    <div className="ai-presets ai-form-wide">
+      <select
+        aria-label="Mẫu đã lưu"
+        value={picked}
+        onChange={(e) => {
+          setPicked(e.target.value);
+          const preset = presets.find((p) => p.name === e.target.value);
+          if (preset) onApply(preset);
+        }}
+      >
+        <option value="">{presets.length ? "Dùng mẫu đã lưu…" : "Chưa có mẫu nào"}</option>
+        {presets.map((p) => (
+          <option key={p.name} value={p.name}>
+            {p.name}
+          </option>
+        ))}
+      </select>
+      {picked && (
+        <button
+          type="button"
+          className="ghost"
+          title="Xoá mẫu này"
+          onClick={() => {
+            store(presets.filter((p) => p.name !== picked));
+            setPicked("");
+          }}
+        >
+          Xoá mẫu
+        </button>
+      )}
+      <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Tên mẫu, ví dụ: Từ vựng mầm non 20 phút" aria-label="Tên mẫu" />
+      <button
+        type="button"
+        disabled={!name.trim()}
+        title="Lưu lứa tuổi, dạng bài, thời lượng, dàn ý, hoạt động và yêu cầu thêm (không lưu chủ đề và từ vựng)"
+        onClick={() => {
+          const preset = presetOf(name, request);
+          store([...presets.filter((p) => p.name !== preset.name), preset]);
+          setPicked(preset.name);
+          setName("");
+        }}
+      >
+        Lưu thành mẫu
+      </button>
+    </div>
+  );
+}
+
+function Outline({ request, onChange }: { request: LessonRequest; onChange(patch: Partial<LessonRequest>): void }) {
+  const { templates } = useServices();
+  const steps = useMemo(() => planOutline(request), [request]);
+  const total = steps.reduce((n, s) => n + s.count, 0);
+  const set = (role: string, count: number) => onChange({ outline: { ...request.outline, [role]: count } });
+  const changed = steps.some((s) => s.count !== s.suggested);
+
+  return (
+    <fieldset className="ai-outline ai-form-wide">
+      <legend>
+        Dàn ý: {total} slide{" "}
+        <span className="muted">(bấm − / + để đổi số slide; về 0 là bỏ bước đó)</span>
+        {changed && (
+          <button type="button" className="ghost" onClick={() => onChange({ outline: {} })}>
+            Về dàn ý gợi ý
+          </button>
+        )}
+      </legend>
+      <ol>
+        {steps.map((s) => (
+          <li key={s.role} className={s.count ? undefined : "ai-outline-off"}>
+            <span className="ai-outline-role" title={s.role}>
+              {/* The role is written for the AI; its first words name the step for the teacher. */}
+              {s.role.split(/[:(]/)[0]!.trim()}
+              <span className="muted"> · {s.types.map((t) => templates.get(t)?.label ?? t).join(" / ")}</span>
+            </span>
+            <span className="ai-outline-count">
+              <button type="button" aria-label={`Bớt một slide: ${s.role}`} disabled={s.count <= s.min} onClick={() => set(s.role, s.count - 1)}>
+                −
+              </button>
+              <span>{s.count}</span>
+              <button type="button" aria-label={`Thêm một slide: ${s.role}`} disabled={s.count >= s.max} onClick={() => set(s.role, s.count + 1)}>
+                +
+              </button>
+            </span>
+          </li>
+        ))}
+      </ol>
+    </fieldset>
+  );
+}
+
 function RequestForm({ request, onChange }: { request: LessonRequest; onChange(patch: Partial<LessonRequest>): void }) {
   const { templates } = useServices();
-  const plan = useMemo(() => resolvePlan(request), [request]);
   const activities = activityChoices(request.kind, request.age);
+  const review = request.kind === "review";
   const toggle = (type: string) =>
     onChange({
       activities: request.activities.includes(type) ? request.activities.filter((t) => t !== type) : [...request.activities, type],
     });
+  // Opened when something in it is already filled in, so nothing set stays out of sight.
+  const advancedInUse = !!(request.patterns.trim() || request.known.trim() || request.exclude.trim() || request.notes.trim() || request.activities.length);
 
   return (
     <div className="ai-form">
+      <Presets request={request} onApply={(preset) => onChange(applyPreset(request, preset))} />
       <label className="ai-form-wide">
         Chủ đề bài học
         <input value={request.topic} onChange={(e) => onChange({ topic: e.target.value })} placeholder="Ví dụ: Con vật trong sở thú" />
@@ -139,9 +271,9 @@ function RequestForm({ request, onChange }: { request: LessonRequest; onChange(p
           ))}
         </select>
       </label>
-      <label>
+      <label className="ai-form-wide">
         <span>
-          {request.kind === "review" ? "Từ đã học cần ôn" : "Từ vựng cần dạy"} <span className="muted">(nếu có)</span>
+          {review ? "Từ đã học cần ôn" : "Từ vựng cần dạy"} <span className="muted">(nếu có)</span>
         </span>
         <textarea
           rows={2}
@@ -151,46 +283,73 @@ function RequestForm({ request, onChange }: { request: LessonRequest; onChange(p
           placeholder="猫, 狗, 兔子, 熊猫 — bỏ trống để AI tự chọn"
         />
       </label>
-      <label>
-        <span>
-          Mẫu câu <span className="muted">(nếu có)</span>
-        </span>
-        <textarea
-          rows={2}
-          lang="zh-CN"
-          value={request.patterns}
-          onChange={(e) => onChange({ patterns: e.target.value })}
-          placeholder="这是什么？这是……"
-        />
-      </label>
-      <fieldset className="ai-form-wide">
-        <legend>
-          Hoạt động muốn có <span className="muted">(bỏ trống để AI tự chọn)</span>
-        </legend>
-        <div className="ai-activities">
-          {activities.map((t) => (
-            <label key={t} className="chip">
-              <input type="checkbox" checked={request.activities.includes(t)} onChange={() => toggle(t)} />{" "}
-              {templates.get(t)?.label ?? t}
+      <Outline request={request} onChange={onChange} />
+      <details className="ai-advanced ai-form-wide" open={advancedInUse || undefined}>
+        <summary>Tuỳ chỉnh nâng cao</summary>
+        <div className="ai-form">
+          <label>
+            <span>
+              Mẫu câu <span className="muted">(nếu có)</span>
+            </span>
+            <textarea
+              rows={2}
+              lang="zh-CN"
+              value={request.patterns}
+              onChange={(e) => onChange({ patterns: e.target.value })}
+              placeholder="这是什么？这是……"
+            />
+          </label>
+          {!review && (
+            <label>
+              <span>
+                Từ lớp đã học <span className="muted">(dùng lại, không dạy lại)</span>
+              </span>
+              <textarea
+                rows={2}
+                lang="zh-CN"
+                value={request.known}
+                onChange={(e) => onChange({ known: e.target.value })}
+                placeholder="你好, 我, 是, 这"
+              />
             </label>
-          ))}
+          )}
+          <label className={review ? undefined : "ai-form-wide"}>
+            <span>
+              Không đưa vào bài <span className="muted">(nếu có)</span>
+            </span>
+            <textarea
+              rows={2}
+              value={request.exclude}
+              onChange={(e) => onChange({ exclude: e.target.value })}
+              placeholder="Ví dụ: 狗, 猪 — hoặc: không dùng động vật hoang dã"
+            />
+          </label>
+          <fieldset className="ai-form-wide">
+            <legend>
+              Hoạt động muốn có <span className="muted">(bỏ trống để AI tự chọn)</span>
+            </legend>
+            <div className="ai-activities">
+              {activities.map((t) => (
+                <label key={t} className="chip">
+                  <input type="checkbox" checked={request.activities.includes(t)} onChange={() => toggle(t)} />{" "}
+                  {templates.get(t)?.label ?? t}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <label className="ai-form-wide">
+            <span>
+              Yêu cầu thêm <span className="muted">(nếu có)</span>
+            </span>
+            <textarea
+              rows={2}
+              value={request.notes}
+              onChange={(e) => onChange({ notes: e.target.value })}
+              placeholder="Ví dụ: câu ngắn, vui nhộn; nhân vật là hai bạn Tiểu Minh và Lan"
+            />
+          </label>
         </div>
-      </fieldset>
-      <label className="ai-form-wide">
-        <span>
-          Yêu cầu thêm <span className="muted">(nếu có)</span>
-        </span>
-        <textarea
-          rows={2}
-          value={request.notes}
-          onChange={(e) => onChange({ notes: e.target.value })}
-          placeholder="Ví dụ: câu ngắn, vui nhộn; nhân vật là hai bạn Tiểu Minh và Lan"
-        />
-      </label>
-      <p className="ai-plan ai-form-wide">
-        <strong>Dự kiến {planSlideCount(plan)} slide:</strong>{" "}
-        {plan.map((s) => `${s.role.split(/[:(]/)[0]!.trim()}${s.count > 1 ? ` ×${s.count}` : ""}`).join(" → ")}
-      </p>
+      </details>
     </div>
   );
 }
@@ -261,7 +420,7 @@ export function AiImportDialog({ mode, onImport, onClose }: Props) {
         <ol className="ai-steps">
           <li>
             <span>Chọn nội dung bài học. Ứng dụng soạn sẵn lời nhắn cho AI theo lựa chọn của bạn.</span>
-            <RequestForm request={request} onChange={(patch) => setRequest((r) => normalizeRequest({ ...r, ...patch }))} />
+            <RequestForm request={request} onChange={(patch) => setRequest((r) => changeRequest(r, patch))} />
           </li>
           <li>
             <span>Sao chép lời nhắn, dán vào ChatGPT, Gemini, Claude hoặc công cụ AI bạn dùng.</span>

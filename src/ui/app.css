@@ -780,10 +780,6 @@ textarea {
   font-weight: 400;
   cursor: pointer;
 }
-.ai-plan {
-  margin: 0;
-  font-size: 13px;
-}
 .copy-button {
   display: inline-flex;
   align-items: center;
@@ -854,4 +850,67 @@ textarea {
 }
 .image-fill-status--paused {
   color: var(--warning);
+}
+.ai-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.ai-presets input {
+  flex: 1;
+  min-width: 180px;
+}
+.ai-outline {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.ai-outline legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 0 4px;
+  font-weight: 600;
+}
+.ai-outline ol {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 22px;
+}
+.ai-outline li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-weight: 400;
+}
+.ai-outline-off .ai-outline-role {
+  text-decoration: line-through;
+  opacity: 0.55;
+}
+.ai-outline-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.ai-outline-count button {
+  width: 28px;
+  padding: 2px 0;
+}
+.ai-outline-count span {
+  min-width: 16px;
+  text-align: center;
+  font-weight: 700;
+}
+.ai-advanced > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.ai-advanced > .ai-form {
+  margin-top: 8px;
+}
+.ai-presets select {
+  flex: 0 1 260px;
 }
