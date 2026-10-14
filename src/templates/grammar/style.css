@@ -1,9 +1,9 @@
 .ls-slide[data-slide-type="grammar"] .ls-gr {
-  --c1: var(--ls-part-1, #d64545);
-  --c2: var(--ls-part-2, #2a6f97);
-  --c3: var(--ls-part-3, #2f8a4f);
-  --c4: var(--ls-part-4, #b7700b);
-  --c5: var(--ls-part-5, #8e44ad);
+  --c1: var(--ls-c1);
+  --c2: var(--ls-c2);
+  --c3: var(--ls-c3);
+  --c4: var(--ls-c4);
+  --c5: var(--ls-c5);
   flex: 1;
   min-height: 0;
   display: flex;

@@ -12,6 +12,15 @@
   --ls-surface: #ffffff;
   --ls-surface-border: #e3e6ea;
   --ls-pinyin: #2a6f97;
+  --ls-good: #2f8a4f;
+  /* Categorical colours for things that belong together: matching pairs,
+     grammar parts, tones, groups. Themes may override them. */
+  --ls-c1: #d64545;
+  --ls-c2: #2a6f97;
+  --ls-c3: #2f8a4f;
+  --ls-c4: #b7700b;
+  --ls-c5: #8e44ad;
+  --ls-c6: #c2185b;
   --ls-radius: 28;
   --ls-font-latin: "LS Nunito", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --ls-font-hanzi-sc: "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Noto Sans SC", sans-serif;

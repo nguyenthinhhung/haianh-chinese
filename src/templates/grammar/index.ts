@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { SlideTemplate } from "../../core/template";
 import { esc } from "../../renderer/escape";
-import { vi } from "../../renderer/helpers";
+import { splitParts, vi } from "../../renderer/helpers";
 import css from "./style.css?raw";
 
 const part = z.object({
@@ -25,18 +25,12 @@ const schema = z.object({
 
 export type GrammarContent = z.output<typeof schema>;
 
-const PART_SEPARATOR = "/";
-
 /**
  * Splits an example at "/" into parts coloured like the pattern's parts, so
  * "我 / 是 / 学生" matches "主语 + 是 + 名词". Text without "/" is one part.
  */
 function coloredParts(text: string, lang: "zh-CN" | "zh-Latn-pinyin", cls: string, joiner: string): string {
-  const parts = text
-    .split(PART_SEPARATOR)
-    .map((p) => p.trim())
-    .filter(Boolean);
-  const spans = parts.map((p, i) => `<span class="ls-gr-c${(i % 5) + 1}">${esc(p)}</span>`).join(joiner);
+  const spans = splitParts(text).map((p, i) => `<span class="ls-gr-c${(i % 5) + 1}">${esc(p)}</span>`).join(joiner);
   return `<span class="${cls}" lang="${lang}">${spans}</span>`;
 }
 
