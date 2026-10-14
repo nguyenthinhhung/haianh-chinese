@@ -154,6 +154,18 @@ describe("buildAiPrompt", () => {
     expect(prompt).toContain("Tối đa ký tự: segments[].text ≤ 8.");
   });
 
+  it("passes on words the class knows and content to leave out", () => {
+    const prompt = buildAiPrompt(templates, { ...request, known: "你好, 我", exclude: "狗" });
+    expect(prompt).toContain("- Từ lớp đã học (dùng lại trong câu, luyện tập và trò chơi; không dạy lại như từ mới): 你好, 我");
+    expect(prompt).toContain("- Không đưa vào bài: 狗");
+  });
+
+  it("follows the outline the teacher edited", () => {
+    const prompt = buildAiPrompt(templates, { ...request, outline: { "Trò chơi cả lớp": 0 } });
+    expect(prompt).not.toContain("Trò chơi cả lớp —");
+    expect(prompt).toContain(`tổng cộng ${planSlideCount(resolvePlan({ ...request, outline: { "Trò chơi cả lớp": 0 } }))} slide`);
+  });
+
   it("asks a review lesson not to add new words", () => {
     expect(buildAiPrompt(templates, { ...request, kind: "review" })).toContain("không thêm từ mới");
   });

@@ -3,6 +3,7 @@ import { testEnv } from "../test/env";
 import { AGE_PROFILES, ageRangeLabel } from "./ages";
 import {
   activityChoices,
+  applyPreset,
   BLUEPRINTS,
   checkAgainstRequest,
   DEFAULT_REQUEST,
@@ -10,7 +11,9 @@ import {
   lessonKindsFor,
   normalizeRequest,
   parseWordList,
+  planOutline,
   planSlideCount,
+  presetOf,
   resolvePlan,
   type LessonRequest,
 } from "./lessonPlan";
@@ -90,7 +93,62 @@ describe("resolvePlan", () => {
   });
 });
 
+describe("planOutline", () => {
+  it("applies the teacher's counts within each step's limits and drops steps set to 0", () => {
+    const base = planOutline(request());
+    expect(base.every((s) => s.count === s.suggested)).toBe(true);
+    const outline = { "Trò chơi cả lớp": 0, "Luyện tập": 4, "Mở đầu: tên bài": 0 };
+    const steps = planOutline(request({ outline }));
+    expect(steps.find((s) => s.role === "Trò chơi cả lớp")!.count).toBe(0);
+    expect(steps.find((s) => s.role === "Luyện tập")!.count).toBe(4);
+    // The cover is a step the lesson relies on: it keeps one slide.
+    expect(steps.find((s) => s.role === "Mở đầu: tên bài")!.count).toBe(1);
+    const plan = resolvePlan(request({ outline }));
+    expect(plan.some((s) => s.role === "Trò chơi cả lớp")).toBe(false);
+    // The two game slides moved to practice: same length as suggested.
+    expect(planSlideCount(plan)).toBe(planSlideCount(resolvePlan(request())));
+  });
+
+  it("lists optional steps at 0 so the teacher can add them", () => {
+    const short = planOutline(request({ duration: "short" }));
+    const step = short.find((s) => s.role === "Dùng từ mới trong câu ngắn")!;
+    expect([step.count, step.min]).toEqual([0, 0]);
+    expect(resolvePlan(request({ duration: "short" })).some((s) => s.role === step.role)).toBe(false);
+    const added = resolvePlan(request({ duration: "short", outline: { [step.role]: 1 } }));
+    expect(added.some((s) => s.role === step.role)).toBe(true);
+  });
+
+  it("measures the length warning against the edited outline", () => {
+    const slides = Array.from({ length: 4 }, (_, i): Slide => ({ id: `s_${i}`, type: "cover", content: { title: "动物" } }));
+    const outline = Object.fromEntries(planOutline(request({ duration: "short" })).map((s) => [s.role, s.min]));
+    expect(planSlideCount(resolvePlan(request({ duration: "short", outline })))).toBeLessThanOrEqual(6);
+    expect(checkAgainstRequest(slides, request({ duration: "short", outline }), templates).some((w) => w.startsWith("Bài có"))).toBe(false);
+  });
+});
+
+describe("presets", () => {
+  it("keep the way of teaching and leave the lesson's content alone", () => {
+    const source = request({ age: "preschool", duration: "short", notes: "Câu ngắn", outline: { "Luyện tập": 2 }, words: "猫", topic: "Con vật" });
+    const preset = presetOf("  Mầm non 20 phút ", source);
+    expect(preset.name).toBe("Mầm non 20 phút");
+    expect(preset.settings).not.toHaveProperty("topic");
+    expect(preset.settings).not.toHaveProperty("words");
+    const applied = applyPreset(request({ topic: "Hoa quả", words: "苹果" }), preset);
+    expect(applied).toMatchObject({ topic: "Hoa quả", words: "苹果", age: "preschool", duration: "short", notes: "Câu ngắn", outline: { "Luyện tập": 2 } });
+  });
+});
+
 describe("normalizeRequest", () => {
+  it("keeps a valid outline and drops counts it cannot use", () => {
+    const r = normalizeRequest({ ...DEFAULT_REQUEST, outline: { "Luyện tập": 3, "Trò chơi cả lớp": -1, x: 2.5, y: "4" } });
+    expect(r.outline).toEqual({ "Luyện tập": 3 });
+  });
+
+  it("reads a request saved before known, exclude and outline existed", () => {
+    const { known: _k, exclude: _e, outline: _o, ...old } = DEFAULT_REQUEST;
+    expect(normalizeRequest({ ...old, topic: "Con vật" })).toEqual({ ...DEFAULT_REQUEST, topic: "Con vật" });
+  });
+
   it("falls back to defaults for anything unusable", () => {
     expect(normalizeRequest(null)).toEqual(DEFAULT_REQUEST);
     expect(normalizeRequest({ age: "adult", kind: "x", duration: 5, activities: "quiz", topic: 3 })).toEqual(DEFAULT_REQUEST);
@@ -116,6 +174,12 @@ describe("checkAgainstRequest", () => {
     const slides = [slide("vocabulary", { words: [{ hanzi: "猫", pinyin: "māo", meaning: "con mèo" }] })];
     const warnings = checkAgainstRequest(slides, request({ words: "猫, 狗, con thỏ", duration: "short" }), templates);
     expect(warnings).toContain("Thiếu từ bắt buộc: 狗.");
+  });
+
+  it("names excluded Chinese words the lesson still uses", () => {
+    const slides = [slide("vocabulary", { words: [{ hanzi: "狗", pinyin: "gǒu", meaning: "con chó" }] })];
+    const warnings = checkAgainstRequest(slides, request({ exclude: "狗, 猪, không dùng động vật hoang dã", duration: "short" }), templates);
+    expect(warnings).toContain("Có nội dung bạn muốn loại khỏi bài: 狗.");
   });
 
   it("flags slide types too hard for the age and a lesson far from the planned length", () => {

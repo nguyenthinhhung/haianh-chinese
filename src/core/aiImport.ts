@@ -202,6 +202,8 @@ export function buildAiPrompt(registry: TemplateRegistry, request: LessonRequest
   const kind = BLUEPRINTS.find((b) => b.id === request.kind) ?? BLUEPRINTS[0]!;
   const duration = DURATIONS.find((d) => d.id === request.duration) ?? DURATIONS[1]!;
   const words = parseWordList(request.words);
+  const known = parseWordList(request.known);
+  const exclude = parseWordList(request.exclude);
   const review = request.kind === "review";
 
   const lesson = [
@@ -215,6 +217,10 @@ export function buildAiPrompt(registry: TemplateRegistry, request: LessonRequest
         : `- Từ vựng bắt buộc (phải dạy đủ, có thể thêm vài từ cùng chủ đề): ${words.join(", ")}`
       : `- Số từ ${review ? "ôn tập" : "mới"}: khoảng ${age.words[0]}–${age.words[1]} từ hợp với chủ đề.`,
     ...(request.patterns.trim() ? [`- Mẫu câu cần dạy: ${request.patterns.trim()}`] : []),
+    ...(known.length && !review
+      ? [`- Từ lớp đã học (dùng lại trong câu, luyện tập và trò chơi; không dạy lại như từ mới): ${known.join(", ")}`]
+      : []),
+    ...(exclude.length ? [`- Không đưa vào bài: ${exclude.join(", ")}`] : []),
     ...(request.notes.trim() ? [`- Yêu cầu thêm của giáo viên: ${request.notes.trim()}`] : []),
   ].join("\n");
 
