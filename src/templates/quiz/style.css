@@ -1,0 +1,155 @@
+.ls-slide[data-slide-type="quiz"] .ls-quiz {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(40 * var(--u));
+}
+.ls-slide[data-slide-type="quiz"] .ls-quiz-prompt {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(56 * var(--u));
+}
+.ls-slide[data-slide-type="quiz"] .ls-quiz-media {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ls-slide[data-slide-type="quiz"] .ls-quiz-image {
+  border-radius: calc(20 * var(--u));
+}
+.ls-slide[data-slide-type="quiz"] .ls-quiz-ask {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(12 * var(--u));
+  text-align: center;
+}
+.ls-slide[data-slide-type="quiz"] .ls-quiz-prompt--image .ls-quiz-ask {
+  flex: 1 1 0;
+}
+.ls-slide[data-slide-type="quiz"] .ls-quiz-hanzi {
+  font-size: calc(170 * var(--u));
+  font-weight: 700;
+  line-height: 1.1;
+}
+.ls-slide[data-slide-type="quiz"] .ls-quiz-pinyin {
+  font-size: calc(56 * var(--u));
+}
+.ls-slide[data-slide-type="quiz"] .ls-quiz-question {
+  margin: 0;
+  font-size: calc(60 * var(--u));
+  font-weight: 800;
+}
+.ls-slide[data-slide-type="quiz"] .ls-play {
+  width: calc(110 * var(--u));
+  height: calc(110 * var(--u));
+}
+
+.ls-slide[data-slide-type="quiz"] .ls-quiz-options {
+  --cols: 2;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  gap: calc(28 * var(--u));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ls-slide[data-slide-type="quiz"] .ls-quiz-options[data-count="3"] {
+  --cols: 3;
+}
+.ls-slide[data-slide-type="quiz"] .ls-quiz-options[data-count="4"]:has(.ls-quiz-option--image) {
+  --cols: 4;
+}
+.ls-slide[data-slide-type="quiz"] .ls-quiz-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(20 * var(--u));
+  min-height: calc(130 * var(--u));
+  padding: calc(16 * var(--u)) calc(28 * var(--u));
+  border: calc(5 * var(--u)) solid var(--ls-surface-border);
+  border-radius: calc(var(--ls-radius) * var(--u));
+  background: var(--ls-surface);
+  transition: opacity 0.3s ease, transform 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
+}
+.ls-slide[data-slide-type="quiz"] .ls-quiz-option--image {
+  flex-direction: column;
+  height: calc(300 * var(--u));
+}
+.ls-slide[data-slide-type="quiz"] .ls-quiz-option-media {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+}
+.ls-slide[data-slide-type="quiz"] .ls-quiz-letter {
+  flex: none;
+  width: calc(76 * var(--u));
+  height: calc(76 * var(--u));
+  border-radius: 50%;
+  background: var(--ls-accent-2);
+  color: #fff;
+  font-size: calc(44 * var(--u));
+  font-weight: 800;
+  line-height: calc(76 * var(--u));
+  text-align: center;
+}
+.ls-slide[data-slide-type="quiz"] .ls-quiz-option--image .ls-quiz-letter {
+  position: absolute;
+  top: calc(12 * var(--u));
+  left: calc(12 * var(--u));
+}
+.ls-slide[data-slide-type="quiz"] .ls-quiz-text {
+  font-size: calc(54 * var(--u));
+  font-weight: 800;
+}
+.ls-slide[data-slide-type="quiz"] .ls-quiz-text[lang="zh-CN"] {
+  font-size: calc(70 * var(--u));
+  font-weight: 700;
+}
+.ls-slide[data-slide-type="quiz"] .ls-quiz-option svg {
+  width: calc(80 * var(--u));
+  height: calc(80 * var(--u));
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.ls-slide[data-slide-type="quiz"] .ls-quiz-true svg {
+  stroke: var(--ls-good);
+}
+.ls-slide[data-slide-type="quiz"] .ls-quiz-false svg {
+  stroke: var(--ls-accent);
+}
+.ls-slide[data-slide-type="quiz"] .ls-quiz[data-mode="truefalse"] .ls-quiz-option {
+  min-height: calc(180 * var(--u));
+}
+.ls-slide[data-slide-type="quiz"] .ls-quiz[data-mode="truefalse"] .ls-quiz-text {
+  font-size: calc(72 * var(--u));
+}
+
+/* Next reveals the answer: the correct option lights up, the others fade. */
+.ls-slide[data-slide-type="quiz"] .ls-quiz-option.ls-revealed {
+  border-color: var(--ls-good);
+  background: color-mix(in srgb, var(--ls-good) 14%, var(--ls-surface));
+  transform: scale(1.04);
+}
+.ls-slide[data-slide-type="quiz"] .ls-quiz-option.ls-revealed .ls-quiz-letter {
+  background: var(--ls-good);
+}
+.ls-slide[data-slide-type="quiz"] .ls-quiz-options:has(.ls-revealed) .ls-quiz-option:not(.ls-revealed) {
+  opacity: 0.35;
+}
+/* Editing: mark which option is correct. */
+.ls-slide[data-slide-type="quiz"]:not(.ls-presenting > *) .ls-quiz-correct {
+  outline: calc(4 * var(--u)) dashed var(--ls-good);
+  outline-offset: calc(6 * var(--u));
+}

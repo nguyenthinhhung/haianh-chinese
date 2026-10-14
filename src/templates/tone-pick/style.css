@@ -1,0 +1,135 @@
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-t1 { --t: var(--ls-c1); }
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-t2 { --t: var(--ls-c4); }
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-t3 { --t: var(--ls-c3); }
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-t4 { --t: var(--ls-c2); }
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-t0 { --t: var(--ls-muted); }
+
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-grid {
+  --cols: 4;
+  --hanzi: 150;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+  gap: calc(32 * var(--u));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-grid[data-count="1"] { --cols: 1; --hanzi: 260; padding: 0 30%; }
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-grid[data-count="2"] { --cols: 2; --hanzi: 220; padding: 0 12%; }
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-grid[data-count="3"] { --cols: 3; --hanzi: 180; }
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-grid[data-count="5"],
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-grid[data-count="6"] { --cols: 3; --hanzi: 110; }
+
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-card {
+  position: relative;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(12 * var(--u));
+  padding: calc(20 * var(--u));
+  border: calc(5 * var(--u)) solid var(--ls-surface-border);
+  border-radius: calc(var(--ls-radius) * var(--u));
+  background: var(--ls-surface);
+}
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-hanzi {
+  font-size: calc(var(--hanzi) * var(--u));
+  font-weight: 700;
+  line-height: 1.1;
+}
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-answer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(6 * var(--u));
+}
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-pinyin {
+  font-size: calc(var(--hanzi) * 0.4 * var(--u));
+}
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-tones {
+  display: flex;
+  gap: calc(12 * var(--u));
+}
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-tone {
+  display: flex;
+  align-items: center;
+  gap: calc(8 * var(--u));
+}
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-tone svg {
+  width: calc(var(--hanzi) * 1.05 * var(--u));
+  height: calc(var(--hanzi) * 0.8 * var(--u));
+}
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-tone svg,
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-legend svg {
+  fill: none;
+  stroke: var(--t);
+  stroke-width: 9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-tone .ls-tp-lines {
+  stroke: var(--ls-surface-border);
+  stroke-width: 2;
+}
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-dot {
+  fill: var(--t);
+  stroke: none;
+}
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-number {
+  min-width: 1.5em;
+  border-radius: 999px;
+  background: var(--t);
+  color: #fff;
+  font-size: calc(var(--hanzi) * 0.3 * var(--u));
+  font-weight: 800;
+  text-align: center;
+}
+.ls-slide[data-slide-type="tone-pick"] .ls-play {
+  position: absolute;
+  top: calc(12 * var(--u));
+  right: calc(12 * var(--u));
+  width: calc(64 * var(--u));
+  height: calc(64 * var(--u));
+}
+
+/* The 1–4 chart children answer from by holding up fingers. */
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-legend {
+  display: flex;
+  justify-content: center;
+  gap: calc(36 * var(--u));
+  margin: calc(28 * var(--u)) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-legend li {
+  display: flex;
+  align-items: center;
+  gap: calc(10 * var(--u));
+  padding: calc(6 * var(--u)) calc(22 * var(--u)) calc(6 * var(--u)) calc(8 * var(--u));
+  border: calc(4 * var(--u)) solid var(--t);
+  border-radius: 999px;
+  background: var(--ls-surface);
+}
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-legend svg {
+  width: calc(64 * var(--u));
+  height: calc(64 * var(--u));
+}
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-finger {
+  width: calc(56 * var(--u));
+  height: calc(56 * var(--u));
+  border-radius: 50%;
+  background: var(--t);
+  color: #fff;
+  font-size: calc(34 * var(--u));
+  font-weight: 800;
+  line-height: calc(56 * var(--u));
+  text-align: center;
+}
+.ls-slide[data-slide-type="tone-pick"] .ls-tp-legend .ls-pinyin {
+  color: var(--t);
+  font-size: calc(44 * var(--u));
+}

@@ -1,0 +1,104 @@
+.ls-slide[data-slide-type="matching"] .ls-mt {
+  --gap: 22;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: calc(180 * var(--u));
+  padding: 0 calc(80 * var(--u));
+}
+.ls-slide[data-slide-type="matching"] .ls-mt-c1 { --c: var(--ls-c1); }
+.ls-slide[data-slide-type="matching"] .ls-mt-c2 { --c: var(--ls-c2); }
+.ls-slide[data-slide-type="matching"] .ls-mt-c3 { --c: var(--ls-c3); }
+.ls-slide[data-slide-type="matching"] .ls-mt-c4 { --c: var(--ls-c4); }
+.ls-slide[data-slide-type="matching"] .ls-mt-c5 { --c: var(--ls-c5); }
+.ls-slide[data-slide-type="matching"] .ls-mt-c6 { --c: var(--ls-c6); }
+
+.ls-slide[data-slide-type="matching"] .ls-mt-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(var(--gap) * var(--u));
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ls-slide[data-slide-type="matching"] .ls-mt-item {
+  position: relative;
+  flex: 1 1 0;
+  max-height: calc(200 * var(--u));
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(24 * var(--u));
+  padding: calc(10 * var(--u)) calc(90 * var(--u));
+  border: calc(5 * var(--u)) solid var(--ls-surface-border);
+  border-radius: calc(var(--ls-radius) * var(--u));
+  background: var(--ls-surface);
+  transition: border-color 0.35s ease, background-color 0.35s ease;
+}
+.ls-slide[data-slide-type="matching"] .ls-mt-hanzi {
+  font-size: calc(80 * var(--u));
+  font-weight: 700;
+  line-height: 1.1;
+}
+.ls-slide[data-slide-type="matching"] .ls-mt[data-count="5"] .ls-mt-hanzi,
+.ls-slide[data-slide-type="matching"] .ls-mt[data-count="6"] .ls-mt-hanzi {
+  font-size: calc(62 * var(--u));
+}
+.ls-slide[data-slide-type="matching"] .ls-mt-pinyin {
+  font-size: calc(40 * var(--u));
+}
+.ls-slide[data-slide-type="matching"] .ls-mt-text {
+  font-size: calc(50 * var(--u));
+  font-weight: 800;
+}
+.ls-slide[data-slide-type="matching"] .ls-mt-text[lang="zh-CN"] {
+  font-size: calc(70 * var(--u));
+  font-weight: 700;
+}
+.ls-slide[data-slide-type="matching"] .ls-mt-media {
+  height: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+.ls-slide[data-slide-type="matching"] .ls-mt-image {
+  border-radius: calc(12 * var(--u));
+}
+.ls-slide[data-slide-type="matching"] .ls-mt-badge {
+  position: absolute;
+  top: 50%;
+  width: calc(66 * var(--u));
+  height: calc(66 * var(--u));
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: var(--c);
+  color: #fff;
+  font-size: calc(38 * var(--u));
+  font-weight: 800;
+  line-height: calc(66 * var(--u));
+  text-align: center;
+  transition: opacity 0.35s ease;
+}
+.ls-slide[data-slide-type="matching"] .ls-mt-left .ls-mt-badge {
+  right: calc(16 * var(--u));
+}
+.ls-slide[data-slide-type="matching"] .ls-mt-right .ls-mt-badge {
+  left: calc(16 * var(--u));
+}
+
+/* Presenting: numbers stay hidden until Next joins the pair. */
+.ls-slide[data-slide-type="matching"]:is(.ls-presenting > *) .ls-mt-item:not(.ls-revealed) .ls-mt-badge {
+  opacity: 0;
+}
+.ls-slide[data-slide-type="matching"] .ls-mt-item.ls-revealed {
+  border-color: var(--c);
+  background: color-mix(in srgb, var(--c) 12%, var(--ls-surface));
+}
+/* Editing: the numbers show which items belong together. */
+.ls-slide[data-slide-type="matching"]:not(.ls-presenting > *) .ls-mt-badge {
+  opacity: 0.6;
+}

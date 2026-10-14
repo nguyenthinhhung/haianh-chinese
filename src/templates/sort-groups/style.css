@@ -1,0 +1,92 @@
+.ls-slide[data-slide-type="sort-groups"] .ls-sg {
+  --card: 64;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(32 * var(--u));
+}
+.ls-slide[data-slide-type="sort-groups"] .ls-sg[data-count="9"],
+.ls-slide[data-slide-type="sort-groups"] .ls-sg[data-count="10"],
+.ls-slide[data-slide-type="sort-groups"] .ls-sg[data-count="11"],
+.ls-slide[data-slide-type="sort-groups"] .ls-sg[data-count="12"] {
+  --card: 48;
+}
+.ls-slide[data-slide-type="sort-groups"] .ls-sg-g1 { --g: var(--ls-c1); }
+.ls-slide[data-slide-type="sort-groups"] .ls-sg-g2 { --g: var(--ls-c2); }
+.ls-slide[data-slide-type="sort-groups"] .ls-sg-g3 { --g: var(--ls-c3); }
+
+.ls-slide[data-slide-type="sort-groups"] .ls-sg-pool,
+.ls-slide[data-slide-type="sort-groups"] .ls-sg-members {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: flex-start;
+  gap: calc(16 * var(--u));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ls-slide[data-slide-type="sort-groups"] .ls-sg-card {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(4 * var(--u));
+  padding: calc(10 * var(--u)) calc(26 * var(--u));
+  border: calc(4 * var(--u)) solid var(--ls-accent-2);
+  border-radius: calc(20 * var(--u));
+  background: var(--ls-surface);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.ls-slide[data-slide-type="sort-groups"] .ls-sg-media {
+  display: flex;
+  height: calc(var(--card) * 1.8 * var(--u));
+}
+.ls-slide[data-slide-type="sort-groups"] .ls-sg-image {
+  border-radius: calc(10 * var(--u));
+}
+.ls-slide[data-slide-type="sort-groups"] .ls-sg-text {
+  font-size: calc(var(--card) * 0.7 * var(--u));
+  font-weight: 800;
+}
+.ls-slide[data-slide-type="sort-groups"] .ls-sg-text[lang="zh-CN"] {
+  font-size: calc(var(--card) * var(--u));
+  font-weight: 700;
+  line-height: 1.15;
+}
+/* A card that has gone to its group fades in the pool. */
+.ls-slide[data-slide-type="sort-groups"] .ls-sg-pool .ls-sg-card.ls-revealed {
+  opacity: 0.2;
+  transform: scale(0.9);
+}
+
+.ls-slide[data-slide-type="sort-groups"] .ls-sg-groups {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: calc(32 * var(--u));
+}
+.ls-slide[data-slide-type="sort-groups"] .ls-sg-groups[data-groups="3"] {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.ls-slide[data-slide-type="sort-groups"] .ls-sg-group {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(16 * var(--u));
+  padding: calc(18 * var(--u)) calc(20 * var(--u));
+  border: calc(5 * var(--u)) solid var(--g);
+  border-radius: calc(var(--ls-radius) * var(--u));
+  background: color-mix(in srgb, var(--g) 7%, var(--ls-surface));
+}
+.ls-slide[data-slide-type="sort-groups"] .ls-sg-name {
+  margin: 0;
+  color: var(--g);
+  font-size: calc(48 * var(--u));
+  font-weight: 800;
+  text-align: center;
+}
+.ls-slide[data-slide-type="sort-groups"] .ls-sg-placed {
+  border-color: var(--g);
+}

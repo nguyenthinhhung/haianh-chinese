@@ -1,0 +1,81 @@
+.ls-slide[data-slide-type="fill-blank"] .ls-fb {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(48 * var(--u));
+}
+.ls-slide[data-slide-type="fill-blank"] .ls-fb-bank {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: calc(20 * var(--u));
+  margin: 0;
+  padding: calc(20 * var(--u)) calc(28 * var(--u));
+  border: calc(4 * var(--u)) dashed var(--ls-surface-border);
+  border-radius: calc(var(--ls-radius) * var(--u));
+  list-style: none;
+}
+.ls-slide[data-slide-type="fill-blank"] .ls-fb-chip {
+  padding: calc(8 * var(--u)) calc(30 * var(--u));
+  border: calc(4 * var(--u)) solid var(--ls-accent-2);
+  border-radius: calc(20 * var(--u));
+  background: var(--ls-surface);
+  font-size: calc(60 * var(--u));
+  font-weight: 700;
+  transition: opacity 0.35s ease;
+}
+/* A word used to fill a blank is crossed off the bank. */
+.ls-slide[data-slide-type="fill-blank"] .ls-fb-chip.ls-revealed {
+  opacity: 0.3;
+  text-decoration: line-through;
+}
+
+.ls-slide[data-slide-type="fill-blank"] .ls-fb-sentences {
+  display: flex;
+  flex-direction: column;
+  gap: calc(34 * var(--u));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: center;
+}
+.ls-slide[data-slide-type="fill-blank"] .ls-fb-sentence {
+  display: flex;
+  flex-direction: column;
+  gap: calc(6 * var(--u));
+}
+.ls-slide[data-slide-type="fill-blank"] .ls-fb-hanzi {
+  font-size: calc(86 * var(--u));
+  font-weight: 700;
+  line-height: 1.3;
+}
+.ls-slide[data-slide-type="fill-blank"] .ls-fb-sentences[data-count="3"] .ls-fb-hanzi,
+.ls-slide[data-slide-type="fill-blank"] .ls-fb-sentences[data-count="4"] .ls-fb-hanzi {
+  font-size: calc(66 * var(--u));
+}
+.ls-slide[data-slide-type="fill-blank"] .ls-fb-pinyin {
+  font-size: calc(40 * var(--u));
+}
+.ls-slide[data-slide-type="fill-blank"] .ls-fb-meaning {
+  font-size: calc(36 * var(--u));
+  font-weight: 700;
+  color: var(--ls-muted);
+}
+.ls-slide[data-slide-type="fill-blank"] .ls-fb-blank {
+  display: inline-block;
+  min-width: 2.4em;
+  margin: 0 0.15em;
+  padding: 0 0.2em;
+  border-bottom: calc(6 * var(--u)) solid var(--ls-accent);
+  text-align: center;
+  line-height: 1.1;
+}
+.ls-slide[data-slide-type="fill-blank"] .ls-fb-blank--pinyin {
+  min-width: 3em;
+  border-bottom-width: calc(3 * var(--u));
+}
+.ls-slide[data-slide-type="fill-blank"] .ls-fb-answer {
+  color: var(--ls-good);
+}

@@ -1,0 +1,70 @@
+.ls-slide[data-slide-type="sentence-order"] .ls-so {
+  --hanzi: 80;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(30 * var(--u));
+}
+.ls-slide[data-slide-type="sentence-order"] .ls-so[data-count="6"],
+.ls-slide[data-slide-type="sentence-order"] .ls-so[data-count="7"],
+.ls-slide[data-slide-type="sentence-order"] .ls-so[data-count="8"] {
+  --hanzi: 60;
+}
+.ls-slide[data-slide-type="sentence-order"] .ls-so-pool,
+.ls-slide[data-slide-type="sentence-order"] .ls-so-answer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: calc(22 * var(--u));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ls-slide[data-slide-type="sentence-order"] .ls-so-card {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(2 * var(--u));
+  padding: calc(12 * var(--u)) calc(32 * var(--u));
+  border: calc(5 * var(--u)) solid var(--ls-accent-2);
+  border-radius: calc(22 * var(--u));
+  background: var(--ls-surface);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.ls-slide[data-slide-type="sentence-order"] .ls-so-hanzi {
+  font-size: calc(var(--hanzi) * var(--u));
+  font-weight: 700;
+  line-height: 1.15;
+}
+.ls-slide[data-slide-type="sentence-order"] .ls-so-pinyin {
+  font-size: calc(var(--hanzi) * 0.45 * var(--u));
+}
+/* A card that has moved to its slot fades in the pool. */
+.ls-slide[data-slide-type="sentence-order"] .ls-so-pool .ls-so-card.ls-revealed {
+  opacity: 0.2;
+  transform: scale(0.92);
+}
+.ls-slide[data-slide-type="sentence-order"] .ls-so-arrow {
+  font-size: calc(48 * var(--u));
+  color: var(--ls-muted);
+}
+.ls-slide[data-slide-type="sentence-order"] .ls-so-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: calc(180 * var(--u));
+  min-height: calc(var(--hanzi) * 1.9 * var(--u));
+  border-bottom: calc(6 * var(--u)) solid var(--ls-surface-border);
+}
+.ls-slide[data-slide-type="sentence-order"] .ls-so-placed {
+  border-color: var(--ls-good);
+}
+.ls-slide[data-slide-type="sentence-order"] .ls-so-meaning {
+  margin: calc(8 * var(--u)) 0 0;
+  font-size: calc(48 * var(--u));
+  font-weight: 800;
+  color: var(--ls-muted);
+}
