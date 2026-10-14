@@ -12,7 +12,7 @@ phải chạm vào HTML.
 **Người dùng duy nhất của ứng dụng là giáo viên.** Học sinh chỉ xem màn hình chiếu
 và trả lời bằng lời; giáo viên là người điều khiển mọi thứ trên màn hình.
 
-> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 11).
+> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 12).
 
 ---
 
@@ -88,6 +88,8 @@ Mỗi loại slide nằm trong `templates/<type>/` và export một đối tư�
 ```ts
 interface SlideTemplate<C> {
   type: string;                    // "matching"
+  label: string;                   // "Ghép cặp"
+  description: string;             // một dòng cho menu "Thêm slide"
   category: "teach" | "qa" | "game";
   schema: ZodType<C>;              // validate content
   aiSchemaHint: string;            // mô tả ngắn đưa vào prompt AI
@@ -723,6 +725,14 @@ Chưa làm:
 ---
 
 ## 12. Lịch sử thay đổi
+
+### Rev 12
+
+| Thay đổi | Lý do |
+| --- | --- |
+| Danh sách trong bảng thuộc tính thu gọn mỗi mục còn một dòng tóm tắt (danh sách > 2 mục); mục có lỗi luôn mở | Slide 8 từ là 8 khung đầy đủ, phải cuộn rất nhiều; soạn tay là việc giáo viên làm nhiều nhất sau khi nhập AI. |
+| Template có `description`; menu "Thêm slide" ba cột kèm mô tả | Tên như "Phân nhóm", "Hộp bí mật" không nói slide dùng để làm gì. |
+| Thư viện: "Tạo bài bằng AI…" là nút chính; màn hình trống có hai lựa chọn; form "Bài mới" chọn được theme (nhớ lần trước) | Tạo bằng AI đã là luồng chính; theme lúc tạo đã có trong thiết kế (mục 5.A) nhưng chưa làm. |
 
 ### Rev 11
 

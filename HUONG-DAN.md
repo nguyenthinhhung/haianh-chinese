@@ -15,10 +15,15 @@ Bài học nằm trong thư mục **Tài liệu → Chinese Lesson Studio**, m�
 
 ## 2. Tạo và soạn bài
 
-- **+ Bài mới**: đặt tên, chọn "Bài mẫu: Hoa quả" để xem ví dụ hoặc "Bài trống".
-- Cột trái là danh sách slide: **+ Thêm slide** để thêm, kéo thả để đổi thứ tự,
-  các nút bên dưới để lên/xuống, nhân bản, xoá.
+- **Tạo bài bằng AI…**: cách nhanh nhất, xem mục 6.
+- **+ Bài mới**: đặt tên, chọn "Bài mẫu: Hoa quả" để xem ví dụ hoặc "Bài trống",
+  và chọn theme (lần sau ứng dụng nhớ theme đã chọn).
+- Cột trái là danh sách slide: **+ Thêm slide** mở bảng các loại slide, mỗi loại
+  có một dòng mô tả; kéo thả để đổi thứ tự, các nút bên dưới để lên/xuống, nhân
+  bản, xoá.
 - Cột phải là nội dung slide đang chọn. Gõ đến đâu, slide ở giữa đổi đến đó.
+  Danh sách dài (các từ, các thẻ…) thu gọn mỗi mục còn một dòng; bấm vào để sửa,
+  hoặc **Mở tất cả**. Mục có lỗi luôn tự mở.
 - **Ctrl+Z / Ctrl+Y**: hoàn tác / làm lại. **Ctrl+S** hoặc nút **Lưu** để lưu.
   Ứng dụng cũng tự lưu sau 30 giây không sửa và khi đóng. Nếu máy tắt đột ngột,
   lần sau mở bài ứng dụng sẽ hỏi có khôi phục phần chưa lưu không.
@@ -97,9 +102,9 @@ lật ra hình.
    chế độ trình chiếu, có đủ ảnh, âm thanh, trò chơi và công cụ lớp học. Máy lớp
    học không cần cài ứng dụng, không cần mạng. Bấm **F** để toàn màn hình.
 
-## 6. Nhập bài do AI soạn
+## 6. Tạo bài bằng AI
 
-1. **Nhập từ AI…** (ở thư viện để tạo bài mới, hoặc trong bài để thêm slide).
+1. **Tạo bài bằng AI…** ở thư viện, hoặc **Thêm slide bằng AI…** trong một bài.
 2. Chọn nội dung bài: chủ đề, lứa tuổi học sinh, thời lượng, dạng bài (Từ vựng,
    Hội thoại, Mẫu câu, Ôn tập, Tổng hợp), và nếu muốn thì ghi các từ cần dạy.
    - **Dàn ý**: bấm − / + để đổi số slide của từng phần; về 0 là bỏ phần đó (ví
