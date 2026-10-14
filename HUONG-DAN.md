@@ -22,6 +22,9 @@ Bài học nằm trong thư mục **Tài liệu → Chinese Lesson Studio**, m�
   có một dòng mô tả; kéo thả để đổi thứ tự, các nút bên dưới để lên/xuống, nhân
   bản, xoá. Xoá nhanh: rê chuột lên slide và bấm **✕** ở góc, hoặc chọn slide rồi
   bấm phím **Delete**. Lỡ xoá thì **Ctrl+Z**.
+- **Kiểm tra bài** (thanh trên cùng) trước khi dạy: liệt kê theo từng slide các
+  lỗi, chữ quá dài so với khung, pinyin không khớp chữ, ô ảnh còn trống, ảnh tự
+  chọn chưa duyệt. Bấm vào một dòng để mở slide đó.
 - Cột phải là nội dung slide đang chọn. Gõ đến đâu, slide ở giữa đổi đến đó.
   Danh sách dài (các từ, các thẻ…) thu gọn mỗi mục còn một dòng; bấm vào để sửa,
   hoặc **Mở tất cả**. Mục có lỗi luôn tự mở.
@@ -45,10 +48,13 @@ Hán. Pinyin tự điền nên được xem lại với từ đọc nhẹ hoặc
 - **Tìm ảnh…**: tìm trên mạng (từ khoá điền sẵn theo nghĩa của từ), bấm vào ảnh
   để chèn. Đánh dấu **Chỉ hình vẽ** để có hình đơn giản cho trẻ nhỏ. Tìm bằng
   tiếng Anh thường ra ảnh đúng hơn (ví dụ "orange fruit" thay vì "quả cam").
-- **Tìm ảnh ô trống** (thanh trên cùng): ứng dụng tự tìm ảnh cho mọi ô ảnh còn
-  trống ở các slide từ vựng, thẻ hình, thẻ lật, đoán hình, "Cái gì biến mất?",
-  và ở Ghép cặp / Lật cặp khi chọn **Cột phải: Hình** / **Thẻ thứ hai: Hình**.
-  Bài vừa tạo bằng AI được tự tìm ảnh ngay. Ảnh tự chọn có **chấm cam** ở danh
+- **Điền ảnh & giọng đọc** (thanh trên cùng): ứng dụng tự tìm ảnh cho mọi ô ảnh
+  còn trống ở các slide từ vựng, thẻ hình, thẻ lật, đoán hình, "Cái gì biến
+  mất?", và ở Ghép cặp / Lật cặp khi chọn **Cột phải: Hình** / **Thẻ thứ hai:
+  Hình**; đồng thời tạo giọng đọc chuẩn (Google Dịch) cho từ vựng, thẻ hình, thẻ
+  lật, câu hội thoại và chữ trong "Chọn thanh điệu". Trắc nghiệm không được tự
+  thêm âm thanh, vì âm thanh ở đó biến câu hỏi thành "nghe và chọn". Bài vừa tạo
+  bằng AI được tự điền ngay. Ảnh tự chọn có **chấm cam** ở danh
   sách slide; bấm **Duyệt ảnh** để xem tất cả, **Đổi** ảnh chưa đúng hoặc **Giữ**.
   Nếu Bing tạm chặn vì tìm nhiều, chờ vài phút rồi bấm **Thử lại**.
 - Hoặc copy ảnh trên trình duyệt rồi bấm vào ô Ảnh và **Ctrl+V**, hoặc kéo ảnh thả
@@ -110,8 +116,13 @@ lật ra hình.
    Hội thoại, Mẫu câu, Ôn tập, Tổng hợp), và nếu muốn thì ghi các từ cần dạy.
    - **Dàn ý**: bấm − / + để đổi số slide của từng phần; về 0 là bỏ phần đó (ví
      dụ bỏ trò chơi khi tiết học ngắn). **Về dàn ý gợi ý** để làm lại.
+   - **Soạn theo giáo trình**: ghi tên sách và bài (ví dụ "HSK 1, Bài 7"), rồi
+     khi gửi lời nhắn cho AI thì **đính kèm file PDF** (chỉ các trang của bài
+     đó). AI sẽ dùng đúng từ mới, mẫu câu và bài khoá trong sách.
    - **Tuỳ chỉnh nâng cao**: mẫu câu, từ lớp đã học (AI dùng lại mà không dạy
-     lại), nội dung không đưa vào bài, hoạt động muốn có, yêu cầu thêm.
+     lại; bấm **Lấy từ các bài đã dạy…** để chọn bài cũ trong thư viện và tự
+     gom từ của chúng), nội dung không đưa vào bài, hoạt động muốn có, yêu cầu
+     thêm.
    - **Lưu thành mẫu**: lưu cách dạy (lứa tuổi, dạng bài, thời lượng, dàn ý…) để
      lần sau chọn lại một lần là xong; chủ đề và từ vựng không lưu vào mẫu.
    Lần sau ứng dụng nhớ lựa chọn gần nhất.

@@ -12,7 +12,7 @@ phải chạm vào HTML.
 **Người dùng duy nhất của ứng dụng là giáo viên.** Học sinh chỉ xem màn hình chiếu
 và trả lời bằng lời; giáo viên là người điều khiển mọi thứ trên màn hình.
 
-> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 14).
+> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 15).
 
 ---
 
@@ -733,6 +733,15 @@ Chưa làm:
 ---
 
 ## 12. Lịch sử thay đổi
+
+### Rev 15
+
+| Thay đổi | Lý do |
+| --- | --- |
+| `LessonRequest.source`: soạn theo giáo trình; giáo viên đính kèm PDF trong cuộc trò chuyện với AI | Các AI đã đọc được PDF (kể cả bản scan) tốt hơn mọi thứ app tự làm được; app chỉ cần dặn AI bám đúng bài. |
+| "Lấy từ các bài đã dạy" (`lessonWords`): gom các ô chữ Hán ngắn (≤ 6 chữ, không dấu câu) của bài cũ vào "từ lớp đã học" | Bài sau nối tiếp bài trước mà không phải gõ lại từ. |
+| "Kiểm tra bài" (`lessonIssues`): lỗi schema, chữ quá dài, pinyin, ảnh trống, ảnh chưa duyệt cho mọi bài | Các kiểm tra trước đây chỉ chạy lúc nhập bài AI; bài soạn tay hay đã sửa không được kiểm lại. |
+| Tự tạo giọng đọc cho ô `autoAudio` (từ vựng, thẻ hình, thẻ lật, hội thoại, chọn thanh điệu), chung nút với tự tìm ảnh | Phát âm chuẩn là cốt lõi của bài tiếng Trung; bấm từng từ thì chậm. Trắc nghiệm không tự thêm vì âm thanh làm đổi dạng câu hỏi. |
 
 ### Rev 14
 
