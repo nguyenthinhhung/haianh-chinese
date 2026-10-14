@@ -162,6 +162,14 @@ describe("buildAiPrompt", () => {
     expect(prompt).toContain("Tối đa ký tự: segments[].text ≤ 8.");
   });
 
+  it("keeps to an attached textbook unit when one is named", () => {
+    const prompt = buildAiPrompt(templates, { ...request, words: "", source: "HSK 1, Bài 7" });
+    expect(prompt).toContain("- Giáo trình: HSK 1, Bài 7. Giáo viên đính kèm các trang của bài này.");
+    expect(prompt).toContain("- Từ mới: các từ của bài trong giáo trình.");
+    expect(prompt).not.toContain("khoảng 5–8 từ");
+    expect(buildAiPrompt(templates, { ...request, source: "" })).not.toContain("Giáo trình:");
+  });
+
   it("passes on words the class knows and content to leave out", () => {
     const prompt = buildAiPrompt(templates, { ...request, known: "你好, 我", exclude: "狗" });
     expect(prompt).toContain("- Từ lớp đã học (dùng lại trong câu, luyện tập và trò chơi; không dạy lại như từ mới): 你好, 我");

@@ -24,6 +24,11 @@ export interface LessonRequest {
   known: string;
   /** Words or content to leave out of the lesson. */
   exclude: string;
+  /**
+   * Textbook and unit the lesson follows, e.g. "HSK 1, Bài 7". The teacher
+   * attaches those pages to the AI chat; the prompt says to keep to them.
+   */
+  source: string;
   /** Activity slide types the teacher prefers; empty lets the AI choose. */
   activities: string[];
   notes: string;
@@ -44,6 +49,7 @@ export const DEFAULT_REQUEST: LessonRequest = {
   patterns: "",
   known: "",
   exclude: "",
+  source: "",
   activities: [],
   notes: "",
   outline: {},
@@ -233,6 +239,7 @@ export function normalizeRequest(raw: unknown): LessonRequest {
     patterns: text(r.patterns, 500),
     known: text(r.known, 2000),
     exclude: text(r.exclude, 1000),
+    source: text(r.source, 200),
     activities,
     notes: text(r.notes, 2000),
     outline,

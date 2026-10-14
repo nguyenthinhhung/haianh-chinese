@@ -8,12 +8,16 @@ import {
   DURATIONS,
   lessonKindsFor,
   normalizeRequest,
+  parseWordList,
   planOutline,
   presetOf,
   type LessonPreset,
   type LessonRequest,
 } from "../core/lessonPlan";
+import { parseLessonHtml } from "../core/codec";
+import { lessonWords } from "../core/lessonWords";
 import { pinyinWarnings } from "../core/pinyinCheck";
+import type { LessonLocation } from "../platform/persistence";
 import type { Slide } from "../core/schema";
 import type { ImageFillRequest } from "./lessonFiles";
 import { useServices } from "./services";
@@ -223,6 +227,90 @@ function Outline({ request, onChange }: { request: LessonRequest; onChange(patch
   );
 }
 
+/**
+ * Fills "words the class knows" from lessons in the library: the teacher
+ * ticks earlier lessons and their words are added, without duplicates.
+ */
+function KnownFromLessons({ onAdd }: { onAdd(words: string[]): number }) {
+  const { persistence, templates } = useServices();
+  const [lessons, setLessons] = useState<LessonLocation[] | null>(null);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function openPicker() {
+    setMessage(null);
+    try {
+      setLessons(await persistence.listLessons());
+    } catch (e) {
+      setMessage(`Không đọc được thư viện: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+
+  async function add() {
+    setBusy(true);
+    const words: string[] = [];
+    let unreadable = 0;
+    for (const dir of picked) {
+      try {
+        const parsed = parseLessonHtml((await persistence.readLesson(dir)).html, templates);
+        if (parsed.ok) words.push(...lessonWords(parsed.doc, templates));
+        else unreadable++;
+      } catch {
+        unreadable++;
+      }
+    }
+    const added = onAdd(words);
+    setMessage(`Đã thêm ${added} từ mới vào danh sách.${unreadable ? ` ${unreadable} bài không đọc được.` : ""}`);
+    setLessons(null);
+    setPicked(new Set());
+    setBusy(false);
+  }
+
+  if (!lessons) {
+    return (
+      <div className="ai-form-wide ai-known-from">
+        <button type="button" className="ghost" onClick={() => void openPicker()}>
+          Lấy từ các bài đã dạy…
+        </button>
+        {message && <span className="muted">{message}</span>}
+      </div>
+    );
+  }
+  return (
+    <fieldset className="ai-form-wide ai-known-picker">
+      <legend>Chọn các bài lớp đã học</legend>
+      {lessons.length === 0 && <p className="muted">Thư viện chưa có bài nào.</p>}
+      <div className="ai-known-list">
+        {lessons.map((l) => (
+          <label key={l.dir} className="chip">
+            <input
+              type="checkbox"
+              checked={picked.has(l.dir)}
+              onChange={() =>
+                setPicked((s) => {
+                  const next = new Set(s);
+                  if (!next.delete(l.dir)) next.add(l.dir);
+                  return next;
+                })
+              }
+            />{" "}
+            {l.title ?? l.folderName}
+          </label>
+        ))}
+      </div>
+      <div className="form-actions">
+        <button type="button" onClick={() => setLessons(null)} disabled={busy}>
+          Huỷ
+        </button>
+        <button type="button" className="primary" onClick={() => void add()} disabled={busy || picked.size === 0}>
+          {busy ? "Đang đọc…" : `Thêm từ của ${picked.size} bài`}
+        </button>
+      </div>
+    </fieldset>
+  );
+}
+
 function RequestForm({ request, onChange }: { request: LessonRequest; onChange(patch: Partial<LessonRequest>): void }) {
   const { templates } = useServices();
   const activities = activityChoices(request.kind, request.age);
@@ -283,6 +371,16 @@ function RequestForm({ request, onChange }: { request: LessonRequest; onChange(p
           placeholder="猫, 狗, 兔子, 熊猫 — bỏ trống để AI tự chọn"
         />
       </label>
+      <label className="ai-form-wide">
+        <span>
+          Soạn theo giáo trình <span className="muted">(nếu có: tên sách và bài)</span>
+        </span>
+        <input
+          value={request.source}
+          onChange={(e) => onChange({ source: e.target.value })}
+          placeholder="Ví dụ: HSK 1, Bài 7 — rồi đính kèm các trang của bài khi gửi cho AI"
+        />
+      </label>
       <Outline request={request} onChange={onChange} />
       <details className="ai-advanced ai-form-wide" open={advancedInUse || undefined}>
         <summary>Tuỳ chỉnh nâng cao</summary>
@@ -312,6 +410,15 @@ function RequestForm({ request, onChange }: { request: LessonRequest; onChange(p
                 placeholder="你好, 我, 是, 这"
               />
             </label>
+          )}
+          {!review && (
+            <KnownFromLessons
+              onAdd={(found) => {
+                const merged = [...new Set([...parseWordList(request.known), ...found])];
+                onChange({ known: merged.join(", ") });
+                return merged.length - parseWordList(request.known).length;
+              }}
+            />
           )}
           <label className={review ? undefined : "ai-form-wide"}>
             <span>
@@ -431,6 +538,11 @@ export function AiImportDialog({ mode, onImport, onClose }: Props) {
               text={() => buildAiPrompt(templates, request)}
             />
             {!request.topic.trim() && <span className="muted">Hãy ghi chủ đề bài học trước.</span>}
+            {request.topic.trim() && request.source.trim() && (
+              <span className="ai-attach-note">
+                Nhớ đính kèm file PDF giáo trình (chỉ các trang của bài “{request.source.trim()}”) cùng lời nhắn.
+              </span>
+            )}
           </li>
           <li>
             <span>Sao chép toàn bộ câu trả lời của AI và dán vào đây:</span>

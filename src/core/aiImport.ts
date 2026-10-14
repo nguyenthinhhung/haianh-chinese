@@ -209,17 +209,25 @@ export function buildAiPrompt(registry: TemplateRegistry, request: LessonRequest
   const known = parseWordList(request.known);
   const exclude = parseWordList(request.exclude);
   const review = request.kind === "review";
+  const source = request.source.trim();
 
   const lesson = [
     `- Chủ đề: ${request.topic.trim() || "[GHI CHỦ ĐỀ Ở ĐÂY]"}`,
     `- Học sinh: ${age.label}. ${age.guidance}`,
     `- Dạng bài: ${kind.label}. ${kind.description}`,
     `- Thời lượng: ${duration.label}, tổng cộng ${planSlideCount(plan)} slide.`,
+    ...(source
+      ? [
+          `- Giáo trình: ${source}. Giáo viên đính kèm các trang của bài này. Lấy đúng từ mới, mẫu câu và bài khoá/hội thoại trong tài liệu; không thêm từ ngoài bài (trừ từ lớp đã học). Slide luyện tập và trò chơi dùng lại đúng nội dung đó. Bám theo thứ tự các phần trong giáo trình khi hợp với trình tự slide bên dưới.`,
+        ]
+      : []),
     words.length
       ? review
         ? `- Từ đã học cần ôn (chỉ dùng những từ này, không thêm từ mới): ${words.join(", ")}`
         : `- Từ vựng bắt buộc (phải dạy đủ, có thể thêm vài từ cùng chủ đề): ${words.join(", ")}`
-      : `- Số từ ${review ? "ôn tập" : "mới"}: khoảng ${age.words[0]}–${age.words[1]} từ hợp với chủ đề.`,
+      : source
+        ? `- Từ ${review ? "ôn tập" : "mới"}: các từ của bài trong giáo trình.`
+        : `- Số từ ${review ? "ôn tập" : "mới"}: khoảng ${age.words[0]}–${age.words[1]} từ hợp với chủ đề.`,
     ...(request.patterns.trim() ? [`- Mẫu câu cần dạy: ${request.patterns.trim()}`] : []),
     ...(known.length && !review
       ? [`- Từ lớp đã học (dùng lại trong câu, luyện tập và trò chơi; không dạy lại như từ mới): ${known.join(", ")}`]

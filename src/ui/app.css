@@ -1016,3 +1016,36 @@ input.library-search {
   width: min(360px, 100%);
   margin-bottom: 12px;
 }
+.ai-attach-note {
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--warning-bg);
+  color: var(--warning);
+  font-size: 13px;
+}
+.ai-known-from {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: -6px;
+}
+.ai-known-from button {
+  padding: 2px 6px;
+  font-size: 13px;
+  color: var(--focus);
+}
+.ai-known-picker {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.ai-known-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 160px;
+  overflow-y: auto;
+}
