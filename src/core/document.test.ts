@@ -4,6 +4,7 @@ import { testEnv } from "../test/env";
 import {
   addAsset,
   addSlide,
+  appendSlides,
   duplicateSlide,
   moveSlide,
   removeSlide,
@@ -80,5 +81,15 @@ describe("document commands", () => {
     const cleaned = removeUnusedAssets(withRef, templates);
     expect(cleaned.assets.map((a) => a.id)).toEqual([used.assetId]);
     expect(removeUnusedAssets(cleaned, templates)).toBe(cleaned);
+  });
+
+  it("appends imported slides at the end and keeps the document valid", () => {
+    const doc = base();
+    const extra = addSlide(doc, templates, "quiz").doc.slides.at(-1)!;
+    const next = appendSlides(doc, [{ ...extra, id: "s_appended01" }]);
+    expect(next.slides.map((s) => s.id).at(-1)).toBe("s_appended01");
+    expect(next.slides).toHaveLength(doc.slides.length + 1);
+    expect(validateLesson(next, templates).ok).toBe(true);
+    expect(appendSlides(doc, [])).toBe(doc);
   });
 });

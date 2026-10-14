@@ -5,6 +5,7 @@ import {
   type Draft,
   type ImageHit,
   type ImportedAsset,
+  type PickedLesson,
   type LessonFile,
   type LessonLocation,
   type Persistence,
@@ -46,6 +47,12 @@ export function createTauriPersistence(): Persistence {
     importImageBytes: (dir, bytes) =>
       call<ImportedAsset>("import_image_bytes", bytes, { "x-lesson-dir": encodeURIComponent(dir) }),
     speakChinese: (dir, text) => call<ImportedAsset>("speak_chinese", { dir, text }),
+    readAssetsData: (dir, files) => call<Record<string, string>>("read_assets_data", { dir, files }),
+    saveExport: (html, fileName) => call<string | null>("save_export", { html, fileName }),
+    pickLessonFile: () => call<PickedLesson | null>("pick_lesson_file"),
+    copySiblingAssets: (dir, files) => call<string[]>("copy_sibling_assets", { dir, files }),
+    writeAsset: (dir, file, bytes) =>
+      call("write_asset", bytes, { "x-lesson-dir": encodeURIComponent(dir), "x-asset-file": encodeURIComponent(file) }),
     assetUrl: (dir, file) => {
       const sep = dir.includes("\\") ? "\\" : "/";
       return convertFileSrc(`${dir}${sep}${file.split("/").join(sep)}`);

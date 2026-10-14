@@ -53,6 +53,14 @@ export function addSlide(
   return { doc: next, slideId: slide.id };
 }
 
+/** Adds slides (e.g. imported from an AI reply) after the last one, as one step. */
+export function appendSlides(doc: LessonDocument, slides: Slide[]): LessonDocument {
+  if (!slides.length) return doc;
+  return produce(doc, (d) => {
+    d.slides.push(...structuredClone(slides));
+  });
+}
+
 export function removeSlide(doc: LessonDocument, slideId: string): LessonDocument {
   return produce(doc, (d) => {
     d.slides.splice(slideIndex(d, slideId), 1);

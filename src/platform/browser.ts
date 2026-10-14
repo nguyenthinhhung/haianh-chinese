@@ -153,6 +153,39 @@ export function createBrowserPersistence(): Persistence {
     async speakChinese() {
       throw new PersistenceError("network", "Tạo giọng đọc chỉ có trong ứng dụng desktop.");
     },
+    async readAssetsData(_dir, files) {
+      const out: Record<string, string> = {};
+      for (const file of files) {
+        const url = blobs.get(file);
+        if (!url) continue;
+        const blob = await (await fetch(url)).blob();
+        out[file] = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result));
+          reader.readAsDataURL(blob);
+        });
+      }
+      return out;
+    },
+    // A browser cannot ask where to save; it downloads the file instead.
+    async saveExport(html, fileName) {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([html], { type: "text/html" }));
+      a.download = fileName;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
+      return fileName;
+    },
+    async pickLessonFile() {
+      const file = await pickFile(".html,.htm");
+      return file ? { path: file.name, html: await file.text() } : null;
+    },
+    // A browser file picker cannot reach the folder around the chosen file.
+    copySiblingAssets: async () => [],
+    async writeAsset(_dir, file, bytes) {
+      const type = file.endsWith(".mp3") ? "audio/mpeg" : "image/*";
+      if (!blobs.has(file)) blobs.set(file, URL.createObjectURL(new Blob([bytes.slice()], { type })));
+    },
     // Imported files only live for this tab; nothing on disk to clean.
     pruneAssets: async () => 0,
     assetUrl: (_dir, file) => blobs.get(file) ?? "",

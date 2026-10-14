@@ -32,6 +32,12 @@ export interface ImageHit {
   title: string;
 }
 
+/** A lesson file chosen from outside the library. */
+export interface PickedLesson {
+  path: string;
+  html: string;
+}
+
 export interface ImportedAsset {
   /** Relative path inside the lesson folder, e.g. `assets/img-3f9a2c….webp`. */
   file: string;
@@ -100,6 +106,16 @@ export interface Persistence {
   importImageBytes(dir: string, bytes: Uint8Array): Promise<ImportedAsset>;
   /** Creates an MP3 of Chinese text read aloud and stores it in `assets/`. */
   speakChinese(dir: string, text: string): Promise<ImportedAsset>;
+  /** The lesson's asset files as data URLs keyed by `assets/…` path; unreadable files are left out. */
+  readAssetsData(dir: string, files: string[]): Promise<Record<string, string>>;
+  /** Asks where to save an exported lesson and writes it; the saved path, or null if cancelled. */
+  saveExport(html: string, fileName: string): Promise<string | null>;
+  /** Lets the teacher pick a lesson file from anywhere; null if cancelled. */
+  pickLessonFile(): Promise<PickedLesson | null>;
+  /** Copies files from the `assets/` folder beside the last picked lesson file; returns those copied. */
+  copySiblingAssets(dir: string, files: string[]): Promise<string[]>;
+  /** Writes one asset file (an image or audio carried inside an exported lesson). */
+  writeAsset(dir: string, file: string, bytes: Uint8Array): Promise<void>;
   /** Deletes imported files in `assets/` other than `keep` (`assets/<name>` paths); returns how many. */
   pruneAssets(dir: string, keep: string[]): Promise<number>;
   /** URL the editor webview can load an asset from. */

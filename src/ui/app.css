@@ -292,6 +292,69 @@ textarea {
 .toolbar-spacer {
   flex: 1;
 }
+.editor-notice {
+  position: fixed;
+  top: 64px;
+  left: 50%;
+  z-index: 50;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(900px, calc(100vw - 32px));
+  padding: 8px 8px 8px 16px;
+  border: 1px solid #b7e0c3;
+  border-radius: 10px;
+  background: #ecf8f0;
+  color: #1f5f35;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.12);
+}
+.editor-notice--error {
+  border-color: #f4c7c3;
+  background: var(--error-bg);
+  color: var(--error);
+}
+.library-actions {
+  display: flex;
+  gap: 8px;
+}
+.ai-import {
+  width: min(760px, 100%);
+}
+.ai-steps {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding-left: 20px;
+}
+.ai-steps li {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+.ai-steps textarea {
+  width: 100%;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 13px;
+}
+.ai-preview {
+  display: grid;
+  gap: 6px;
+}
+.ai-preview label {
+  display: grid;
+  gap: 4px;
+  font-weight: 600;
+}
+.ai-preview p,
+.ai-preview ol {
+  margin: 0;
+}
+.ai-preview ol {
+  max-height: 180px;
+  overflow-y: auto;
+  padding-left: 24px;
+}
 .present-button {
   font-weight: 600;
   color: var(--accent);

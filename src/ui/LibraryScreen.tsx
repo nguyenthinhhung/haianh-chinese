@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import type { LessonLocation } from "../platform/persistence";
 import { SAMPLES, type SampleId } from "../samples";
+import { AiImportDialog } from "./AiImportDialog";
 import { LessonCard } from "./LessonCard";
 import {
   createLessonFromSample,
+  createLessonFromSlides,
   deleteLesson,
   duplicateLesson,
+  importLessonFile,
   openLesson,
   renameLesson,
   type OpenLesson,
@@ -37,6 +40,7 @@ export function LibraryScreen({ onOpen }: Props) {
   const [sample, setSample] = useState<SampleId>("fruits");
   const [busy, setBusy] = useState(false);
   const [recovery, setRecovery] = useState<{ lesson: OpenLesson; draft: PendingDraft } | null>(null);
+  const [aiImport, setAiImport] = useState(false);
 
   const refresh = useCallback(async () => {
     try {
@@ -104,6 +108,28 @@ export function LibraryScreen({ onOpen }: Props) {
     onOpen(lesson);
   }
 
+  async function openFile() {
+    setError(null);
+    setBusy(true);
+    try {
+      const result = await importLessonFile(services);
+      if (!result) return;
+      if (!result.ok) {
+        setError({ message: result.message, details: result.details });
+        return;
+      }
+      await persistence.acquireLock(result.lesson.doc.id);
+      const notice = result.missing.length
+        ? `Đã mở bài vào thư viện, nhưng thiếu ${result.missing.length} ảnh/âm thanh (không có trong file và không có thư mục assets bên cạnh). Hãy thêm lại các ảnh đó.`
+        : "Đã chép bài vào thư viện.";
+      onOpen({ ...result.lesson, notice });
+    } catch (e) {
+      setError({ message: "Không mở được file bài học.", details: [errorText(e)] });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function create(e: React.FormEvent) {
     e.preventDefault();
     const name = title.trim();
@@ -128,10 +154,30 @@ export function LibraryScreen({ onOpen }: Props) {
           <h1>Chinese Lesson Studio</h1>
           {libraryDir && <p className="muted">Thư viện: {libraryDir}</p>}
         </div>
-        <button type="button" className="primary" onClick={() => setCreating(true)} disabled={busy}>
-          + Bài mới
-        </button>
+        <div className="library-actions">
+          <button type="button" onClick={() => void openFile()} disabled={busy} title="Mở file lesson.html hoặc file đã xuất từ máy khác">
+            Mở file…
+          </button>
+          <button type="button" onClick={() => setAiImport(true)} disabled={busy}>
+            Nhập từ AI…
+          </button>
+          <button type="button" className="primary" onClick={() => setCreating(true)} disabled={busy}>
+            + Bài mới
+          </button>
+        </div>
       </header>
+
+      {aiImport && (
+        <AiImportDialog
+          mode="new"
+          onClose={() => setAiImport(false)}
+          onImport={async (title, slides) => {
+            const lesson = await createLessonFromSlides(title, slides, services);
+            await persistence.acquireLock(lesson.doc.id);
+            onOpen({ ...lesson, notice: "Bài đã tạo từ nội dung AI. Hãy xem lại từng slide và thêm ảnh, âm thanh." });
+          }}
+        />
+      )}
 
       {persistence.kind === "browser" && (
         <p className="banner">

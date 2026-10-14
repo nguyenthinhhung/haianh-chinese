@@ -1,9 +1,10 @@
 import { produce } from "immer";
-import { parseLessonHtml, parseLessonJson, serializeLessonHtml, type ParseResult } from "../core/codec";
-import { setTitle, touchUpdatedAt } from "../core/document";
+import { parseLessonHtml, parseLessonJson, readAssetData, serializeLessonHtml, type ParseResult } from "../core/codec";
+import { createLesson, removeUnusedAssets, setTitle, touchUpdatedAt } from "../core/document";
 import { folderNameFromTitle } from "../core/fsNames";
 import { newId } from "../core/ids";
-import type { LessonDocument } from "../core/schema";
+import type { LessonDocument, Slide } from "../core/schema";
+import { formatIssue, validateLesson } from "../core/validate";
 import type { LessonLocation } from "../platform/persistence";
 import { createFromSample, type SampleId } from "../samples";
 import type { Services } from "./services";
@@ -16,6 +17,8 @@ export interface OpenLesson {
   hash: string;
   /** Unsaved edits recovered from a draft; the session starts from these, marked unsaved. */
   recovered?: LessonDocument;
+  /** Message shown when the editor opens, e.g. files missing from an imported lesson. */
+  notice?: string;
 }
 
 /** Edits from an earlier session that never reached `lesson.html`. */
@@ -125,4 +128,84 @@ export async function deleteLesson(dir: string, services: Services): Promise<voi
     // Unreadable or invalid: move the folder anyway.
   }
   await services.persistence.trashLesson(dir, lessonId);
+}
+
+/** Exports above this size get a warning: slow to copy and to open on old computers. */
+export const EXPORT_WARN_BYTES = 50 * 1024 * 1024;
+
+export interface ExportResult {
+  path: string;
+  bytes: number;
+  /** Asset files that could not be read and are missing from the export. */
+  missing: string[];
+}
+
+/**
+ * Writes the lesson as one HTML file that presents on any computer without
+ * the app: CSS, runtime, font, pictures and sounds all inside. Null if the
+ * teacher cancels the save dialog.
+ */
+export async function exportLesson(dir: string, doc: LessonDocument, services: Services): Promise<ExportResult | null> {
+  const valid = validateLesson(doc, services.templates);
+  if (!valid.ok) throw new Error(`Bài có chỗ chưa hợp lệ — ${formatIssue(valid.issues[0]!, doc, services.templates)}`);
+  const lesson = removeUnusedAssets(valid.doc, services.templates);
+  const files = lesson.assets.map((a) => a.file);
+  const data = await services.persistence.readAssetsData(dir, files);
+  const env = { templates: services.templates, themes: services.themes, assetUrl: (a: { file: string }) => a.file };
+  const html = serializeLessonHtml(lesson, env, { assets: data });
+  const path = await services.persistence.saveExport(html, `${folderNameFromTitle(lesson.title)}.html`);
+  if (!path) return null;
+  return { path, bytes: new Blob([html]).size, missing: files.filter((f) => !data[f]) };
+}
+
+function dataUrlBytes(url: string): Uint8Array {
+  return Uint8Array.from(atob(url.slice(url.indexOf(",") + 1)), (c) => c.charCodeAt(0));
+}
+
+export type ImportFileResult =
+  | { ok: true; lesson: OpenLesson; missing: string[] }
+  | { ok: false; message: string; details: string[] };
+
+/**
+ * Brings a lesson file from outside the library in as a new lesson: an
+ * exported file (media inside it) or a lesson.html from another computer
+ * (media in the assets folder beside it). Only the embedded JSON is read.
+ * The copy always gets a new ID so it never shares drafts or locks with a
+ * lesson already in the library. Null if the teacher cancels.
+ */
+export async function importLessonFile(services: Services): Promise<ImportFileResult | null> {
+  const { persistence } = services;
+  const picked = await persistence.pickLessonFile();
+  if (!picked) return null;
+  const parsed = parseLessonHtml(picked.html, services.templates);
+  if (!parsed.ok) return { ok: false, message: parsed.message, details: parsed.details };
+
+  const now = new Date().toISOString();
+  const doc = produce(parsed.doc, (d) => {
+    d.id = newId("l");
+    d.metadata = { ...d.metadata, updatedAt: now, appVersion: services.appVersion };
+  });
+  const location = await persistence.createLessonDir(folderNameFromTitle(doc.title));
+  const embedded = readAssetData(picked.html);
+  const fromFolder: string[] = [];
+  for (const asset of doc.assets) {
+    const data = embedded[asset.file];
+    if (data) await persistence.writeAsset(location.dir, asset.file, dataUrlBytes(data));
+    else fromFolder.push(asset.file);
+  }
+  const copied = fromFolder.length ? await persistence.copySiblingAssets(location.dir, fromFolder) : [];
+  const { hash } = await persistence.writeLesson(location.dir, doc.id, libraryHtml(doc, services), null);
+  return {
+    ok: true,
+    lesson: { dir: location.dir, doc, hash },
+    missing: fromFolder.filter((f) => !copied.includes(f)),
+  };
+}
+
+/** Creates a lesson in the library from slides imported from an AI reply. */
+export async function createLessonFromSlides(title: string, slides: Slide[], services: Services): Promise<OpenLesson> {
+  const doc = { ...createLesson({ title, appVersion: services.appVersion }), slides };
+  const location = await services.persistence.createLessonDir(folderNameFromTitle(title));
+  const { hash } = await services.persistence.writeLesson(location.dir, doc.id, libraryHtml(doc, services), null);
+  return { dir: location.dir, doc, hash };
 }
