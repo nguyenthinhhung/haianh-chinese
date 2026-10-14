@@ -127,7 +127,7 @@ export const dialogue: SlideTemplate<DialogueContent> = {
         { kind: "text", key: "hanzi", label: "Câu (chữ Hán)", lang: "zh" },
         { kind: "text", key: "pinyin", label: "Pinyin", lang: "pinyin" },
         { kind: "text", key: "meaning", label: "Nghĩa", lang: "vi" },
-        { kind: "asset", key: "audio", label: "Âm thanh", assetKind: "audio", speakFrom: "hanzi" },
+        { kind: "asset", key: "audio", label: "Âm thanh", assetKind: "audio", speakFrom: "hanzi", autoAudio: true },
       ],
     },
     { kind: "toggle", key: "stepByStep", label: "Hiện từng câu khi bấm Tiếp" },

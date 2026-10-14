@@ -91,7 +91,7 @@ export const vocabulary: SlideTemplate<VocabularyContent> = {
         { kind: "text", key: "meaning", label: "Nghĩa", lang: "vi" },
         { kind: "text", key: "pos", label: "Từ loại (nếu cần)", lang: "vi", placeholder: "động từ" },
         { kind: "asset", key: "image", label: "Ảnh", assetKind: "image", searchFrom: ["meaning", "hanzi"], autoImage: true },
-        { kind: "asset", key: "audio", label: "Âm thanh", assetKind: "audio", speakFrom: "hanzi" },
+        { kind: "asset", key: "audio", label: "Âm thanh", assetKind: "audio", speakFrom: "hanzi", autoAudio: true },
       ],
     },
     { kind: "toggle", key: "hideMeaning", label: "Ẩn nghĩa, bấm Tiếp để hiện từng từ" },

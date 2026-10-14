@@ -115,7 +115,7 @@ export const flashcard: SlideTemplate<FlashcardContent> = {
           searchFrom: ["meaning", "hanzi"],
           autoImage: true,
         },
-        { kind: "asset", key: "audio", label: "Âm thanh", assetKind: "audio", speakFrom: "hanzi" },
+        { kind: "asset", key: "audio", label: "Âm thanh", assetKind: "audio", speakFrom: "hanzi", autoAudio: true },
       ],
     },
   ],

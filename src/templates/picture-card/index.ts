@@ -108,7 +108,7 @@ export const pictureCard: SlideTemplate<PictureCardContent> = {
       ],
     },
     { kind: "asset", key: "image", label: "Ảnh", assetKind: "image", searchFrom: ["meaning", "hanzi"], autoImage: true },
-    { kind: "asset", key: "audio", label: "Âm thanh", assetKind: "audio", speakFrom: "hanzi" },
+    { kind: "asset", key: "audio", label: "Âm thanh", assetKind: "audio", speakFrom: "hanzi", autoAudio: true },
     { kind: "toggle", key: "hideWord", label: "Hiện hình trước, bấm Tiếp mới hiện chữ" },
   ],
 };

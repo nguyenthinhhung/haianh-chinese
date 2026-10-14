@@ -49,6 +49,12 @@ export type EditorField = (
       autoImage?: boolean | ((slideContent: any) => boolean);
       /** Sibling field whose Chinese text the "read aloud" button speaks. */
       speakFrom?: string;
+      /**
+       * Pronunciation of the word or sentence beside it, so it is read aloud
+       * automatically after an AI import or on request. Not for sound that
+       * changes the activity (a listening question).
+       */
+      autoAudio?: boolean;
     }
   | {
       kind: "list";

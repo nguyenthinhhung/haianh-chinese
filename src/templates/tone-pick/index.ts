@@ -138,7 +138,7 @@ export const tonePick: SlideTemplate<TonePickContent> = {
       fields: [
         { kind: "text", key: "hanzi", label: "Chữ Hán", lang: "zh" },
         { kind: "text", key: "pinyin", label: "Pinyin có dấu thanh", lang: "pinyin", placeholder: "mǎ" },
-        { kind: "asset", key: "audio", label: "Âm thanh", assetKind: "audio", speakFrom: "hanzi" },
+        { kind: "asset", key: "audio", label: "Âm thanh", assetKind: "audio", speakFrom: "hanzi", autoAudio: true },
       ],
     },
     { kind: "toggle", key: "legend", label: "Hiện bảng 4 thanh (giơ 1–4 ngón tay)" },

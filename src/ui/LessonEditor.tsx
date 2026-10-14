@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { audioJobs } from "../core/autoAudio";
 import { imageJobs, picturesToReview } from "../core/autoImages";
 import { appendSlides, setSlideNotes, setTitle } from "../core/document";
 import type { RenderEnv } from "../renderer/render";
@@ -14,6 +15,7 @@ import { useServices } from "./services";
 import { SHORTCUTS } from "./shortcuts";
 import { SlideNavigator } from "./SlideNavigator";
 import { LessonStyles, SlideView } from "./SlideView";
+import { useAudioFill } from "./useAudioFill";
 import { prefersClipart, useImageFill } from "./useImageFill";
 import { useLessonSession } from "./useLessonSession";
 
@@ -36,19 +38,23 @@ export function LessonEditor({ lesson, onClose }: Props) {
   const [reviewing, setReviewing] = useState(false);
   const [checking, setChecking] = useState(false);
   const fill = useImageFill(session);
+  const voice = useAudioFill(session);
   const clipart = prefersClipart(doc, services.themes);
   const toReview = useMemo(() => picturesToReview(doc, services.templates), [doc, services.templates]);
   const toReviewSlides = useMemo(() => new Set(toReview.map((p) => p.slideId)), [toReview]);
 
-  // A lesson just made by AI starts looking for its pictures right away.
+  // A lesson just made by AI starts looking for its pictures and reading its words right away.
   useEffect(() => {
-    if (lesson.imageFill) fill.enqueue(imageJobs(lesson.doc.slides, services.templates, lesson.imageFill));
+    if (!lesson.imageFill) return;
+    fill.enqueue(imageJobs(lesson.doc.slides, services.templates, lesson.imageFill));
+    voice.enqueue(audioJobs(lesson.doc.slides, services.templates));
     // Only once, for the lesson the editor opened with.
   }, []);
 
   function fillEmptySlots() {
-    const added = fill.enqueue(imageJobs(doc.slides, services.templates, { clipart }));
-    if (!added) setNotice({ text: "Không còn ô ảnh nào cần tìm (hoặc đang tìm rồi)." });
+    const pictures = fill.enqueue(imageJobs(doc.slides, services.templates, { clipart }));
+    const sounds = voice.enqueue(audioJobs(doc.slides, services.templates));
+    if (!pictures && !sounds) setNotice({ text: "Không còn ô ảnh hay giọng đọc nào trống (hoặc đang điền rồi)." });
   }
   const [exporting, setExporting] = useState(false);
   const slide = doc.slides.find((s) => s.id === selectedId) ?? doc.slides[0];
@@ -141,7 +147,19 @@ export function LessonEditor({ lesson, onClose }: Props) {
             {fill.progress.failed} ô chưa tìm được ảnh
           </span>
         )}
-
+        {voice.progress.running && (
+          <span className="image-fill-status" role="status">
+            Đang tạo giọng đọc {Math.min(voice.progress.done + 1, voice.progress.total)}/{voice.progress.total}…
+          </span>
+        )}
+        {voice.progress.paused && (
+          <span className="image-fill-status image-fill-status--paused" role="status" title={voice.progress.paused}>
+            Tạm dừng tạo giọng đọc
+            <button type="button" className="ghost" onClick={() => void voice.resume()}>
+              Thử lại
+            </button>
+          </span>
+        )}
         {toReview.length > 0 && (
           <button type="button" className="ghost" onClick={() => setReviewing(true)} title="Xem và đổi các ảnh ứng dụng tự chọn">
             Duyệt ảnh ({toReview.length})
@@ -159,10 +177,10 @@ export function LessonEditor({ lesson, onClose }: Props) {
           type="button"
           className="ghost"
           onClick={fillEmptySlots}
-          disabled={fill.progress.running}
-          title="Tự tìm ảnh cho các ô ảnh còn trống (từ vựng, thẻ hình, thẻ lật, đoán hình…)"
+          disabled={fill.progress.running || voice.progress.running}
+          title="Tự tìm ảnh và tạo giọng đọc cho các ô còn trống (từ vựng, thẻ hình, thẻ lật, hội thoại…)"
         >
-          Tìm ảnh ô trống
+          Điền ảnh & giọng đọc
         </button>
         <button type="button" className="ghost" onClick={() => setAiImport(true)} title="Thêm slide do AI soạn vào cuối bài">
           Thêm slide bằng AI…
@@ -208,6 +226,7 @@ export function LessonEditor({ lesson, onClose }: Props) {
             session.update((d) => appendSlides(d, slides));
             setSelectedId(slides[0]?.id);
             const searching = fill.enqueue(imageJobs(slides, services.templates, images));
+            voice.enqueue(audioJobs(slides, services.templates));
             setNotice({
               text: `Đã thêm ${slides.length} slide vào cuối bài (Ctrl+Z để bỏ).${searching ? " Ảnh đang được tự tìm." : ""}`,
             });
