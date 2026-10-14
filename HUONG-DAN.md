@@ -34,7 +34,8 @@ Bài học nằm trong thư mục **Tài liệu → Chinese Lesson Studio**, m�
   để chèn. Đánh dấu **Chỉ hình vẽ** để có hình đơn giản cho trẻ nhỏ. Tìm bằng
   tiếng Anh thường ra ảnh đúng hơn (ví dụ "orange fruit" thay vì "quả cam").
 - **Tìm ảnh ô trống** (thanh trên cùng): ứng dụng tự tìm ảnh cho mọi ô ảnh còn
-  trống ở các slide từ vựng, thẻ hình, thẻ lật, đoán hình, "Cái gì biến mất?".
+  trống ở các slide từ vựng, thẻ hình, thẻ lật, đoán hình, "Cái gì biến mất?",
+  và ở Ghép cặp / Lật cặp khi chọn **Cột phải: Hình** / **Thẻ thứ hai: Hình**.
   Bài vừa tạo bằng AI được tự tìm ảnh ngay. Ảnh tự chọn có **chấm cam** ở danh
   sách slide; bấm **Duyệt ảnh** để xem tất cả, **Đổi** ảnh chưa đúng hoặc **Giữ**.
   Nếu Bing tạm chặn vì tìm nhiều, chờ vài phút rồi bấm **Thử lại**.
@@ -78,6 +79,10 @@ Mọi slide đều chạy được chỉ bằng nút Tiếp/Lùi của bút trì
 **Trò chơi chọn ô** (Hộp bí mật, Lật cặp, Đoán hình kiểu mở ô): gõ số ô (hoặc bấm
 chuột vào ô). Trên các slide này phím số dùng để chọn ô, nên cộng điểm bằng cách
 bấm vào bảng điểm. Hộp bí mật và Lật cặp tự cộng điểm cho đội đang có lượt.
+
+**Thẻ lật**: Tiếp lật lần lượt; muốn lật thẻ nào trước thì bấm vào thẻ đó hoặc gõ
+số của thẻ (bấm lại để úp xuống). Chọn **Mặt trước: Chữ Hán** để trẻ đọc chữ rồi
+lật ra hình.
 
 ## 5. Chiếu trên máy khác (máy lớp học)
 

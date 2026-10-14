@@ -275,7 +275,7 @@ thể bổ sung dần mà không ảnh hưởng các loại đã có.
 | `cover` | Tiêu đề, phụ đề, ảnh/hình trang trí. Dùng cả làm trang mở đầu phần. |
 | `vocabulary` | 1–8 từ: chữ Hán, pinyin, nghĩa, ảnh, audio; bật/tắt ẩn nghĩa. |
 | `picture-card` | Một từ chiếm cả slide: ảnh lớn, chữ Hán lớn, pinyin, bấm để nghe. |
-| `flashcard` | Thẻ lật: mặt trước ảnh hoặc chữ Hán, mặt sau nghĩa và pinyin. |
+| `flashcard` | Thẻ lật: mặt trước ảnh (lật ra chữ Hán) hoặc chữ Hán (lật ra ảnh), mặt sau kèm pinyin và nghĩa. Tiếp lật thẻ kế tiếp còn úp; giáo viên cũng bấm chuột hoặc gõ số để lật thẻ bất kỳ, bấm lại thì úp xuống; Lùi úp lại theo thứ tự đã lật. |
 | `dialogue` | Các lượt thoại theo vai, có ảnh nhân vật. |
 | `grammar` | Cấu trúc, giải thích, câu ví dụ có tô màu thành phần. |
 | `summary` | Điểm cần nhớ, từ vựng chính. |
@@ -288,7 +288,7 @@ Giáo viên đặt câu hỏi, học sinh trả lời bằng lời, giáo viên 
 | Template | Giáo viên dùng thế nào | Các bước khi bấm Tiếp |
 | --- | --- | --- |
 | `quiz` | Hỏi cả lớp; đề là chữ, ảnh hoặc audio ("nghe và chọn hình"); 2–4 lựa chọn đánh số/chữ cái để trẻ gọi tên; có biến thể Đúng/Sai. | Hiện câu hỏi → hiện đáp án đúng (sáng lên + âm thanh). |
-| `matching` | Hai cột chữ Hán ↔ ảnh/nghĩa; trẻ nói cặp nào đi với nhau. | Mỗi lần Tiếp nối thêm một cặp. |
+| `matching` | Hai cột chữ Hán ↔ nghĩa, hoặc ↔ hình khi `rightAs: "image"` (ảnh tự tìm theo nghĩa); trẻ nói cặp nào đi với nhau. | Mỗi lần Tiếp nối thêm một cặp. |
 | `fill-blank` | Câu có chỗ trống, kèm ô gợi ý từ. | Mỗi lần Tiếp điền một chỗ trống. |
 | `sentence-order` | Các thẻ từ bị xáo trộn; trẻ đọc lại câu đúng. | Mỗi lần Tiếp đưa một thẻ về đúng vị trí, hoặc hiện cả câu một lần (tuỳ chọn khi soạn). |
 | `tone-pick` | Đặc thù tiếng Trung: phát audio hoặc hiện chữ, trẻ giơ 1–4 ngón tay chọn thanh điệu. | Phát âm → hiện thanh đúng (dấu thanh + đường nét cao độ). |
@@ -306,7 +306,7 @@ chơi theo đội.
 | `guess-picture` | Quick peek, Slow reveal, Hidden picture | Đoán từ qua hình bị che. Chế độ khi soạn: **chớp nhanh**, **phóng to dần ra**, **mờ dần rõ**, **mở từng ô** (ô đánh số, trẻ gọi số, giáo viên bấm). |
 | `box-pick` | Bomb game / Hộp bí mật | Lưới 6–16 ô đánh số. Trẻ (theo đội) gọi số; ô mở ra một từ/câu hỏi cần trả lời, rồi một phần thưởng: +điểm, bom (mất điểm), đổi điểm giữa hai đội… Cộng thẳng vào bảng điểm. |
 | `lucky-wheel` | Spin the wheel | Space để quay; dừng ở từ/câu hỏi để gọi một em hoặc một đội trả lời. |
-| `memory` | Memory / Pairs | Thẻ úp đánh số; trẻ gọi hai số, giáo viên bấm lật. Trùng cặp thì giữ mở. |
+| `memory` | Memory / Pairs | Thẻ úp đánh số; trẻ gọi hai số, giáo viên bấm lật. Trùng cặp thì giữ mở. `secondAs: "image"`: thẻ thứ hai của mỗi cặp là hình (tìm cặp chữ ↔ hình). |
 
 Các trò cần chọn vị trí (`guess-picture` mở từng ô, `box-pick`, `memory`) cho
 phép giáo viên bấm chuột hoặc gõ số trên bàn phím (số có hai chữ số được gom lại,
@@ -418,7 +418,13 @@ và loại slide; AI chỉ viết phần ngôn ngữ (chữ Hán, pinyin, nghĩa
 5. Người dùng dán kết quả vào hộp thoại nhập; ứng dụng tự bỏ khung ```` ```json ````
    và đoạn văn thừa.
 6. Validate theo schema Zod; lỗi hiển thị theo vị trí ("Slide 3, từ 2: thiếu
-   pinyin") và chặn nhập.
+   pinyin") và chặn nhập. Trước đó, mục danh sách AI viết thành chuỗi trần
+   (`"segments": ["猫"]`) được đặt vào trường chữ đầu tiên của mục
+   (`{"text": "猫"}`): ChatGPT hay viết vậy, và ý định thì không mơ hồ. Prompt
+   ghi kèm giới hạn ký tự của từng trường (`lengthLimits`): lấy giá trị nhỏ hơn
+   giữa mức vừa slide (`limits` của template) và giới hạn cứng (đọc từ JSON Schema
+   mà Zod sinh ra); chỉ ghi các giới hạn ≤ 50. AI không tự đoán được, ví dụ ô vòng
+   quay nhập được 16 ký tự nhưng chỉ khoảng 8 ký tự là đọc rõ trên múi quay.
 7. Kiểm tra mềm, chỉ **cảnh báo**, không chặn: thiếu từ bắt buộc (chỉ xét từ viết
    bằng chữ Hán), loại slide quá sức với lứa tuổi, số slide lệch dự kiến quá 2,
    pinyin không khớp số chữ (mỗi chữ một âm tiết cách nhau bằng dấu cách; bỏ qua
@@ -473,10 +479,12 @@ sao chép vào Library → mở Editor`. Không có chuyển đổi HTML tuỳ �
   thì ra ảnh minh hoạ bài báo dinh dưỡng.
 
 **Tự điền ảnh.** Template đánh dấu `autoImage` ở các ô ảnh mà thiếu thì slide hỏng
-hoặc kém hẳn: `vocabulary`, `picture-card`, `flashcard` (chỉ khi mặt trước là
-ảnh), `guess-picture`, `whats-missing`. Ảnh thay cho chữ (`matching`, `memory`,
-lựa chọn của `quiz`, `sort-groups`, `box-pick`) và ảnh không bắt buộc (`cover`,
-nhân vật `dialogue`) không tự điền, vì điền vào sẽ đổi cách chơi của slide.
+hoặc kém hẳn: `vocabulary`, `picture-card`, `flashcard`, `guess-picture`,
+`whats-missing`, cùng `matching` và `memory` khi slide chọn hiện hình
+(`rightAs` / `secondAs`; `autoImage` nhận một hàm đọc nội dung slide). Ảnh thay
+cho chữ mà slide không chọn (lựa chọn của `quiz`, `sort-groups`, `box-pick`) và
+ảnh không bắt buộc (`cover`, nhân vật `dialogue`) không tự điền, vì điền vào sẽ
+đổi cách chơi của slide.
 
 1. Sau khi nhập bài từ AI, hoặc khi bấm **Tìm ảnh ô trống**, `imageJobs` gom các
    ô trống. Từ khoá là từ khoá AI ghi, nếu không có thì dùng chữ của ô.
