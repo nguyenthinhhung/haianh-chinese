@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createFromSample } from "../samples";
 import { testEnv } from "../test/env";
-import { parseLessonHtml, serializeLessonHtml } from "./codec";
+import { parseLessonHtml, readAssetData, serializeLessonHtml } from "./codec";
 import { addAsset, addSlide, setSlideField } from "./document";
 import type { LessonDocument } from "./schema";
 import { TemplateRegistry } from "./templateRegistry";
@@ -140,5 +140,30 @@ describe("LessonCodec", () => {
       const result = parseLessonHtml(lessonHtmlWithJson(JSON.stringify(raw)), env.templates);
       expect(result, file).toMatchObject({ ok: false, code: "invalid" });
     }
+  });
+
+  it("embeds asset files once in an export and reads them back as JSON", () => {
+    const doc = createFromSample("fruits", "Hoa quả", "0.0.0");
+    const png = "data:image/png;base64,iVBORw0KGgo=";
+    const html = serializeLessonHtml(doc, env, {
+      assets: { "assets/img-aaaaaaaaaaaa.png": png },
+    });
+    expect(html.split(png)).toHaveLength(2);
+    expect(readAssetData(html)).toEqual({ "assets/img-aaaaaaaaaaaa.png": png });
+    expect(parseLessonHtml(html, env.templates)).toEqual({ ok: true, doc });
+  });
+
+  it("ignores embedded assets with unsafe paths or non-media data", () => {
+    const doc = createFromSample("blank", "x", "0.0.0");
+    const html = serializeLessonHtml(doc, env, {
+      assets: {
+        "assets/ok.png": "data:image/png;base64,AAAA",
+        "../evil.png": "data:image/png;base64,AAAA",
+        "assets/x.html": "data:text/html;base64,PHNjcmlwdD4=",
+        "assets/y.svg": "javascript:alert(1)",
+      },
+    });
+    expect(readAssetData(html)).toEqual({ "assets/ok.png": "data:image/png;base64,AAAA" });
+    expect(readAssetData(serializeLessonHtml(doc, env))).toEqual({});
   });
 });

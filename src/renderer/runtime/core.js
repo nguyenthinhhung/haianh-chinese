@@ -393,10 +393,31 @@
     };
   };
 
+  /* An exported lesson carries its pictures and sounds in #lesson-assets,
+   * keyed by the assets/… path the slides use; swap them in. Only image and
+   * audio data URLs are accepted. */
+  var ASSET_DATA = /^data:(image|audio)\/[a-z0-9.+-]+;base64,[A-Za-z0-9+/=]+$/;
+  function applyEmbeddedAssets(deck) {
+    var block = document.getElementById("lesson-assets");
+    if (!block) return;
+    var map;
+    try {
+      map = JSON.parse(block.textContent);
+    } catch (e) {
+      return;
+    }
+    var nodes = deck.querySelectorAll("img[src], audio[src]");
+    for (var i = 0; i < nodes.length; i++) {
+      var data = map[nodes[i].getAttribute("src")];
+      if (typeof data === "string" && ASSET_DATA.test(data)) nodes[i].setAttribute("src", data);
+    }
+  }
+
   /* A lesson file opened in a browser presents itself. */
   function start() {
     var deck = document.querySelector("body > .ls-deck");
     if (!deck) return;
+    applyEmbeddedAssets(deck);
     document.documentElement.classList.add("ls-present");
     var initial = parseInt((location.hash || "").slice(1), 10);
     var controller = LS.mount(deck, {
