@@ -15,6 +15,8 @@ const pair = z
 
 const schema = z.object({
   heading: z.string().max(60).default(""),
+  /** "image": the right column shows pictures only, found from the meaning. */
+  rightAs: z.enum(["text", "image"]).default("text"),
   pairs: z.array(pair).min(2, "Cần ít nhất 2 cặp").max(6, "Tối đa 6 cặp"),
 });
 
@@ -27,9 +29,10 @@ export const matching: SlideTemplate<MatchingContent> = {
   order: 120,
   schema,
   aiSchemaHint:
-    'Hai cột để ghép; cột phải tự xáo trộn, mỗi lần bấm Tiếp nối một cặp. {"heading"?: tiêu đề, "pairs": [{"left": chữ Hán, "leftPinyin"?: pinyin, "right": nghĩa tiếng Việt}] (2–6 cặp)}',
+    'Hai cột để ghép; cột phải tự xáo trộn, mỗi lần bấm Tiếp nối một cặp. {"heading"?: tiêu đề, "rightAs"?: "image" để cột phải là hình thay cho nghĩa (ghép chữ với hình, hợp với trẻ nhỏ), "pairs": [{"left": chữ Hán, "leftPinyin"?: pinyin, "right": nghĩa tiếng Việt (vẫn ghi khi cột phải là hình)}] (2–6 cặp)}',
   defaults: () => ({
     heading: "Ghép chữ với nghĩa",
+    rightAs: "text",
     pairs: [
       { left: "红", leftPinyin: "hóng", right: "màu đỏ" },
       { left: "绿", leftPinyin: "lǜ", right: "màu xanh lá" },
@@ -59,11 +62,13 @@ export const matching: SlideTemplate<MatchingContent> = {
       .map((i) => {
         const p = c.pairs[i]!;
         const img = image(ctx, p.rightImage, "ls-mt-image");
+        // Pictures only when asked for and found; otherwise the meaning stays.
+        const text = p.right && !(c.rightAs === "image" && img) ? autoText(p.right, "span", "ls-mt-text") : "";
         return (
           `<li class="ls-mt-item ls-mt-c${(i % 6) + 1}${img ? " ls-mt-item--image" : ""}" data-ls-reveal="${i + 1}">` +
           badge(i) +
           (img ? `<span class="ls-mt-media">${img}</span>` : "") +
-          (p.right ? autoText(p.right, "span", "ls-mt-text") : "") +
+          text +
           `</li>`
         );
       })
@@ -80,6 +85,15 @@ export const matching: SlideTemplate<MatchingContent> = {
   editor: [
     { kind: "text", key: "heading", label: "Tiêu đề", lang: "vi" },
     {
+      kind: "select",
+      key: "rightAs",
+      label: "Cột phải",
+      options: [
+        { value: "text", label: "Nghĩa (chữ)" },
+        { value: "image", label: "Hình (ghép chữ với hình)" },
+      ],
+    },
+    {
       kind: "list",
       key: "pairs",
       label: "Các cặp (cột phải sẽ tự xáo trộn)",
@@ -91,7 +105,14 @@ export const matching: SlideTemplate<MatchingContent> = {
         { kind: "text", key: "left", label: "Bên trái (chữ Hán)", lang: "zh" },
         { kind: "text", key: "leftPinyin", label: "Pinyin", lang: "pinyin" },
         { kind: "text", key: "right", label: "Bên phải (nghĩa)", lang: "vi" },
-        { kind: "asset", key: "rightImage", label: "hoặc ảnh bên phải", assetKind: "image", searchFrom: ["right", "left"] },
+        {
+          kind: "asset",
+          key: "rightImage",
+          label: "Ảnh bên phải",
+          assetKind: "image",
+          searchFrom: ["right", "left"],
+          autoImage: (c: MatchingContent) => c.rightAs === "image",
+        },
       ],
     },
   ],

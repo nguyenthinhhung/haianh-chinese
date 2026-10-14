@@ -41,8 +41,13 @@ describe("imageSlots / imageJobs", () => {
     ]);
   });
 
-  it("leaves out pictures that stand in for text", () => {
+  it("fills pictures that stand in for text only when the slide is set to show pictures", () => {
     expect(imageSlots(matching, templates)).toEqual([]);
+    const withPictures = { ...matching, content: { ...(matching.content as object), rightAs: "image" } };
+    expect(imageSlots(withPictures, templates).map((s) => [s.path.join("."), s.anchor])).toEqual([
+      ["pairs.0.rightImage", "con mèo"],
+      ["pairs.1.rightImage", "con chó"],
+    ]);
   });
 
   it("fills flashcard pictures whichever face shows first", () => {

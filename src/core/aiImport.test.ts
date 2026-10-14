@@ -140,7 +140,9 @@ describe("buildAiPrompt", () => {
     const prompt = buildAiPrompt(templates, request);
     expect(prompt).toContain('"vocabulary": words[].image');
     expect(prompt).toContain("TIẾNG ANH");
-    expect(prompt).not.toContain('"matching": ');
+    expect(prompt).toContain('"matching": pairs[].rightImage');
+    // Pictures that are only ever chosen by hand are not asked for.
+    expect(prompt).not.toContain('"box-pick": ');
   });
 
   it("states the tight character limits, read from each template's schema", () => {
