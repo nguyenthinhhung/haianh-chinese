@@ -275,6 +275,7 @@ function ListField(props: FieldProps & { field: Extract<EditorField, { kind: "li
 
 function Field(props: FieldProps) {
   const { field, path, content, session, slide, messages } = props;
+  if (field.when && !field.when(getIn(content, path.slice(0, -1)))) return null;
   const value = getIn(content, path);
   const id = `f-${slide.id}-${pathKey(path)}`;
   const set = (v: unknown) => session.update((d) => setSlideField(d, slide.id, path, v), { coalesce: id });

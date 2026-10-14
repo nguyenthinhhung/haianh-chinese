@@ -16,7 +16,13 @@ export interface RenderContext {
  * Declarative description of a template's form. The Properties panel builds its
  * UI from this, so a new template rarely needs UI code of its own.
  */
-export type EditorField =
+/**
+ * Shown only when `when` returns true for the object holding the field (the
+ * slide content, or the list item for fields inside a list).
+ */
+type Conditional = { when?(parent: any): boolean };
+
+export type EditorField = (
   | {
       kind: "text";
       key: string;
@@ -47,7 +53,9 @@ export type EditorField =
       max: number;
       fields: EditorField[];
       newItem(): unknown;
-    };
+    }
+) &
+  Conditional;
 
 export type EditorFieldSpec = EditorField[];
 
