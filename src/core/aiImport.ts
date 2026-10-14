@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { ageProfile } from "./ages";
 import { slotKey } from "./autoImages";
 import { describeContentPath, type Path } from "./fields";
@@ -11,7 +12,7 @@ import {
   type LessonRequest,
 } from "./lessonPlan";
 import type { Slide } from "./schema";
-import type { EditorFieldSpec } from "./template";
+import type { AnySlideTemplate, EditorFieldSpec } from "./template";
 import type { TemplateRegistry } from "./templateRegistry";
 
 /**
@@ -63,6 +64,53 @@ function imageKeywords(content: unknown, fields: EditorFieldSpec, base: Path = [
     const usable = words.length > 0 && words.length <= 60 && !/[/\\]|^\w+:|\.(png|jpe?g|gif|webp|svg)$/i.test(words);
     return usable ? [[[...base, field.key], words]] : [];
   });
+}
+
+/**
+ * AI tools often write a list item as a bare string ("segments": ["猫", "狗"])
+ * where an object is expected. The string becomes the item's first text field.
+ */
+function wrapBareStrings(content: unknown, fields: EditorFieldSpec): unknown {
+  if (!content || typeof content !== "object" || Array.isArray(content)) return content;
+  const out: Record<string, unknown> = { ...(content as Record<string, unknown>) };
+  for (const field of fields) {
+    if (field.kind !== "list" || !Array.isArray(out[field.key])) continue;
+    const textKey = field.fields.find((f) => f.kind === "text")?.key;
+    out[field.key] = (out[field.key] as unknown[]).map((item) =>
+      typeof item === "string" && textKey ? { [textKey]: item } : wrapBareStrings(item, field.fields),
+    );
+  }
+  return out;
+}
+
+/** Limits above this are rarely reached, and listing them would only lengthen the prompt. */
+const PROMPT_MAX_CHARS = 50;
+
+/**
+ * Character limits of a template's text fields, as told to the AI: the
+ * smaller of what still fits the slide comfortably (`limits`) and what the
+ * import accepts (read from the schema, so the prompt never drifts from it).
+ * Headings share one rule in the prompt and are left out.
+ */
+export function lengthLimits(template: Pick<AnySlideTemplate, "schema" | "limits">): string[] {
+  const limits = new Map<string, number>();
+  const keep = (path: string, max: number) => limits.set(path, Math.min(max, limits.get(path) ?? Infinity));
+  try {
+    const walk = (node: unknown, path: string) => {
+      if (!node || typeof node !== "object") return;
+      const n = node as { type?: string; maxLength?: number; properties?: Record<string, unknown>; items?: unknown };
+      if (n.type === "string" && n.maxLength !== undefined) keep(path, n.maxLength);
+      for (const [key, child] of Object.entries(n.properties ?? {})) walk(child, path ? `${path}.${key}` : key);
+      if (n.items) walk(n.items, `${path}[]`);
+    };
+    walk(z.toJSONSchema(template.schema, { io: "input", unrepresentable: "any" }), "");
+  } catch {
+    // A schema JSON Schema cannot express still has its comfortable limits.
+  }
+  for (const [pattern, limit] of Object.entries(template.limits)) {
+    if (limit.maxChars !== undefined) keep(pattern.replace(/\.\*/g, "[]"), limit.maxChars);
+  }
+  return [...limits].filter(([path, max]) => path !== "heading" && max <= PROMPT_MAX_CHARS).map(([path, max]) => `${path} ≤ ${max}`);
 }
 
 /** Picture fields filled in automatically, written as paths for the prompt: `words[].image`. */
@@ -128,7 +176,8 @@ export function parseAiLesson(text: string, registry: TemplateRegistry): AiImpor
       errors.push(`${where}: loại slide "${type || "(trống)"}" không có trong ứng dụng.`);
       return;
     }
-    const parsed = template.schema.safeParse(withoutAssets(item?.content ?? {}, template.editor));
+    const content = wrapBareStrings(item?.content ?? {}, template.editor);
+    const parsed = template.schema.safeParse(withoutAssets(content, template.editor));
     if (!parsed.success) {
       for (const issue of parsed.error.issues) {
         const path = describeContentPath(issue.path as Path, template.editor);
@@ -138,7 +187,7 @@ export function parseAiLesson(text: string, registry: TemplateRegistry): AiImpor
     }
     const notes = typeof item?.notes === "string" ? item.notes.trim().slice(0, 5000) : "";
     const id = newId("s");
-    for (const [path, words] of imageKeywords(item?.content, template.editor)) imageQueries.set(slotKey(id, path), words);
+    for (const [path, words] of imageKeywords(content, template.editor)) imageQueries.set(slotKey(id, path), words);
     slides.push({ id, type, content: parsed.data, ...(notes ? { notes } : {}) });
   });
   if (errors.length) return { ok: false, errors };
@@ -180,7 +229,10 @@ export function buildAiPrompt(registry: TemplateRegistry, request: LessonRequest
   const types = registry
     .list()
     .filter((t) => used.has(t.type))
-    .map((t) => `- "${t.type}" (${t.label}): ${t.aiSchemaHint}`)
+    .map((t) => {
+      const limits = lengthLimits(t);
+      return `- "${t.type}" (${t.label}): ${t.aiSchemaHint}${limits.length ? ` Tối đa ký tự: ${limits.join(", ")}.` : ""}`;
+    })
     .join("\n");
   const pictureFields = registry
     .list()
@@ -226,6 +278,8 @@ ${types}
 
 Quy tắc:
 - Chữ Hán giản thể; pinyin có dấu thanh, các âm tiết cách nhau bằng dấu cách (píng guǒ).
+- Mỗi mục trong danh sách là một object như mô tả ở trên, kể cả khi chỉ có một trường ({"text": "..."}, không phải "...").
+- Giữ đúng giới hạn "Tối đa ký tự" của từng trường (chữ dài hơn sẽ không vừa slide); "heading" tối đa 40 ký tự. Ô trò chơi và lựa chọn nên là một từ hoặc cụm từ ngắn; lời dặn cho học sinh ("Đọc…", "Nói…") ghi vào "notes".
 - Luôn điền pinyin và nghĩa tiếng Việt ở mọi trường có; giáo viên tự ẩn khi trình chiếu nếu cần.
 - Nghĩa, câu hỏi và giải thích bằng tiếng Việt, ngắn gọn, hợp lứa tuổi.
 - Slide luyện tập và trò chơi chỉ dùng từ và mẫu câu đã dạy trong bài.

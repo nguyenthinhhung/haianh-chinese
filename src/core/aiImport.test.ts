@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { testEnv } from "../test/env";
-import { buildAiPrompt, extractJson, parseAiLesson } from "./aiImport";
+import { buildAiPrompt, extractJson, lengthLimits, parseAiLesson } from "./aiImport";
 import { DEFAULT_REQUEST, planSlideCount, resolvePlan, type LessonRequest } from "./lessonPlan";
 
 const { templates } = testEnv();
@@ -44,6 +44,20 @@ describe("parseAiLesson", () => {
   it("accepts a bare array of slides", () => {
     const result = parseAiLesson(JSON.stringify(lesson.slides), templates);
     expect(result.ok && result.slides).toHaveLength(2);
+  });
+
+  it("accepts list items written as bare strings", () => {
+    // As ChatGPT wrote them: wheel segments and summary points without {"text": …}.
+    const bare = {
+      slides: [
+        { type: "lucky-wheel", content: { segments: ["猫", "狗", "兔子"] } },
+        { type: "summary", content: { points: ["Con mèo là 猫", "Con chó là 狗"], words: [{ hanzi: "猫", pinyin: "māo" }] } },
+      ],
+    };
+    const result = parseAiLesson(JSON.stringify(bare), templates);
+    if (!result.ok) throw new Error(result.errors.join("; "));
+    expect((result.slides[0]!.content as { segments: unknown[] }).segments).toEqual([{ text: "猫" }, { text: "狗" }, { text: "兔子" }]);
+    expect((result.slides[1]!.content as { points: unknown[] }).points[0]).toEqual({ text: "Con mèo là 猫" });
   });
 
   it("keeps the AI's picture keywords by slot, ignoring links and file names", () => {
@@ -127,6 +141,15 @@ describe("buildAiPrompt", () => {
     expect(prompt).toContain('"vocabulary": words[].image');
     expect(prompt).toContain("TIẾNG ANH");
     expect(prompt).not.toContain('"matching": ');
+  });
+
+  it("states the tight character limits, read from each template's schema", () => {
+    // The wheel accepts 16 characters but only 8 read well on a wedge.
+    expect(lengthLimits(templates.require("lucky-wheel"))).toEqual(["segments[].text ≤ 8"]);
+    expect(lengthLimits(templates.require("picture-card"))).toEqual(["hanzi ≤ 4", "pinyin ≤ 24", "meaning ≤ 30"]);
+    for (const t of templates.list()) expect(lengthLimits(t).some((l) => l.startsWith("heading ")), t.type).toBe(false);
+    const prompt = buildAiPrompt(templates, { ...request, kind: "review", activities: ["lucky-wheel"] });
+    expect(prompt).toContain("Tối đa ký tự: segments[].text ≤ 8.");
   });
 
   it("asks a review lesson not to add new words", () => {

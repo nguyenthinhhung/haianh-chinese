@@ -47,7 +47,7 @@ export const quiz: SlideTemplate<QuizContent> = {
   order: 110,
   schema,
   aiSchemaHint:
-    'Câu hỏi cho cả lớp, bấm Tiếp để hiện đáp án. {"mode": "choice" (2–4 lựa chọn) hoặc "truefalse" (Đúng/Sai), "question"?: câu hỏi tiếng Việt, "hanzi"?: chữ Hán làm đề, "pinyin"?, "options": [{"text"}] (2–4, với "choice"), "answer": "a"|"b"|"c"|"d" (với "choice"), "truth": "true"|"false" (với "truefalse")}',
+    'Câu hỏi cho cả lớp, bấm Tiếp để hiện đáp án. {"mode": "choice" (2–4 lựa chọn) hoặc "truefalse" (Đúng/Sai), "question"?: câu hỏi tiếng Việt, "hanzi"?: chữ Hán làm đề, "pinyin"?, "options": [{"text"}] (2–4, với "choice"), "answer": "a"|"b"|"c"|"d" (với "choice"), "truth": "true"|"false" (với "truefalse")}. Lựa chọn không được lộ đáp án: hỏi nghĩa thì lựa chọn chỉ ghi nghĩa, hỏi chữ Hán thì lựa chọn chỉ ghi chữ Hán (không kèm nghĩa).',
   defaults: () => ({
     mode: "choice",
     question: "Chữ này nghĩa là gì?",
