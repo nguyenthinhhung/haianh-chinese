@@ -12,7 +12,7 @@ phải chạm vào HTML.
 **Người dùng duy nhất của ứng dụng là giáo viên.** Học sinh chỉ xem màn hình chiếu
 và trả lời bằng lời; giáo viên là người điều khiển mọi thứ trên màn hình.
 
-> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 6).
+> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 7).
 
 ---
 
@@ -255,7 +255,8 @@ Lưu cũng không mất bài.
 | `assets[]` | `{ id, file, kind: "image" \| "audio", mime, alt?, source? }` — `source` là trang web nơi lấy ảnh, để giáo viên tìm lại. |
 | `metadata` | `createdAt`, `updatedAt`, `appVersion`. |
 
-Schema định nghĩa một lần bằng Zod; JSON Schema cho AI import được sinh từ đó.
+Schema định nghĩa một lần bằng Zod. Prompt cho AI mô tả từng loại slide bằng
+`aiSchemaHint` kèm một ví dụ hợp lệ; kết quả AI đi qua đúng các schema Zod đó.
 Pinyin lưu dạng có dấu thanh (`píng guǒ`), hiển thị bằng `<ruby>` khi cần.
 
 `hanziFont: "kai"` chọn kiểu chữ Khải (楷体 — KaiTi trên Windows, Kaiti SC trên
@@ -383,8 +384,9 @@ Library → "Bài mới" → chọn bài mẫu và theme → tạo thư mục + 
 mở Editor.
 
 ### B. Nhập nội dung từ AI
-1. Nút **"Sao chép prompt cho AI"** đưa vào clipboard prompt kèm JSON Schema, mô tả
-   từng loại slide (`aiSchemaHint`) và ví dụ.
+1. Nút **"Sao chép lời nhắn cho AI"** đưa vào clipboard prompt mô tả định dạng,
+   từng loại slide (`aiSchemaHint`), quy tắc và một ví dụ (có test bảo đảm ví dụ
+   này hợp lệ). Trường ảnh/âm thanh AI tự thêm bị bỏ, giáo viên thêm sau.
 2. Người dùng dán kết quả vào hộp thoại nhập; ứng dụng tự bỏ khung ```` ```json ````
    và đoạn văn thừa.
 3. Validate; lỗi hiển thị theo vị trí ("Slide 3, từ 2: thiếu pinyin").
@@ -397,14 +399,25 @@ Không gọi AI API trong MVP.
 ### C. Preview, Present và Export
 - Editor hiển thị slide bằng chính hàm render, thêm lớp chỉnh sửa.
 - Present: toàn màn hình; ←/→, PageUp/PageDown, Space, Esc; hỗ trợ bút trình chiếu.
-- Export: render + nhúng asset base64 + runtime của các template được dùng → một
-  file `.html`. Cảnh báo khi vượt ~50 MB.
+- Export: render + runtime của các template được dùng + asset nhúng → một file
+  `.html`. Asset không còn dùng bị bỏ trước. Mỗi file ảnh/âm thanh chỉ nhúng
+  **một lần**, trong khối JSON `#lesson-assets` (đường dẫn `assets/…` → `data:` URL);
+  slide vẫn trỏ `assets/…` và runtime thay bằng dữ liệu nhúng khi mở trang (chỉ
+  nhận `data:image/…` và `data:audio/…`). Nhờ vậy file không chứa hai bản của mỗi
+  ảnh, và mở lại file export vẫn lấy được ảnh mà chỉ cần đọc JSON. Báo kích thước
+  sau khi xuất, cảnh báo khi vượt ~50 MB.
 - Slide tương tác chạy giống hệt trong Present và file export.
 - File export phải chạy đúng trên Chrome, Edge và **Safari**.
 
 ### D. Mở HTML từ bên ngoài
 `Chọn file → kiểm tra meta + #lesson-data → parse JSON → migrate → validate →
 sao chép vào Library → mở Editor`. Không có chuyển đổi HTML tuỳ ý.
+- Bài chép vào luôn nhận **ID mới**, để không bao giờ dùng chung draft, backup hay
+  lock với một bài đã có trong Library.
+- Ảnh/âm thanh lấy từ `#lesson-assets` (file export) hoặc thư mục `assets/` cạnh
+  file được chọn (`lesson.html` chép từ máy khác). Rust nhớ file vừa chọn qua hộp
+  thoại và chỉ cho chép từ thư mục cạnh file đó; mỗi file được kiểm tra tên và nội
+  dung (chỉ ảnh, âm thanh). Thiếu file nào thì báo cho giáo viên.
 
 ### E. Ảnh và giọng đọc từ web
 - **Tìm ảnh…** mở hộp thoại tìm, từ khoá điền sẵn từ nghĩa hoặc chữ Hán của từ
@@ -507,7 +520,7 @@ cắt validation, ghi file an toàn, backup, recovery, hay hỗ trợ macOS.
 | 4. Hỏi đáp + theme | 🟢 Xong (Windows) | Đủ 6 loại slide nhóm 2 (`quiz` có biến thể Đúng/Sai và đề bằng ảnh/âm thanh, `matching`, `fill-blank`, `sentence-order`, `tone-pick` tự lấy thanh từ dấu pinyin, `sort-groups`); thứ tự xáo trộn cố định theo ID slide nên Editor, Present và file giống nhau; hoàn thành có pháo giấy. 5 theme (`classic`, `garden`, `ocean`, `space` nền tối, `panda`); tuỳ chọn chữ Khải. Trường form hiện theo điều kiện. Chữ Hán lẫn trong câu tiếng Việt được gắn `lang="zh-CN"` riêng. Đã kiểm tra trong app thật: chạy các bước của cả 6 loại và xem 5 theme. | Thử trên lớp thật. |
 | 5. Trò chơi + công cụ lớp học | 🟢 Xong (Windows) | Đủ 5 trò nhóm 3 (`whats-missing`, `guess-picture` với 4 cách chơi, `box-pick`, `lucky-wheel`, `memory`), mỗi trò có `interaction.js` riêng qua các hook mới của runtime (Tiếp/Lùi tự xử lý, chọn ô bằng số, vào/rời slide). Công cụ lớp học: bảng điểm đội, đồng hồ đếm ngược, gọi số ngẫu nhiên, bảng phím tắt. Runtime có test chạy thật trong DOM giả lập (happy-dom) cho từng trò. Đã kiểm tra trong app thật. | Dạy thử một buổi với lớp thật. |
 | Ảnh và giọng đọc từ web (thêm ở Rev 6) | 🟢 Xong (Windows) | Tìm ảnh Bing, dán/kéo ảnh, giọng đọc Google Dịch, ghi nguồn ảnh. Đã kiểm tra trong app thật: tìm "quả táo" ra 30 ảnh trong ~2,5 giây, chèn ảnh, tạo giọng đọc 苹果, dán ảnh, kéo địa chỉ ảnh vào. | Kéo ảnh thật từ Chrome/Edge sang chưa thử bằng chuột thật. |
-| 6. Import/Export + phát hành | ⚪ Chưa bắt đầu | Icon ứng dụng; cấu hình đóng gói NSIS / `.dmg`. | Export độc lập, AI import, mở HTML ngoài, ký số + notarize, hướng dẫn. |
+| 6. Import/Export + phát hành | 🟡 Còn macOS + ký số | Xuất một file HTML độc lập (asset nhúng một lần trong `#lesson-assets`); nhập bài từ AI (tạo bài mới hoặc thêm vào cuối bài, một bước undo); mở file bài học từ ngoài (file export hoặc `lesson.html` kèm `assets/`). Bộ cài Windows NSIS build được (`Chinese Lesson Studio_0.1.0_x64-setup.exe`, 5,3 MB), bản release đã chạy thử. Hướng dẫn ngắn: `HUONG-DAN.md`. Đã kiểm tra: file export chạy trên Chrome không cần app (ảnh, audio, trò chơi, công cụ lớp học). | Ký số Windows; build, ký và notarize bản macOS (cần máy Mac hoặc CI macOS); thử file export trên Edge, Safari; thử hộp thoại chọn/lưu file bằng tay. |
 
 ---
 
@@ -523,7 +536,7 @@ cắt validation, ghi file an toàn, backup, recovery, hay hỗ trợ macOS.
 - [x] Sửa nội dung slide mà không cần biết HTML.
 - [x] Thêm, xoá, nhân bản, kéo thả sắp xếp slide.
 - [ ] Thay ảnh/audio, chỉnh thuộc tính template, đổi theme không mất nội dung. *(Đã có trong UI; chọn file ảnh/audio qua hộp thoại chưa thử trong app thật.)*
-- [ ] Undo/redo cho mọi thao tác sửa document, kể cả nhập AI. *(Có cho mọi lệnh hiện tại; nhập AI chưa có.)*
+- [x] Undo/redo cho mọi thao tác sửa document, kể cả nhập AI.
 - [x] Cảnh báo khi nội dung vượt giới hạn của template.
 - [x] Nút Lưu, Ctrl+S / ⌘S và trạng thái lưu hiển thị đúng.
 
@@ -531,7 +544,7 @@ cắt validation, ghi file an toàn, backup, recovery, hay hỗ trợ macOS.
 - [x] Đủ các loại slide nhóm 1 và 2 (nhóm 3 nếu không bị cắt). *(Đủ cả nhóm 3.)*
 - [ ] Mọi slide nhóm 1 và 2 chạy hết các bước chỉ bằng Tiếp/Lùi (bút trình chiếu). *(Nhóm 1 và 2 đạt với bàn phím; chưa thử bút thật.)*
 - [x] Mỗi slide hoạt động có phản hồi âm thanh/hiệu ứng và phím `A`/`R`.
-- [ ] Bảng điểm đội, đồng hồ đếm ngược dùng được trong Present và file export. *(Có trong Present và `lesson.html`; file export chưa làm.)*
+- [x] Bảng điểm đội, đồng hồ đếm ngược dùng được trong Present và file export.
 - [x] Mỗi slide có ô ghi chú cho giáo viên, không hiện khi trình chiếu.
 - [x] 5 theme; âm thanh và hiệu ứng tắt được.
 - [x] Thêm một loại slide mới chỉ cần thêm một thư mục trong `templates/`.
@@ -539,7 +552,7 @@ cắt validation, ghi file an toàn, backup, recovery, hay hỗ trợ macOS.
 **Contract và import**
 - [x] Schema v1 có kiểm thử; round-trip `doc → html → doc` bằng nhau cho mọi loại slide. *(Test tự chạy cho mọi template đã đăng ký.)*
 - [x] HTML không đúng contract bị từ chối với thông báo dễ hiểu.
-- [ ] JSON từ AI được validate, lỗi chỉ rõ vị trí; AI tạo được mọi loại slide.
+- [x] JSON từ AI được validate, lỗi chỉ rõ vị trí; AI tạo được mọi loại slide.
 - [x] File có `schemaVersion` cao hơn hoặc `type` lạ bị từ chối, không bị sửa.
 
 **Autosave và recovery**
@@ -549,17 +562,19 @@ cắt validation, ghi file an toàn, backup, recovery, hay hỗ trợ macOS.
 - [ ] File bị sửa từ bên ngoài (OneDrive/iCloud) trong lúc mở → không bị ghi đè âm thầm. *(Đã kiểm tra trên Windows với thư mục OneDrive; chưa thử iCloud.)*
 
 **Present và Export**
-- [ ] Editor, Present và Export hiển thị giống nhau. *(Editor và Present dùng chung hàm render và runtime; Export chưa có.)*
+- [x] Editor, Present và Export hiển thị giống nhau. *(Cùng hàm render, cùng runtime.)*
 - [ ] Điều hướng bằng bàn phím và bút trình chiếu. *(Chạy đúng trong `lesson.html` trên Chrome và trong Present của app; chưa thử bút thật.)*
 - [ ] File export mở offline trên máy không cài ứng dụng, chạy đúng trên Chrome,
-      Edge và Safari; ảnh, audio, âm thanh phản hồi và tương tác hoạt động.
+      Edge và Safari; ảnh, audio, âm thanh phản hồi và tương tác hoạt động. *(Đã
+      kiểm tra trên Chrome: ảnh, audio, các bước, vòng quay, hộp bí mật, đồng hồ;
+      chưa thử Edge, Safari.)*
 
 **Bảo mật và chất lượng**
-- [ ] Không có `<script>` nào từ file ngoài hoặc AI được thực thi.
-- [ ] Unit test cho schema, codec, migration, AI import, commands/undo và từng template. *(Đã có cho schema, codec, migration, commands, undo/redo, phát hiện draft, từng template; còn AI import.)*
+- [x] Không có `<script>` nào từ file ngoài hoặc AI được thực thi. *(Chỉ đọc JSON; codec có test cho file bị chèn `<script>`.)*
+- [x] Unit test cho schema, codec, migration, AI import, commands/undo và từng template. *(Thêm cả runtime trình chiếu chạy trong DOM giả lập.)*
 - [ ] Test luồng tạo → sửa → lưu → mở lại → export (Vitest cho core; kiểm tra file
       export bằng Playwright trên Chromium và WebKit).
-- [ ] Bộ cài Windows và macOS (đã ký, notarize) cùng hướng dẫn sử dụng ngắn.
+- [ ] Bộ cài Windows và macOS (đã ký, notarize) cùng hướng dẫn sử dụng ngắn. *(Bộ cài Windows chưa ký và hướng dẫn đã có; còn ký số và toàn bộ phần macOS.)*
 
 ---
 
@@ -607,6 +622,16 @@ Chưa làm:
 ---
 
 ## 12. Lịch sử thay đổi
+
+### Rev 7
+
+| Thay đổi | Lý do |
+| --- | --- |
+| File export nhúng mỗi ảnh/âm thanh một lần trong JSON `#lesson-assets`; runtime thay vào khi mở | Nhúng thẳng vào `src` thì mở lại file export phải đọc DOM mới lấy được ảnh; nhúng cả hai nơi thì file nặng gấp đôi. |
+| Prompt AI dùng `aiSchemaHint` + ví dụ thay vì JSON Schema đầy đủ | Ngắn và dễ hiểu với công cụ AI hơn; mọi kết quả vẫn qua đúng schema Zod, lỗi chỉ rõ vị trí. |
+| Bài mở từ file ngoài luôn nhận ID mới | Hai bài cùng ID sẽ dùng chung draft, backup và lock. |
+| Runtime có hook cho trò chơi (Tiếp/Lùi tự xử lý, chọn ô bằng số, vào/rời slide) và công cụ lớp học trong `runtime/tools.js` | Trò chơi không phải chuỗi bước tuyến tính; công cụ lớp học cần chạy cả trong file export. |
+| Công cụ lớp học: thêm phím `N` gọi số ngẫu nhiên, `H` bảng phím tắt; trên slide chọn ô, phím số dùng để chọn ô | Phím `1`–`4` của bảng điểm trùng với gõ số ô. |
 
 ### Rev 6
 

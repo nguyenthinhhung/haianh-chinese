@@ -3,11 +3,13 @@
 Offline-first desktop app (Tauri 2 + React + TypeScript) for teachers to build
 and present Chinese lessons for children. Design decisions: [ARCHITECTURE.md](ARCHITECTURE.md).
 
-Current state: roadmap phases 1–5 done on Windows (editor, safe save, drafts and
-recovery, undo/redo, lesson management, 18 slide types including 5 classroom games,
-5 themes, in-app Present with scoreboard, timer and random picker),
-plus web image search and Chinese text-to-speech. Status per phase:
-[ARCHITECTURE.md §8.1](ARCHITECTURE.md).
+Current state: all roadmap features implemented and tested on Windows — editor with
+safe save, drafts and recovery; 18 slide types including 5 classroom games; 5 themes;
+in-app Present with scoreboard, timer and random picker; single-file export for
+classroom computers; AI import; web image search and Chinese text-to-speech.
+macOS builds, code signing and classroom trials are still open. Status per phase:
+[ARCHITECTURE.md §8.1](ARCHITECTURE.md). Teacher's guide (Vietnamese):
+[HUONG-DAN.md](HUONG-DAN.md).
 
 ## Requirements
 
@@ -23,6 +25,7 @@ npm test             # Vitest: core, renderer, templates
 npm run typecheck
 npm run tauri dev    # desktop app
 npm run tauri build  # NSIS installer (Windows) / .app + .dmg (macOS)
+                     # Windows only: npx tauri build --bundles nsis
 npm run dev          # UI only, in a browser; lessons kept in localStorage
 ```
 
