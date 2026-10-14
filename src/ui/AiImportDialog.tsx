@@ -13,13 +13,17 @@ import {
 } from "../core/lessonPlan";
 import { pinyinWarnings } from "../core/pinyinCheck";
 import type { Slide } from "../core/schema";
+import type { ImageFillRequest } from "./lessonFiles";
 import { useServices } from "./services";
 
 interface Props {
   /** "new" creates a lesson; "append" adds the slides to the open one. */
   mode: "new" | "append";
-  /** `themeId` suits the age the lesson was asked for; only a new lesson uses it. */
-  onImport(title: string, slides: Slide[], themeId: string): Promise<void>;
+  /**
+   * `themeId` suits the age the lesson was asked for; only a new lesson uses
+   * it. `images` drives the picture search that follows the import.
+   */
+  onImport(title: string, slides: Slide[], themeId: string, images: ImageFillRequest): Promise<void>;
   onClose(): void;
 }
 
@@ -231,7 +235,11 @@ export function AiImportDialog({ mode, onImport, onClose }: Props) {
     setBusy(true);
     setError(null);
     try {
-      await onImport(title.trim() || request.topic.trim() || "Bài mới", result.slides, ageProfile(request.age).theme);
+      const age = ageProfile(request.age);
+      await onImport(title.trim() || request.topic.trim() || "Bài mới", result.slides, age.theme, {
+        queries: result.imageQueries,
+        clipart: age.clipart,
+      });
       onClose();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));

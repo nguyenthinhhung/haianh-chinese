@@ -1,11 +1,13 @@
 import { useMemo, useState } from "react";
 import { AGE_PROFILES, ageRangeLabel } from "../core/ages";
+import { markReviewed } from "../core/autoImages";
 import { addAsset, setSettings, setSlideField, setTheme } from "../core/document";
 import { checkLimits, getIn, type Path } from "../core/fields";
 import type { LessonDocument, Slide } from "../core/schema";
 import type { AnySlideTemplate, EditorField } from "../core/template";
 import type { ImportedAsset } from "../platform/persistence";
 import { ImageSearchDialog } from "./ImageSearchDialog";
+import { prefersClipart } from "./useImageFill";
 import type { LessonSession } from "./useLessonSession";
 import { useServices } from "./services";
 
@@ -90,7 +92,7 @@ const hostOf = (url: string) => {
 };
 
 function AssetField({ field, path, content, session, slide }: FieldProps & { field: Extract<EditorField, { kind: "asset" }> }) {
-  const { persistence } = useServices();
+  const { persistence, themes } = useServices();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
@@ -109,7 +111,8 @@ function AssetField({ field, path, content, session, slide }: FieldProps & { fie
   function attach(imported: ImportedAsset, source?: string) {
     session.update((d) => {
       const added = addAsset(d, { file: imported.file, kind: field.assetKind, mime: imported.mime, ...(source ? { source } : {}) });
-      return setSlideField(added.doc, slide.id, path, added.assetId);
+      // The same file may already be in the lesson, still marked; the teacher chose it now.
+      return markReviewed(setSlideField(added.doc, slide.id, path, added.assetId), [added.assetId]);
     });
   }
 
@@ -167,6 +170,14 @@ function AssetField({ field, path, content, session, slide }: FieldProps & { fie
       onDrop={onDrop}
     >
       {asset && isImage && <img className="asset-thumb" src={persistence.assetUrl(session.dir, asset.file)} alt="" />}
+      {asset?.needsReview && (
+        <p className="asset-review">
+          <span>Ảnh tự chọn, chưa duyệt.</span>
+          <button type="button" onClick={() => session.update((d) => markReviewed(d, [asset.id]))}>
+            Giữ ảnh này
+          </button>
+        </p>
+      )}
       {asset && !isImage && <audio controls preload="none" src={persistence.assetUrl(session.dir, asset.file)} />}
       {asset?.source && (
         <p className="asset-source muted" title={asset.source}>
@@ -176,7 +187,7 @@ function AssetField({ field, path, content, session, slide }: FieldProps & { fie
       <div className="asset-actions">
         {isImage && (
           <button type="button" className="primary" disabled={!!busy} onClick={() => setSearching(true)}>
-            Tìm ảnh…
+            {asset?.needsReview ? "Đổi ảnh…" : "Tìm ảnh…"}
           </button>
         )}
         {field.speakFrom && (
@@ -208,7 +219,8 @@ function AssetField({ field, path, content, session, slide }: FieldProps & { fie
       {error && <p className="field-error">{error}</p>}
       {searching && (
         <ImageSearchDialog
-          initialQuery={searchQuery}
+          initialQuery={asset?.query ?? searchQuery}
+          initialClipart={prefersClipart(session.doc, themes)}
           onClose={() => setSearching(false)}
           onPick={async (hit) => {
             // Many sites refuse downloads from apps; Bing's copy is the fallback.

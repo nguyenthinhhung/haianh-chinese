@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import { imageJobs, picturesToReview } from "../core/autoImages";
 import { appendSlides, setSlideNotes, setTitle } from "../core/document";
 import type { RenderEnv } from "../renderer/render";
 import type { OpenLesson } from "./lessonFiles";
 import { AiImportDialog } from "./AiImportDialog";
+import { ImageReviewDialog } from "./ImageReviewDialog";
 import { EXPORT_WARN_BYTES, exportLesson } from "./lessonFiles";
 import { PresentMode } from "./PresentMode";
 import { PropertiesPanel } from "./PropertiesPanel";
@@ -11,6 +13,7 @@ import { useServices } from "./services";
 import { SHORTCUTS } from "./shortcuts";
 import { SlideNavigator } from "./SlideNavigator";
 import { LessonStyles, SlideView } from "./SlideView";
+import { prefersClipart, useImageFill } from "./useImageFill";
 import { useLessonSession } from "./useLessonSession";
 
 interface Props {
@@ -29,6 +32,22 @@ export function LessonEditor({ lesson, onClose }: Props) {
     lesson.notice ? { text: lesson.notice } : null,
   );
   const [aiImport, setAiImport] = useState(false);
+  const [reviewing, setReviewing] = useState(false);
+  const fill = useImageFill(session);
+  const clipart = prefersClipart(doc, services.themes);
+  const toReview = useMemo(() => picturesToReview(doc, services.templates), [doc, services.templates]);
+  const toReviewSlides = useMemo(() => new Set(toReview.map((p) => p.slideId)), [toReview]);
+
+  // A lesson just made by AI starts looking for its pictures right away.
+  useEffect(() => {
+    if (lesson.imageFill) fill.enqueue(imageJobs(lesson.doc.slides, services.templates, lesson.imageFill));
+    // Only once, for the lesson the editor opened with.
+  }, []);
+
+  function fillEmptySlots() {
+    const added = fill.enqueue(imageJobs(doc.slides, services.templates, { clipart }));
+    if (!added) setNotice({ text: "Không còn ô ảnh nào cần tìm (hoặc đang tìm rồi)." });
+  }
   const [exporting, setExporting] = useState(false);
   const slide = doc.slides.find((s) => s.id === selectedId) ?? doc.slides[0];
   const slideIndex = slide ? doc.slides.indexOf(slide) : 0;
@@ -102,6 +121,38 @@ export function LessonEditor({ lesson, onClose }: Props) {
           </button>
         </div>
         <div className="toolbar-spacer" />
+        {fill.progress.running && (
+          <span className="image-fill-status" role="status">
+            Đang tìm ảnh {Math.min(fill.progress.done + 1, fill.progress.total)}/{fill.progress.total}…
+          </span>
+        )}
+        {fill.progress.paused && (
+          <span className="image-fill-status image-fill-status--paused" role="status" title={fill.progress.paused}>
+            Tạm dừng tìm ảnh
+            <button type="button" className="ghost" onClick={() => void fill.resume()}>
+              Thử lại
+            </button>
+          </span>
+        )}
+        {!fill.progress.running && !fill.progress.paused && fill.progress.failed > 0 && (
+          <span className="image-fill-status" role="status">
+            {fill.progress.failed} ô chưa tìm được ảnh
+          </span>
+        )}
+        {toReview.length > 0 && (
+          <button type="button" className="ghost" onClick={() => setReviewing(true)} title="Xem và đổi các ảnh ứng dụng tự chọn">
+            Duyệt ảnh ({toReview.length})
+          </button>
+        )}
+        <button
+          type="button"
+          className="ghost"
+          onClick={fillEmptySlots}
+          disabled={fill.progress.running}
+          title="Tự tìm ảnh cho các ô ảnh còn trống (từ vựng, thẻ hình, thẻ lật, đoán hình…)"
+        >
+          Tìm ảnh ô trống
+        </button>
         <button type="button" className="ghost" onClick={() => setAiImport(true)} title="Thêm slide từ nội dung AI soạn">
           Nhập từ AI…
         </button>
@@ -142,15 +193,30 @@ export function LessonEditor({ lesson, onClose }: Props) {
         <AiImportDialog
           mode="append"
           onClose={() => setAiImport(false)}
-          onImport={async (_title, slides) => {
+          onImport={async (_title, slides, _themeId, images) => {
             session.update((d) => appendSlides(d, slides));
             setSelectedId(slides[0]?.id);
-            setNotice({ text: `Đã thêm ${slides.length} slide vào cuối bài (Ctrl+Z để bỏ).` });
+            const searching = fill.enqueue(imageJobs(slides, services.templates, images));
+            setNotice({
+              text: `Đã thêm ${slides.length} slide vào cuối bài (Ctrl+Z để bỏ).${searching ? " Ảnh đang được tự tìm." : ""}`,
+            });
           }}
         />
       )}
 
-      <SlideNavigator session={session} env={env} selectedId={slide?.id} onSelect={setSelectedId} />
+      {reviewing && (
+        <ImageReviewDialog
+          session={session}
+          clipart={clipart}
+          onShowSlide={(id) => {
+            setSelectedId(id);
+            setReviewing(false);
+          }}
+          onClose={() => setReviewing(false)}
+        />
+      )}
+
+      <SlideNavigator session={session} env={env} selectedId={slide?.id} onSelect={setSelectedId} toReview={toReviewSlides} />
 
       <main className="workspace">
         <div className="stage-wrap">

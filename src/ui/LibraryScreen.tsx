@@ -171,10 +171,14 @@ export function LibraryScreen({ onOpen }: Props) {
         <AiImportDialog
           mode="new"
           onClose={() => setAiImport(false)}
-          onImport={async (title, slides, themeId) => {
+          onImport={async (title, slides, themeId, images) => {
             const lesson = await createLessonFromSlides(title, slides, services, themeId);
             await persistence.acquireLock(lesson.doc.id);
-            onOpen({ ...lesson, notice: "Bài đã tạo từ nội dung AI. Hãy xem lại từng slide và thêm ảnh, âm thanh." });
+            onOpen({
+              ...lesson,
+              notice: "Bài đã tạo từ nội dung AI. Ảnh đang được tự tìm; hãy duyệt ảnh và xem lại từng slide trước khi dạy.",
+              imageFill: images,
+            });
           }}
         />
       )}

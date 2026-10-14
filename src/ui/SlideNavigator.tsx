@@ -17,6 +17,8 @@ interface Props {
   env: RenderEnv;
   selectedId: string | undefined;
   onSelect(id: string | undefined): void;
+  /** Slides holding pictures picked automatically that still need a look. */
+  toReview?: ReadonlySet<string>;
 }
 
 const DRAG_THRESHOLD_PX = 5;
@@ -101,7 +103,7 @@ function useThumbDrag(session: LessonSession, onSelect: (id: string) => void) {
   return { listRef, gap: drag?.gap ?? null, draggingFrom: drag?.from ?? null, handlers };
 }
 
-export function SlideNavigator({ session, env, selectedId, onSelect }: Props) {
+export function SlideNavigator({ session, env, selectedId, onSelect, toReview }: Props) {
   const { templates } = useServices();
   const [adding, setAdding] = useState(false);
   const { doc } = session;
@@ -158,6 +160,11 @@ export function SlideNavigator({ session, env, selectedId, onSelect }: Props) {
               {...handlers(slide.id, i)}
             >
               <span className="thumb-number">{i + 1}</span>
+              {toReview?.has(slide.id) && (
+                <span className="thumb-review" title="Có ảnh tự chọn chưa duyệt">
+                  ●
+                </span>
+              )}
               <SlideView doc={doc} slide={slide} env={env} />
             </button>
           </li>

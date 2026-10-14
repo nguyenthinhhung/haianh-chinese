@@ -10,6 +10,12 @@ import { createFromSample, type SampleId } from "../samples";
 import type { Services } from "./services";
 
 /** A lesson opened for editing: where it lives and the file version it came from. */
+/** The AI's picture search words, by `slotKey`, and whether to look for drawings. */
+export interface ImageFillRequest {
+  queries: Map<string, string>;
+  clipart: boolean;
+}
+
 export interface OpenLesson {
   dir: string;
   doc: LessonDocument;
@@ -19,6 +25,8 @@ export interface OpenLesson {
   recovered?: LessonDocument;
   /** Message shown when the editor opens, e.g. files missing from an imported lesson. */
   notice?: string;
+  /** Pictures to search for as soon as the editor opens (a lesson just made by AI). */
+  imageFill?: ImageFillRequest;
 }
 
 /** Edits from an earlier session that never reached `lesson.html`. */

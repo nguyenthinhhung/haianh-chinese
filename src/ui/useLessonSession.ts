@@ -2,6 +2,7 @@ import { produce } from "immer";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { removeUnusedAssets, touchUpdatedAt } from "../core/document";
 import {
+  applyEverywhere,
   canRedo,
   canUndo,
   createHistory,
@@ -37,6 +38,12 @@ export interface LessonSession {
   canRedo: boolean;
   /** Applies a command to the current document as one undoable step. */
   update(command: (doc: LessonDocument) => LessonDocument, options?: UpdateOptions): void;
+  /**
+   * Applies a change that finished in the background (a picture found for an
+   * empty slot) to the whole undo history instead of adding a step, so undo
+   * neither removes it nor has to step over it.
+   */
+  applyInBackground(change: (doc: LessonDocument) => LessonDocument): void;
   undo(): void;
   redo(): void;
   /** Writes `lesson.html`; `overwrite` skips the outside-change check after a conflict. */
@@ -84,6 +91,10 @@ export function useLessonSession(initial: OpenLesson): LessonSession {
       const h = historyRef.current;
       commit(record(h, command(h.present), options?.coalesce));
     },
+    [commit],
+  );
+  const applyInBackground = useCallback(
+    (change: (d: LessonDocument) => LessonDocument) => commit(applyEverywhere(historyRef.current, change)),
     [commit],
   );
   const undo = useCallback(() => commit(undoStep(historyRef.current)), [commit]);
@@ -229,6 +240,7 @@ export function useLessonSession(initial: OpenLesson): LessonSession {
     canUndo: canUndo(history),
     canRedo: canRedo(history),
     update,
+    applyInBackground,
     undo,
     redo,
     save,
