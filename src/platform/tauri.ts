@@ -3,6 +3,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
   PersistenceError,
   type Draft,
+  type ImageCandidate,
   type ImageHit,
   type ImportedAsset,
   type PickedLesson,
@@ -41,7 +42,8 @@ export function createTauriPersistence(): Persistence {
     releaseLock: (lessonId) => call("release_lock", { lessonId }),
     importAsset: (dir, kind) => call<ImportedAsset | null>("import_asset", { dir, kind }),
     pruneAssets: (dir, keep) => call<number>("prune_assets", { dir, keep }),
-    searchImages: (query, page) => call<ImageHit[]>("search_images", { query, page }),
+    searchImages: (query, page, clipart) => call<ImageHit[]>("search_images", { query, page, clipart }),
+    searchImageCandidates: (query, clipart) => call<ImageCandidate[]>("search_image_candidates", { query, clipart }),
     importImageUrl: (dir, urls) => call<ImportedAsset>("import_image_url", { dir, urls }),
     // Sent as a raw body: JSON would inflate a photo several times over.
     importImageBytes: (dir, bytes) =>

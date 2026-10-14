@@ -44,6 +44,7 @@ pub fn run() {
             assets::import_asset,
             assets::prune_assets,
             web::search_images,
+            web::search_image_candidates,
             web::import_image_url,
             web::import_image_bytes,
             web::speak_chinese,

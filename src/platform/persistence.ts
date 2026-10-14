@@ -21,15 +21,19 @@ export interface Draft {
 }
 
 /** One image search result. */
-export interface ImageHit {
+export interface ImageCandidate {
   /** Full-size image on its original site. */
   url: string;
   /** The search engine's small copy, used when the original refuses downloads. */
   thumbnailUrl: string;
-  /** Preview as a data: URL. */
-  thumbnail: string;
   sourcePage: string | null;
   title: string;
+}
+
+/** A search result with its preview, for the picture picker. */
+export interface ImageHit extends ImageCandidate {
+  /** Preview as a data: URL. */
+  thumbnail: string;
 }
 
 /** A lesson file chosen from outside the library. */
@@ -52,6 +56,7 @@ export type PersistenceErrorCode =
   | "too-large"
   | "locked"
   | "network"
+  | "rate-limited"
   | "io";
 
 export class PersistenceError extends Error {
@@ -99,7 +104,12 @@ export interface Persistence {
   /** Lets the teacher pick a file and copies it into the lesson's `assets/`; null if cancelled. */
   importAsset(dir: string, kind: "image" | "audio"): Promise<ImportedAsset | null>;
   /** Searches the web for images (SafeSearch strict); `page` starts at 0. */
-  searchImages(query: string, page: number): Promise<ImageHit[]>;
+  searchImages(query: string, page: number, clipart: boolean): Promise<ImageHit[]>;
+  /**
+   * Results without previews, for filling pictures in the background. Searches
+   * are cached and spaced out by the backend; "rate-limited" means stop for now.
+   */
+  searchImageCandidates(query: string, clipart: boolean): Promise<ImageCandidate[]>;
   /** Downloads an image into `assets/`, trying each URL in turn. */
   importImageUrl(dir: string, urls: string[]): Promise<ImportedAsset>;
   /** Stores pasted or dropped image bytes in `assets/`. */

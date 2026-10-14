@@ -141,6 +141,9 @@ export function createBrowserPersistence(): Persistence {
     async searchImages() {
       throw new PersistenceError("network", "Tìm ảnh chỉ có trong ứng dụng desktop.");
     },
+    async searchImageCandidates() {
+      throw new PersistenceError("network", "Tìm ảnh chỉ có trong ứng dụng desktop.");
+    },
     async importImageUrl() {
       throw new PersistenceError("network", "Tải ảnh từ web chỉ có trong ứng dụng desktop.");
     },

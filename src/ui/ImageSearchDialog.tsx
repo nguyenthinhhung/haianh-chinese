@@ -4,6 +4,8 @@ import { useServices } from "./services";
 
 interface Props {
   initialQuery: string;
+  /** Start with drawings only (clipart), which suit young children. */
+  initialClipart?: boolean;
   /** Imports the chosen image; a rejection is shown in the dialog and keeps it open. */
   onPick(hit: ImageHit): Promise<void>;
   onClose(): void;
@@ -11,9 +13,10 @@ interface Props {
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
-export function ImageSearchDialog({ initialQuery, onPick, onClose }: Props) {
+export function ImageSearchDialog({ initialQuery, initialClipart = false, onPick, onClose }: Props) {
   const { persistence } = useServices();
   const [query, setQuery] = useState(initialQuery);
+  const [clipart, setClipart] = useState(initialClipart);
   const [hits, setHits] = useState<ImageHit[]>([]);
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -23,14 +26,14 @@ export function ImageSearchDialog({ initialQuery, onPick, onClose }: Props) {
   // Results of a superseded search are dropped when they arrive late.
   const searchId = useRef(0);
 
-  async function search(q: string, nextPage: number) {
+  async function search(q: string, nextPage: number, drawings = clipart) {
     const term = q.trim();
     if (!term) return;
     const id = ++searchId.current;
     setError(null);
     setLoading(true);
     try {
-      const found = await persistence.searchImages(term, nextPage);
+      const found = await persistence.searchImages(term, nextPage, drawings);
       if (id !== searchId.current) return;
       setSearched(term);
       setPage(nextPage);
@@ -98,7 +101,19 @@ export function ImageSearchDialog({ initialQuery, onPick, onClose }: Props) {
             Tìm
           </button>
         </form>
-        <p className="muted image-search-tip">Mẹo: thêm “hoạt hình” hoặc “clipart” để có hình đơn giản, dễ nhìn cho trẻ.</p>
+        <label className="image-search-tip">
+          <input
+            type="checkbox"
+            checked={clipart}
+            onChange={(e) => {
+              setClipart(e.target.checked);
+              setHits([]);
+              void search(query, 0, e.target.checked);
+            }}
+          />{" "}
+          Chỉ hình vẽ (đơn giản, dễ nhìn cho trẻ nhỏ)
+          <span className="muted"> · tìm bằng tiếng Anh thường ra ảnh đúng hơn, ví dụ “orange fruit”</span>
+        </label>
 
         {error && (
           <p className="field-error" role="alert">

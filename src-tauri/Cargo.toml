@@ -29,6 +29,8 @@ futures-util = { version = "0.3", default-features = false, features = ["std"] }
 base64 = "0.22"
 url = "2"
 percent-encoding = "2"
+# Already in the tree through Tauri; used to space out image searches.
+tokio = { version = "1", features = ["sync", "time"] }
 
 # Decoding and resizing photos is many times slower unoptimised; optimise just
 # the image crates so debug builds stay quick to compile but imports stay fast.

@@ -5,15 +5,17 @@
 
 use crate::assets::{self, ImportedAsset, MAX_IMAGE_BYTES};
 use crate::error::{AppError, AppResult};
+use crate::fsutil;
 use crate::state::AppState;
 use base64::Engine;
 use futures_util::future::join_all;
 use reqwest::redirect;
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
+use std::fs;
 use std::net::IpAddr;
-use std::sync::OnceLock;
-use std::time::Duration;
+use std::sync::{Mutex, OnceLock};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tauri::ipc::Request;
 use tauri::State;
 use url::{Host, Url};
@@ -133,68 +135,189 @@ fn parse_bing(html: &str) -> Vec<BingMeta> {
         .collect()
 }
 
-#[derive(Serialize)]
+/// One search result, without its preview.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
-pub struct ImageHit {
+pub struct ImageCandidate {
     /// Full-size image.
     url: String,
     /// Bing's small copy; a fallback when the original host refuses downloads.
     thumbnail_url: String,
-    /// The thumbnail as a data: URL, so the webview needs no network access.
-    thumbnail: String,
     source_page: Option<String>,
     title: String,
 }
 
-async fn thumbnail_data_url(url: &str) -> Option<String> {
-    let bytes = fetch(url, MAX_THUMBNAIL_BYTES, Duration::from_secs(8)).await.ok()?;
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImageHit {
+    #[serde(flatten)]
+    candidate: ImageCandidate,
+    /// The thumbnail as a data: URL, so the webview needs no network access.
+    thumbnail: String,
+}
+
+/// Bing serves its thumbnails at any size; the picker shows them at about
+/// 150 px, so asking for 240 px keeps them sharp at a quarter of the bytes.
+fn small_thumbnail_url(turl: &str) -> String {
+    match Url::parse(turl) {
+        Ok(u) if u.host_str().is_some_and(|h| h.ends_with(".mm.bing.net")) && u.path() == "/th" => {
+            format!("{turl}&w=240&h=240")
+        }
+        _ => turl.to_string(),
+    }
+}
+
+async fn thumbnail_data_url(turl: &str) -> Option<String> {
+    let bytes = fetch(&small_thumbnail_url(turl), MAX_THUMBNAIL_BYTES, Duration::from_secs(8)).await.ok()?;
     let (_, mime) = assets::sniff_image(&bytes)?;
     Some(format!("data:{mime};base64,{}", base64::engine::general_purpose::STANDARD.encode(bytes)))
 }
 
-/// Searches Bing Images with SafeSearch on strict, since the lessons are for
-/// children. `page` starts at 0.
-#[tauri::command]
-pub async fn search_images(query: String, page: u32) -> AppResult<Vec<ImageHit>> {
+/// Pause between two requests to Bing's search page, with up to 300 ms added
+/// at random, so filling a lesson's pictures does not look like a bot burst.
+/// Thumbnails and images come from other hosts and are not spaced out.
+const SEARCH_GAP: Duration = Duration::from_millis(700);
+const CACHE_FILE: &str = "image-search-cache.json";
+const CACHE_TTL_SECS: u64 = 7 * 24 * 3600;
+const CACHE_MAX_ENTRIES: usize = 150;
+
+#[derive(Serialize, Deserialize)]
+struct CachedSearch {
+    /// Seconds since the Unix epoch.
+    at: u64,
+    results: Vec<ImageCandidate>,
+}
+
+fn now_secs() -> u64 {
+    SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0)
+}
+
+fn cache_key(query: &str, page: u32, clipart: bool) -> String {
+    format!("{}|{page}|{}", u8::from(clipart), query.to_lowercase())
+}
+
+/// Searches already made, kept on disk for a week so swapping a picture or
+/// reusing a word in another lesson does not ask Bing again.
+fn cache(state: &AppState) -> &'static Mutex<HashMap<String, CachedSearch>> {
+    static CACHE: OnceLock<Mutex<HashMap<String, CachedSearch>>> = OnceLock::new();
+    CACHE.get_or_init(|| {
+        let mut entries: HashMap<String, CachedSearch> = fs::read(state.data.join(CACHE_FILE))
+            .ok()
+            .and_then(|bytes| serde_json::from_slice(&bytes).ok())
+            .unwrap_or_default();
+        let now = now_secs();
+        entries.retain(|_, e| now.saturating_sub(e.at) < CACHE_TTL_SECS);
+        Mutex::new(entries)
+    })
+}
+
+fn cached(state: &AppState, key: &str) -> Option<Vec<ImageCandidate>> {
+    let entries = cache(state).lock().ok()?;
+    let entry = entries.get(key)?;
+    (now_secs().saturating_sub(entry.at) < CACHE_TTL_SECS).then(|| entry.results.clone())
+}
+
+fn remember(state: &AppState, key: String, results: &[ImageCandidate]) {
+    let Ok(mut entries) = cache(state).lock() else { return };
+    entries.insert(key, CachedSearch { at: now_secs(), results: results.to_vec() });
+    while entries.len() > CACHE_MAX_ENTRIES {
+        let Some(oldest) = entries.iter().min_by_key(|(_, e)| e.at).map(|(k, _)| k.clone()) else { break };
+        entries.remove(&oldest);
+    }
+    // Losing the cache only costs a repeated search.
+    if let Ok(bytes) = serde_json::to_vec(&*entries) {
+        let _ = fsutil::atomic_write(&state.data.join(CACHE_FILE), &bytes);
+    }
+}
+
+/// Waits until the previous search is at least SEARCH_GAP old. Holding the
+/// returned guard while searching keeps searches one at a time.
+async fn search_turn() -> tokio::sync::MutexGuard<'static, Option<Instant>> {
+    static LAST: OnceLock<tokio::sync::Mutex<Option<Instant>>> = OnceLock::new();
+    let guard = LAST.get_or_init(|| tokio::sync::Mutex::new(None)).lock().await;
+    if let Some(last) = *guard {
+        let jitter = Duration::from_millis(u64::from(SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().subsec_millis() % 300));
+        let wait = (SEARCH_GAP + jitter).saturating_sub(last.elapsed());
+        if !wait.is_zero() {
+            tokio::time::sleep(wait).await;
+        }
+    }
+    guard
+}
+
+/// Bing answers a client it distrusts with an error status or a challenge
+/// page instead of results.
+fn looks_blocked(status: u16, html: &str) -> bool {
+    matches!(status, 403 | 429 | 503) || (!html.contains(" m=\"") && html.to_ascii_lowercase().contains("captcha"))
+}
+
+fn rate_limited() -> AppError {
+    AppError::new("rate-limited", "Bing đang tạm chặn tìm ảnh vì tìm nhiều quá. Hãy thử lại sau vài phút.")
+}
+
+/// One page of results for `query`, from the cache when possible. Bing is
+/// asked with SafeSearch on strict, since the lessons are for children;
+/// `clipart` keeps to drawings, which suit young children better than photos.
+async fn search_page(state: &AppState, query: &str, page: u32, clipart: bool) -> AppResult<Vec<ImageCandidate>> {
     let query = query.trim();
     if query.is_empty() || query.chars().count() > 100 {
         return Err(AppError::new("invalid-path", "Từ khoá tìm ảnh không hợp lệ."));
     }
+    let key = cache_key(query, page, clipart);
+    if let Some(results) = cached(state, &key) {
+        return Ok(results);
+    }
+
+    let mut turn = search_turn().await;
     let first = (page as usize * RESULTS_PER_PAGE).to_string();
     let count = RESULTS_PER_PAGE.to_string();
-    let url = Url::parse_with_params(
-        "https://www.bing.com/images/async",
-        [("q", query), ("first", &first), ("count", &count), ("adlt", "strict"), ("mmasync", "1")],
-    )
-    .expect("static URL");
-    let html = client()
-        .get(url)
-        .timeout(Duration::from_secs(15))
-        .send()
-        .await
-        .map_err(offline)?
-        .error_for_status()
-        .map_err(offline)?
-        .text()
-        .await
-        .map_err(offline)?;
+    let mut params = vec![("q", query), ("first", &first), ("count", &count), ("adlt", "strict"), ("mmasync", "1")];
+    if clipart {
+        params.push(("qft", "+filterui:photo-clipart"));
+    }
+    let url = Url::parse_with_params("https://www.bing.com/images/async", params).expect("static URL");
+    let response = client().get(url).timeout(Duration::from_secs(15)).send().await.map_err(offline);
+    *turn = Some(Instant::now());
+    drop(turn);
+    let response = response?;
+    let status = response.status().as_u16();
+    let html = response.text().await.map_err(offline)?;
+    if looks_blocked(status, &html) {
+        return Err(rate_limited());
+    }
+    if !(200..300).contains(&status) {
+        return Err(AppError::new("network", format!("Máy chủ trả về lỗi {status}.")));
+    }
 
-    let metas: Vec<BingMeta> = parse_bing(&html).into_iter().take(RESULTS_PER_PAGE).collect();
-    let thumbnails = join_all(metas.iter().map(|m| thumbnail_data_url(&m.turl))).await;
+    let results: Vec<ImageCandidate> = parse_bing(&html)
+        .into_iter()
+        .take(RESULTS_PER_PAGE)
+        .map(|m| ImageCandidate { url: m.murl, thumbnail_url: m.turl, source_page: m.purl, title: m.t.unwrap_or_default() })
+        .collect();
+    if !results.is_empty() {
+        remember(state, key, &results);
+    }
+    Ok(results)
+}
+
+/// Results with previews, for the picture picker. `page` starts at 0.
+#[tauri::command]
+pub async fn search_images(state: State<'_, AppState>, query: String, page: u32, clipart: bool) -> AppResult<Vec<ImageHit>> {
+    let results = search_page(&state, &query, page, clipart).await?;
+    let thumbnails = join_all(results.iter().map(|c| thumbnail_data_url(&c.thumbnail_url))).await;
     // A result whose preview cannot be shown is left out rather than shown blank.
-    Ok(metas
+    Ok(results
         .into_iter()
         .zip(thumbnails)
-        .filter_map(|(m, thumbnail)| {
-            Some(ImageHit {
-                thumbnail: thumbnail?,
-                url: m.murl,
-                thumbnail_url: m.turl,
-                source_page: m.purl,
-                title: m.t.unwrap_or_default(),
-            })
-        })
+        .filter_map(|(candidate, thumbnail)| Some(ImageHit { candidate, thumbnail: thumbnail? }))
         .collect())
+}
+
+/// Results without previews, for filling pictures in the background: one
+/// request to Bing per query, and nothing else until a picture is chosen.
+#[tauri::command]
+pub async fn search_image_candidates(state: State<'_, AppState>, query: String, clipart: bool) -> AppResult<Vec<ImageCandidate>> {
+    search_page(&state, &query, 0, clipart).await
 }
 
 /// Downloads an image into the lesson, trying each URL in turn: many sites
@@ -309,6 +432,30 @@ mod tests {
         assert_eq!(urls, ["https://a.com/1.png", "https://b.com/2.jpg"]);
         assert_eq!(results[0].turl, "https://ts1.mm.bing.net/th?id=OIP.x&pid=15.1");
         assert_eq!(results[0].t.as_deref(), Some("Quả táo & lê"));
+    }
+
+    #[test]
+    fn bing_thumbnails_are_asked_for_small() {
+        assert_eq!(
+            small_thumbnail_url("https://ts2.mm.bing.net/th?id=OIP.x&pid=15.1"),
+            "https://ts2.mm.bing.net/th?id=OIP.x&pid=15.1&w=240&h=240"
+        );
+        assert_eq!(small_thumbnail_url("https://example.com/th?id=1"), "https://example.com/th?id=1");
+    }
+
+    #[test]
+    fn blocked_answers_are_recognised() {
+        assert!(looks_blocked(429, ""));
+        assert!(looks_blocked(200, "<html>Please solve this CAPTCHA</html>"));
+        assert!(!looks_blocked(200, r#"<a m="{}">captcha in a title</a>"#));
+        assert!(!looks_blocked(200, "<html>no results</html>"));
+    }
+
+    #[test]
+    fn cache_keys_separate_pages_and_clipart() {
+        assert_eq!(cache_key("Cat", 0, false), cache_key("cat", 0, false));
+        assert_ne!(cache_key("cat", 0, false), cache_key("cat", 0, true));
+        assert_ne!(cache_key("cat", 0, false), cache_key("cat", 1, false));
     }
 
     #[test]
