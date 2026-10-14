@@ -12,7 +12,7 @@ phải chạm vào HTML.
 **Người dùng duy nhất của ứng dụng là giáo viên.** Học sinh chỉ xem màn hình chiếu
 và trả lời bằng lời; giáo viên là người điều khiển mọi thứ trên màn hình.
 
-> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 7).
+> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 8).
 
 ---
 
@@ -250,7 +250,7 @@ Lưu cũng không mất bài.
 | `title` | Tên bài học. |
 | `script` | `"simplified"` \| `"traditional"`. |
 | `theme` | `{ id, overrides? }`. |
-| `settings` | `{ sound: boolean, animations: boolean, hanziFont: "sans" \| "kai" }`. |
+| `settings` | `{ sound: boolean, animations: boolean, hanziFont: "sans" \| "kai", pinyin: boolean }`. `pinyin: false` ẩn pinyin khi soạn và chiếu, trừ slide `tone-pick` (pinyin là đáp án). |
 | `slides[]` | `{ id, type, content, layout?, notes? }` — `content` validate theo schema của `type`. `notes` là ghi chú riêng của giáo viên (gợi ý câu hỏi, cách dẫn dắt), không hiện khi trình chiếu. |
 | `assets[]` | `{ id, file, kind: "image" \| "audio", mime, alt?, source? }` — `source` là trang web nơi lấy ảnh, để giáo viên tìm lại. |
 | `metadata` | `createdAt`, `updatedAt`, `appVersion`. |
@@ -348,17 +348,23 @@ Quy ước chung cho slide hoạt động:
 
 ### 4.4. Theme
 
-MVP có 5 theme, mỗi theme gồm bảng màu (kể cả 6 màu phân loại `--ls-c1`…`--ls-c6`
+Có 7 theme, mỗi theme gồm bảng màu (kể cả 6 màu phân loại `--ls-c1`…`--ls-c6`
 dùng cho cặp ghép, thành phần ngữ pháp, thanh điệu, nhóm), hình trang trí SVG và
 kiểu khung slide:
 
-| Theme | Phong cách |
-| --- | --- |
-| `garden` | Vườn hoa, màu pastel ấm. |
-| `ocean` | Đại dương, xanh mát. |
-| `space` | Vũ trụ, nền tối, ngôi sao. |
-| `panda` | Gấu trúc, tre, đỏ–xanh lá (gợi văn hoá Trung Hoa). |
-| `classic` | Gọn gàng, cho học viên lớn hơn. |
+| Theme | Phong cách | Lứa tuổi |
+| --- | --- | --- |
+| `garden` | Vườn hoa, màu pastel ấm. | 3–8 |
+| `panda` | Gấu trúc, tre, đỏ–xanh lá (gợi văn hoá Trung Hoa). | 3–8 |
+| `ocean` | Đại dương, xanh mát. | 6–11 |
+| `space` | Vũ trụ, nền tối, ngôi sao. | 6–11 |
+| `classic` | Gọn gàng. | 9+ |
+| `notebook` | Vở ô ly: giấy kẻ ô, lề đỏ, ô 田字格. | 9+ |
+| `ink` | Thuỷ mặc: giấy dó, núi mực, con dấu đỏ; màu trầm. | 9+ |
+
+Mỗi theme khai báo `ages`. Đây chỉ là gợi ý: ô chọn theme xếp theo tuổi và ghi
+khoảng tuổi bên cạnh tên, không khoá lựa chọn. Bài tạo bằng AI nhận theme gợi ý
+của lứa tuổi đã chọn (mục 5.B).
 
 Đổi theme không làm thay đổi nội dung. Hình trang trí phải tự vẽ hoặc dùng nguồn
 có giấy phép rõ ràng (CC0/OFL), không lấy ảnh trên mạng.
@@ -384,15 +390,42 @@ Library → "Bài mới" → chọn bài mẫu và theme → tạo thư mục + 
 mở Editor.
 
 ### B. Nhập nội dung từ AI
-1. Nút **"Sao chép lời nhắn cho AI"** đưa vào clipboard prompt mô tả định dạng,
-   từng loại slide (`aiSchemaHint`), quy tắc và một ví dụ (có test bảo đảm ví dụ
-   này hợp lệ). Trường ảnh/âm thanh AI tự thêm bị bỏ, giáo viên thêm sau.
-2. Người dùng dán kết quả vào hộp thoại nhập; ứng dụng tự bỏ khung ```` ```json ````
+
+Giáo viên không viết prompt. Họ chọn nội dung bài; ứng dụng quyết định trình tự
+và loại slide; AI chỉ viết phần ngôn ngữ (chữ Hán, pinyin, nghĩa, ví dụ, câu hỏi).
+
+1. Giáo viên điền `LessonRequest`: chủ đề, lứa tuổi, dạng bài, thời lượng, từ cần
+   dạy, mẫu câu, hoạt động muốn có, yêu cầu thêm. Lựa chọn được nhớ cho lần sau
+   (`localStorage`).
+2. **Lứa tuổi** (`core/ages.ts`): Mầm non 3–5, Tiểu học lớp 1–3 (6–8), lớp 4–5
+   (9–11), THCS 12+. Mỗi mốc có lời dặn cho AI, số từ mới gợi ý, các loại slide
+   quá sức (mầm non chưa biết đọc nên bỏ `grammar`, `fill-blank`, `sentence-order`)
+   và theme gợi ý.
+3. **Blueprint** (`core/lessonPlan.ts`): mỗi dạng bài (Từ vựng, Hội thoại, Mẫu câu,
+   Ôn tập, Tổng hợp) là một chuỗi bước, mỗi bước gồm vai trò, các loại slide được
+   dùng và số slide cho bài ngắn/vừa/dài (khoảng 20/35/45 phút). Bỏ loại quá sức
+   với lứa tuổi; dạng bài mất bước chính thì không hiện (mầm non không có "Mẫu
+   câu"). Hoạt động giáo viên chọn thu hẹp các bước luyện tập/trò chơi; bước
+   không còn loại nào chuyển số slide sang bước hoạt động kế tiếp, nên độ dài bài
+   giữ nguyên. Hộp thoại hiện trước trình tự dự kiến.
+4. **Sao chép lời nhắn cho AI**: prompt gồm yêu cầu của giáo viên, trình tự slide
+   bắt buộc, `aiSchemaHint` của **chỉ những loại slide trình tự dùng**, quy tắc và
+   một ví dụ định dạng (có test bảo đảm ví dụ hợp lệ). AI luôn ghi đủ pinyin và
+   nghĩa; ẩn hay hiện là việc của `settings.pinyin`, nên một bài dùng được cho
+   nhiều lớp. Trường ảnh/âm thanh AI tự thêm bị bỏ, giáo viên thêm sau.
+5. Người dùng dán kết quả vào hộp thoại nhập; ứng dụng tự bỏ khung ```` ```json ````
    và đoạn văn thừa.
-3. Validate; lỗi hiển thị theo vị trí ("Slide 3, từ 2: thiếu pinyin").
-4. Xem trước → **Tạo bài mới** hoặc **Thêm vào cuối bài hiện tại**.
-5. ID do ứng dụng gán; slide cần ảnh nhận ô placeholder.
-6. Một lần nhập = một bước undo.
+6. Validate theo schema Zod; lỗi hiển thị theo vị trí ("Slide 3, từ 2: thiếu
+   pinyin") và chặn nhập.
+7. Kiểm tra mềm, chỉ **cảnh báo**, không chặn: thiếu từ bắt buộc (chỉ xét từ viết
+   bằng chữ Hán), loại slide quá sức với lứa tuổi, số slide lệch dự kiến quá 2,
+   pinyin không khớp số chữ (mỗi chữ một âm tiết cách nhau bằng dấu cách; bỏ qua
+   chuỗi có chữ Latin/số; 儿 hoá được chấp nhận). Kiểm tra này không biết pinyin
+   đúng hay sai âm. Lỗi và cảnh báo đều có nút sao chép thành lời nhắn để AI sửa.
+8. Xem trước → **Tạo bài mới** (theme theo lứa tuổi) hoặc **Thêm vào cuối bài
+   hiện tại** (giữ theme của bài).
+9. ID do ứng dụng gán; slide cần ảnh nhận ô placeholder.
+10. Một lần nhập = một bước undo.
 
 Không gọi AI API trong MVP.
 
@@ -447,7 +480,8 @@ sao chép vào Library → mở Editor`. Không có chuyển đổi HTML tuỳ �
 | `ThemeRegistry` | core | Nạp và tra cứu các theme trong `themes/`. |
 | `LessonCodec` | core | `parse(html) → doc`, `serialize(doc) → html`. |
 | `MigrationService` | core | Chuỗi migration theo `schemaVersion`. |
-| `AiImportService` | core | Trích JSON, validate, ánh xạ lỗi, gán ID. |
+| `AiImportService` | core | Trích JSON, validate, ánh xạ lỗi, gán ID; dựng prompt từ `LessonRequest`. |
+| `LessonPlan` | core | Hồ sơ lứa tuổi, blueprint theo dạng bài, trình tự slide, cảnh báo sau khi nhập; kiểm tra pinyin (`pinyinCheck.ts`). |
 | `ExportService` | core | Đóng gói HTML độc lập, chỉ kèm runtime cần thiết. |
 | `templates/*` | plugin | Mỗi loại slide một thư mục theo hợp đồng 2.2. |
 | `themes/*` | plugin | Mỗi theme một thư mục. |
@@ -546,7 +580,7 @@ cắt validation, ghi file an toàn, backup, recovery, hay hỗ trợ macOS.
 - [x] Mỗi slide hoạt động có phản hồi âm thanh/hiệu ứng và phím `A`/`R`.
 - [x] Bảng điểm đội, đồng hồ đếm ngược dùng được trong Present và file export.
 - [x] Mỗi slide có ô ghi chú cho giáo viên, không hiện khi trình chiếu.
-- [x] 5 theme; âm thanh và hiệu ứng tắt được.
+- [x] 7 theme (gợi ý theo lứa tuổi); âm thanh, hiệu ứng và pinyin tắt được.
 - [x] Thêm một loại slide mới chỉ cần thêm một thư mục trong `templates/`.
 
 **Contract và import**
@@ -622,6 +656,17 @@ Chưa làm:
 ---
 
 ## 12. Lịch sử thay đổi
+
+### Rev 8
+
+| Thay đổi | Lý do |
+| --- | --- |
+| Prompt AI sinh từ cấu hình giáo viên chọn (chủ đề, lứa tuổi, dạng bài, thời lượng, từ, mẫu câu, hoạt động) theo blueprint của ứng dụng | Một prompt chung chỉ thay chủ đề thì AI tự quyết cấu trúc bài và giáo viên không kiểm soát được phạm vi kiến thức. Blueprint để ứng dụng giữ trình tự sư phạm; prompt chỉ mô tả loại slide được dùng nên ngắn hơn, AI ít sai hơn. |
+| Bốn mốc tuổi (3–5, 6–8, 9–11, 12+); không có "người lớn" | Ứng dụng dành cho lớp trẻ em. Lứa tuổi quyết định loại slide nên tránh (trẻ mầm non chưa biết đọc) và theme gợi ý. |
+| Cảnh báo sau khi nhập (thiếu từ, quá sức, lệch độ dài, pinyin lệch số âm tiết) không chặn nhập | JSON hợp lệ chưa chắc nội dung đúng; phần kiểm được bằng code thì kiểm bằng code. Chỉ cảnh báo vì giáo viên có thể chủ ý chấp nhận. |
+| `settings.pinyin`, mặc định bật | Lớp đã đọc được chữ Hán cần ẩn pinyin; để ở cài đặt trình chiếu thay vì trong prompt, nên cùng một bài dùng được cho nhiều lớp. Trường có mặc định nên `schemaVersion` giữ nguyên 1. |
+| Theme khai báo `ages`; thêm `notebook` và `ink` cho học sinh từ 9 tuổi | 4/5 theme cũ hợp với trẻ nhỏ; học sinh lớn chỉ có `classic`. |
+| Không thêm nghĩa tiếng Anh | Người dùng không cần; sẽ phải đổi schema. |
 
 ### Rev 7
 

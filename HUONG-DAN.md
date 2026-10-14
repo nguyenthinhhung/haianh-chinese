@@ -22,8 +22,10 @@ Bài học nằm trong thư mục **Tài liệu → Chinese Lesson Studio**, m�
 - **Ctrl+Z / Ctrl+Y**: hoàn tác / làm lại. **Ctrl+S** hoặc nút **Lưu** để lưu.
   Ứng dụng cũng tự lưu sau 30 giây không sửa và khi đóng. Nếu máy tắt đột ngột,
   lần sau mở bài ứng dụng sẽ hỏi có khôi phục phần chưa lưu không.
-- Tab **Bài học** ở cột phải: đổi theme (Cổ điển, Vườn hoa, Đại dương, Vũ trụ,
-  Gấu trúc), kiểu chữ Hán (thường hoặc chữ Khải), bật/tắt âm thanh và hiệu ứng.
+- Tab **Bài học** ở cột phải: đổi theme (bên cạnh tên có ghi lứa tuổi phù hợp),
+  kiểu chữ Hán (thường hoặc chữ Khải), bật/tắt âm thanh và hiệu ứng, và bật/tắt
+  **Hiện pinyin** cho lớp đã đọc được chữ Hán (slide luyện thanh điệu vẫn giữ
+  pinyin vì đó là đáp án).
 - Ô **Ghi chú cho giáo viên** dưới slide: chỉ thầy cô thấy, không hiện khi chiếu.
 
 ### Ảnh và âm thanh
@@ -81,11 +83,19 @@ bấm vào bảng điểm. Hộp bí mật và Lật cặp tự cộng điểm c
 ## 6. Nhập bài do AI soạn
 
 1. **Nhập từ AI…** (ở thư viện để tạo bài mới, hoặc trong bài để thêm slide).
-2. Bấm **Sao chép lời nhắn cho AI**, dán vào ChatGPT, Gemini… và sửa chủ đề ở
-   dòng đầu.
-3. Copy toàn bộ câu trả lời của AI, dán vào ô bên dưới. Nếu có lỗi, ứng dụng chỉ
-   rõ slide nào, ô nào; có thể dán danh sách lỗi cho AI sửa.
-4. Bấm **Tạo bài mới** / **Thêm vào cuối bài**, rồi xem lại và thêm ảnh.
+2. Chọn nội dung bài: chủ đề, lứa tuổi học sinh, thời lượng, dạng bài (Từ vựng,
+   Hội thoại, Mẫu câu, Ôn tập, Tổng hợp). Nếu muốn, ghi thêm các từ cần dạy, mẫu
+   câu, đánh dấu các hoạt động muốn có và yêu cầu thêm. Bên dưới form có trình tự
+   slide dự kiến. Lần sau ứng dụng nhớ lựa chọn này.
+3. Bấm **Sao chép lời nhắn cho AI**, dán vào ChatGPT, Gemini, Claude… Không cần
+   sửa gì trong lời nhắn.
+4. Copy toàn bộ câu trả lời của AI, dán vào ô bên dưới.
+   - Ô đỏ là **lỗi**: chưa nhập được, ứng dụng chỉ rõ slide nào, ô nào.
+   - Ô vàng là **nên xem lại**: thiếu từ đã yêu cầu, pinyin không khớp số chữ,
+     dạng bài khó với lứa tuổi… Vẫn nhập được.
+   - Bấm nút sao chép trong ô đó rồi dán vào cùng cuộc trò chuyện để AI sửa.
+5. Bấm **Tạo bài mới** / **Thêm vào cuối bài**, rồi xem lại và thêm ảnh. Bài mới
+   tự chọn theme hợp lứa tuổi; đổi lại được ở tab **Bài học**.
 
 ## 7. Mở bài từ nơi khác
 
