@@ -1,5 +1,14 @@
+import { ageProfile } from "./ages";
 import { describeContentPath, type Path } from "./fields";
 import { newId } from "./ids";
+import {
+  BLUEPRINTS,
+  DURATIONS,
+  parseWordList,
+  planSlideCount,
+  resolvePlan,
+  type LessonRequest,
+} from "./lessonPlan";
 import type { Slide } from "./schema";
 import type { EditorFieldSpec } from "./template";
 import type { TemplateRegistry } from "./templateRegistry";
@@ -100,12 +109,43 @@ export function parseAiLesson(text: string, registry: TemplateRegistry): AiImpor
   return { ok: true, title, slides };
 }
 
-/** The prompt the teacher pastes into an AI chat, describing every slide type. */
-export function buildAiPrompt(registry: TemplateRegistry): string {
+/** The prompt the teacher pastes into an AI chat: the lesson they asked for, in the order the blueprint sets. */
+export function buildAiPrompt(registry: TemplateRegistry, request: LessonRequest): string {
+  const plan = resolvePlan(request);
+  const age = ageProfile(request.age);
+  const kind = BLUEPRINTS.find((b) => b.id === request.kind) ?? BLUEPRINTS[0]!;
+  const duration = DURATIONS.find((d) => d.id === request.duration) ?? DURATIONS[1]!;
+  const words = parseWordList(request.words);
+  const review = request.kind === "review";
+
+  const lesson = [
+    `- Chủ đề: ${request.topic.trim() || "[GHI CHỦ ĐỀ Ở ĐÂY]"}`,
+    `- Học sinh: ${age.label}. ${age.guidance}`,
+    `- Dạng bài: ${kind.label}. ${kind.description}`,
+    `- Thời lượng: ${duration.label}, tổng cộng ${planSlideCount(plan)} slide.`,
+    words.length
+      ? review
+        ? `- Từ đã học cần ôn (chỉ dùng những từ này, không thêm từ mới): ${words.join(", ")}`
+        : `- Từ vựng bắt buộc (phải dạy đủ, có thể thêm vài từ cùng chủ đề): ${words.join(", ")}`
+      : `- Số từ ${review ? "ôn tập" : "mới"}: khoảng ${age.words[0]}–${age.words[1]} từ hợp với chủ đề.`,
+    ...(request.patterns.trim() ? [`- Mẫu câu cần dạy: ${request.patterns.trim()}`] : []),
+    ...(request.notes.trim() ? [`- Yêu cầu thêm của giáo viên: ${request.notes.trim()}`] : []),
+  ].join("\n");
+
+  const sequence = plan
+    .map((s, i) => {
+      const types = s.types.map((t) => `"${t}"`).join(", ");
+      return `${i + 1}. ${s.role} — ${s.count} slide, ${s.types.length > 1 ? `chọn trong: ${types}` : types}`;
+    })
+    .join("\n");
+
+  const used = new Set(plan.flatMap((s) => s.types));
   const types = registry
     .list()
+    .filter((t) => used.has(t.type))
     .map((t) => `- "${t.type}" (${t.label}): ${t.aiSchemaHint}`)
     .join("\n");
+
   const example = {
     title: "Hoa quả",
     slides: [
@@ -128,20 +168,28 @@ export function buildAiPrompt(registry: TemplateRegistry): string {
       },
     ],
   };
-  return `Bạn là trợ lý soạn bài giảng tiếng Trung cho trẻ em Việt Nam. Hãy soạn một bài học về chủ đề: [GHI CHỦ ĐỀ Ở ĐÂY].
+  return `Bạn là trợ lý soạn bài giảng tiếng Trung cho học sinh Việt Nam. Giáo viên trình chiếu bài trên màn hình lớn và tự điều khiển; học sinh trả lời bằng lời.
+
+Bài cần soạn:
+${lesson}
+
+Trình tự slide (giữ đúng thứ tự và số lượng):
+${sequence}
 
 Chỉ trả lời bằng MỘT khối JSON (không giải thích thêm) theo dạng:
 {"title": "tên bài tiếng Việt", "slides": [{"type": "loại slide", "content": {...}, "notes": "gợi ý cho giáo viên (không bắt buộc)"}]}
 
-Các loại slide và nội dung của từng loại:
+Các loại slide được dùng và nội dung của từng loại:
 ${types}
 
 Quy tắc:
 - Chữ Hán giản thể; pinyin có dấu thanh, các âm tiết cách nhau bằng dấu cách (píng guǒ).
-- Nghĩa và câu hỏi bằng tiếng Việt, ngắn gọn, hợp với trẻ em.
+- Luôn điền pinyin và nghĩa tiếng Việt ở mọi trường có; giáo viên tự ẩn khi trình chiếu nếu cần.
+- Nghĩa, câu hỏi và giải thích bằng tiếng Việt, ngắn gọn, hợp lứa tuổi.
+- Slide luyện tập và trò chơi chỉ dùng từ và mẫu câu đã dạy trong bài.
+- Thêm "notes" cho slide hoạt động: cách tổ chức cho cả lớp hoặc theo đội.
 - Không đưa ảnh hay âm thanh: giáo viên sẽ tự thêm.
-- Bài học khoảng 10–15 slide: mở đầu bằng "cover", dạy từ, rồi hỏi đáp và trò chơi, kết thúc bằng "summary".
 
-Ví dụ:
+Ví dụ về định dạng (nội dung chỉ để minh hoạ):
 ${JSON.stringify(example, null, 2)}`;
 }

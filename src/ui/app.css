@@ -332,7 +332,7 @@ textarea {
   gap: 8px;
   justify-items: start;
 }
-.ai-steps textarea {
+.ai-steps > li > textarea {
   width: 100%;
   font-family: ui-monospace, Consolas, monospace;
   font-size: 13px;
@@ -733,4 +733,56 @@ textarea {
   background: rgb(255 255 255 / 0.9);
   font-size: 12px;
   font-weight: 600;
+}
+.ai-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+  width: 100%;
+}
+.ai-form > label,
+.ai-form > fieldset {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  font-weight: 600;
+}
+.ai-form .muted {
+  font-weight: 400;
+}
+.ai-form-wide {
+  grid-column: 1 / -1;
+}
+.ai-form fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.ai-form legend {
+  padding: 0 0 4px;
+}
+.ai-activities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.ai-activities .chip {
+  padding: 3px 10px;
+  border: 1px solid var(--border, #d9dde3);
+  border-radius: 999px;
+  font-weight: 400;
+  cursor: pointer;
+}
+.ai-plan {
+  margin: 0;
+  font-size: 13px;
+}
+.copy-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.ai-steps .copy-button {
+  margin-top: 0;
 }

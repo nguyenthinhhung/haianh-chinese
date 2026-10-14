@@ -203,8 +203,13 @@ export async function importLessonFile(services: Services): Promise<ImportFileRe
 }
 
 /** Creates a lesson in the library from slides imported from an AI reply. */
-export async function createLessonFromSlides(title: string, slides: Slide[], services: Services): Promise<OpenLesson> {
-  const doc = { ...createLesson({ title, appVersion: services.appVersion }), slides };
+export async function createLessonFromSlides(
+  title: string,
+  slides: Slide[],
+  services: Services,
+  themeId?: string,
+): Promise<OpenLesson> {
+  const doc = { ...createLesson({ title, appVersion: services.appVersion, ...(themeId ? { themeId } : {}) }), slides };
   const location = await services.persistence.createLessonDir(folderNameFromTitle(title));
   const { hash } = await services.persistence.writeLesson(location.dir, doc.id, libraryHtml(doc, services), null);
   return { dir: location.dir, doc, hash };
