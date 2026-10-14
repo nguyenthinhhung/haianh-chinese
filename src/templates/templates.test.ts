@@ -27,8 +27,12 @@ describe.each(env.templates.list().map((t) => [t.type, t] as const))("template %
 
   it("scopes its CSS to its own slides", () => {
     expect(template.css.length).toBeGreaterThan(0);
+    // Animations are global by name, so they only need a prefix that cannot clash.
+    const keyframes = /@keyframes\s+([\w-]+)\s*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/g;
+    for (const [, name] of template.css.matchAll(keyframes)) expect(name).toMatch(/^ls-/);
     const rules = template.css
       .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(keyframes, "")
       .split("}")
       .map((r) => r.trim())
       .filter(Boolean);

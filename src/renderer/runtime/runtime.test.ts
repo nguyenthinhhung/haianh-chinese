@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { LessonDocument } from "../../core/schema";
 import { createFromSample } from "../../samples";
 import { testEnv } from "../../test/env";
@@ -118,3 +118,105 @@ describe("classroom tools", () => {
   });
 });
 
+const cards = (selector: string) => [...current().querySelectorAll<HTMLElement>(selector)];
+const typeNumber = (n: number) => {
+  for (const d of String(n)) press(d, { code: `Digit${d}` });
+  press("Enter");
+};
+
+describe("games", () => {
+  it("what's missing: a card vanishes, then comes back, for each round", () => {
+    present([{ type: "whats-missing" }, { type: "cover" }]);
+    press("ArrowRight");
+    expect(cards(".ls-wm-gone")).toHaveLength(1);
+    press("ArrowRight");
+    expect(cards(".ls-wm-gone")).toHaveLength(0);
+    expect(cards(".ls-wm-back")).toHaveLength(1);
+    for (let i = 0; i < 4; i++) press("ArrowRight");
+    expect(current().dataset.slideType).toBe("whats-missing");
+    press("ArrowRight");
+    expect(current().dataset.slideType).toBe("cover");
+  });
+
+  it("guess the picture (tiles): numbers open tiles, Next opens the rest, then the answer", () => {
+    present([{ type: "guess-picture" }, { type: "cover" }]);
+    typeNumber(5);
+    expect(cards(".ls-gp-open").map((t) => t.dataset.n)).toEqual(["5"]);
+    for (let i = 0; i < 8; i++) press("ArrowRight");
+    expect(cards(".ls-gp-open")).toHaveLength(9);
+    expect(current().querySelector(".ls-gp-answer")!.classList.contains("ls-revealed")).toBe(false);
+    press("ArrowRight");
+    expect(current().querySelector(".ls-gp-answer")!.classList.contains("ls-revealed")).toBe(true);
+    press("ArrowLeft");
+    expect(current().querySelector(".ls-gp-answer")!.classList.contains("ls-revealed")).toBe(false);
+  });
+
+  it("guess the picture (zoom): each Next zooms out, the last shows the answer", () => {
+    const content = { ...(env.templates.require("guess-picture").defaults() as object), mode: "zoom" };
+    present([{ type: "guess-picture", content }]);
+    // Without an asset there is no <img>; the steps and the answer still run.
+    for (let i = 0; i < 4; i++) press("ArrowRight");
+    expect(current().querySelector(".ls-gp-answer")!.classList.contains("ls-revealed")).toBe(true);
+  });
+
+  it("secret boxes: the reward goes to the team whose turn it is, then the turn passes", () => {
+    const c = present([{ type: "box-pick" }]);
+    expect(host.querySelector<HTMLElement>(".ls-score")!.hidden).toBe(false);
+    typeNumber(1); // +1
+    expect(current().querySelector<HTMLElement>(".ls-bp-panel")!.hidden).toBe(false);
+    press("ArrowRight");
+    expect(c.tools!.scores()).toEqual([1, 0]);
+    expect(c.tools!.current()).toBe(1);
+    press("ArrowRight");
+    expect(current().querySelector<HTMLElement>(".ls-bp-panel")!.hidden).toBe(true);
+    expect(cards(".ls-bp-opened")).toHaveLength(1);
+    typeNumber(4); // +3 for team 2
+    press("ArrowRight");
+    press("ArrowRight");
+    expect(c.tools!.scores()).toEqual([1, 3]);
+    typeNumber(5); // bomb for team 1
+    press("ArrowRight");
+    expect(c.tools!.scores()).toEqual([0, 3]);
+  });
+
+  it("lucky wheel: each Next spins to a segment not picked before", () => {
+    vi.useFakeTimers();
+    try {
+      present([{ type: "lucky-wheel" }, { type: "cover" }]);
+      const hits = new Set<string>();
+      for (let i = 0; i < 6; i++) {
+        press("ArrowRight");
+        press("ArrowRight"); // ignored while spinning
+        vi.advanceTimersByTime(4500);
+        hits.add(current().querySelector(".ls-lw-result")!.textContent!);
+      }
+      expect(hits.size).toBe(6);
+      expect(cards(".ls-lw-picked")).toHaveLength(5);
+      press("ArrowRight");
+      expect(current().dataset.slideType).toBe("cover");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("memory: a matching pair stays open and scores; a miss passes the turn", () => {
+    const c = present([{ type: "memory" }]);
+    const all = cards(".ls-mm-card");
+    const first = all[0]!;
+    const twin = all.find((x) => x !== first && x.dataset.pair === first.dataset.pair)!;
+    const other = all.find((x) => x.dataset.pair !== first.dataset.pair)!;
+
+    typeNumber(Number(first.dataset.n));
+    typeNumber(Number(other.dataset.n));
+    expect(cards(".ls-mm-miss")).toHaveLength(2);
+    expect(c.tools!.current()).toBe(1);
+    press("ArrowRight"); // turns the miss back over
+    expect(cards(".ls-mm-up")).toHaveLength(0);
+
+    typeNumber(Number(first.dataset.n));
+    typeNumber(Number(twin.dataset.n));
+    expect(cards(".ls-mm-matched")).toHaveLength(2);
+    expect(c.tools!.scores()).toEqual([0, 1]);
+    expect(c.tools!.current()).toBe(1);
+  });
+});

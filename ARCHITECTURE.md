@@ -308,8 +308,12 @@ chơi theo đội.
 | `memory` | Memory / Pairs | Thẻ úp đánh số; trẻ gọi hai số, giáo viên bấm lật. Trùng cặp thì giữ mở. |
 
 Các trò cần chọn vị trí (`guess-picture` mở từng ô, `box-pick`, `memory`) cho
-phép giáo viên bấm chuột hoặc gõ số trên bàn phím; các trò còn lại chạy chỉ bằng
-Tiếp/Lùi.
+phép giáo viên bấm chuột hoặc gõ số trên bàn phím (số có hai chữ số được gom lại,
+gửi sau một nhịp ngắn hoặc khi bấm Enter); các trò còn lại chạy chỉ bằng Tiếp/Lùi.
+`guess-picture` mở từng ô vẫn chạy được bằng bút trình chiếu: Tiếp mở một ô ngẫu
+nhiên, hết ô thì hiện đáp án. `lucky-wheel` mỗi lần Tiếp quay đến một ô chưa trúng;
+quay hết thì Tiếp sang slide sau. `box-pick` và `memory` chơi theo lượt đội: điểm
+cộng thẳng vào bảng điểm cho đội đang có lượt.
 
 **Đã cân nhắc nhưng không đưa vào:**
 - *Đập chuột (whack-a-mole), bấm nhanh trên bảng tương tác*: cần học sinh tự bấm.
@@ -324,9 +328,15 @@ Tham khảo: [What's missing trong bài tiếng Trung](https://tes.com/teaching-
 
 **Công cụ lớp học trong chế độ trình chiếu** (lớp phủ, không phải slide; không
 lưu vào bài):
-- Bảng điểm 2–4 đội: `1`–`4` cộng điểm, `Shift`+số trừ điểm.
-- Đồng hồ đếm ngược (`T`).
-- Chọn ngẫu nhiên số thứ tự học sinh.
+- Bảng điểm 2–4 đội: `1`–`4` cộng điểm, `Shift`+số trừ điểm, `S` hiện/ẩn; bấm
+  vào bảng để cộng/trừ, thêm đội, về 0 hoặc chọn đội có lượt. Trên slide trò chơi
+  chọn ô bằng số, phím số dùng để chọn ô; khi đó cộng điểm bằng cách bấm vào bảng.
+- Đồng hồ đếm ngược: `T` chạy/dừng, `Shift+T` tắt; bấm vào đồng hồ khi đang dừng
+  để đổi 15/30/60/90/120 giây; hết giờ có tiếng báo và nhấp nháy.
+- Chọn ngẫu nhiên số thứ tự học sinh: `N` (sĩ số lưu trên máy), `Shift+N` tắt.
+- `H`: bảng phím tắt cho giáo viên.
+- Các công cụ nằm trong runtime (`runtime/tools.js`), nên chạy cả trong Present
+  của app lẫn khi mở `lesson.html` bằng trình duyệt.
 
 Quy ước chung cho slide hoạt động:
 - Phản hồi rõ ràng cho cả lớp: âm thanh + hiệu ứng khi hiện đáp án đúng, pháo giấy
@@ -495,7 +505,7 @@ cắt validation, ghi file an toàn, backup, recovery, hay hỗ trợ macOS.
 | 2. Editor | 🟢 Xong (Windows) | Library (tạo, mở, đổi tên, nhân bản, xoá vào Thùng rác; hiện tiêu đề bài); SlideNavigator (thêm, xoá, nhân bản, lên/xuống, kéo thả); PropertiesPanel tự dựng form từ `editor` spec, báo lỗi và cảnh báo giới hạn theo từng trường; nút Lưu + Ctrl+S/⌘S + trạng thái + xử lý xung đột; undo/redo (nút + Ctrl+Z/Ctrl+Y, ⌘Z/⇧⌘Z, gộp lần gõ); draft sau 1 giây + hỏi phục hồi khi mở bài; tự lưu sau 30 giây rảnh và khi đóng cửa sổ; thu nhỏ ảnh ≤ 1920 px khi nhập (giữ đúng chiều xoay EXIF); dọn asset không dùng khi đóng bài. Đã kiểm tra trong app thật trên Windows. | Chọn ảnh/audio qua hộp thoại chưa thử trong app thật. |
 | 3. Dạy + Present | 🟢 Xong (Windows) | Đủ 7 loại slide nhóm 1 (`cover`, `vocabulary`, `picture-card`, `flashcard`, `dialogue`, `grammar`, `summary`). Present trong app dùng chung runtime với `lesson.html`: F5 từ đầu, Shift+F5 / nút "Trình chiếu" từ slide đang chọn, toàn màn hình, Esc thoát về đúng slide. Runtime: bước Tiếp/Lùi, `A`/`R`, Home/End, hiện từng phần chung cho mọi slide (`data-ls-reveal`), âm thanh phản hồi tổng hợp (WebAudio), pháo giấy. Đã kiểm tra trong app thật: chạy các bước của thẻ lật, hội thoại, ngữ pháp. | Thử bút trình chiếu thật; trình chiếu trọn một bài 15 slide. |
 | 4. Hỏi đáp + theme | 🟢 Xong (Windows) | Đủ 6 loại slide nhóm 2 (`quiz` có biến thể Đúng/Sai và đề bằng ảnh/âm thanh, `matching`, `fill-blank`, `sentence-order`, `tone-pick` tự lấy thanh từ dấu pinyin, `sort-groups`); thứ tự xáo trộn cố định theo ID slide nên Editor, Present và file giống nhau; hoàn thành có pháo giấy. 5 theme (`classic`, `garden`, `ocean`, `space` nền tối, `panda`); tuỳ chọn chữ Khải. Trường form hiện theo điều kiện. Chữ Hán lẫn trong câu tiếng Việt được gắn `lang="zh-CN"` riêng. Đã kiểm tra trong app thật: chạy các bước của cả 6 loại và xem 5 theme. | Thử trên lớp thật. |
-| 5. Trò chơi + công cụ lớp học | ⚪ Chưa bắt đầu | | |
+| 5. Trò chơi + công cụ lớp học | 🟢 Xong (Windows) | Đủ 5 trò nhóm 3 (`whats-missing`, `guess-picture` với 4 cách chơi, `box-pick`, `lucky-wheel`, `memory`), mỗi trò có `interaction.js` riêng qua các hook mới của runtime (Tiếp/Lùi tự xử lý, chọn ô bằng số, vào/rời slide). Công cụ lớp học: bảng điểm đội, đồng hồ đếm ngược, gọi số ngẫu nhiên, bảng phím tắt. Runtime có test chạy thật trong DOM giả lập (happy-dom) cho từng trò. Đã kiểm tra trong app thật. | Dạy thử một buổi với lớp thật. |
 | Ảnh và giọng đọc từ web (thêm ở Rev 6) | 🟢 Xong (Windows) | Tìm ảnh Bing, dán/kéo ảnh, giọng đọc Google Dịch, ghi nguồn ảnh. Đã kiểm tra trong app thật: tìm "quả táo" ra 30 ảnh trong ~2,5 giây, chèn ảnh, tạo giọng đọc 苹果, dán ảnh, kéo địa chỉ ảnh vào. | Kéo ảnh thật từ Chrome/Edge sang chưa thử bằng chuột thật. |
 | 6. Import/Export + phát hành | ⚪ Chưa bắt đầu | Icon ứng dụng; cấu hình đóng gói NSIS / `.dmg`. | Export độc lập, AI import, mở HTML ngoài, ký số + notarize, hướng dẫn. |
 
@@ -518,10 +528,10 @@ cắt validation, ghi file an toàn, backup, recovery, hay hỗ trợ macOS.
 - [x] Nút Lưu, Ctrl+S / ⌘S và trạng thái lưu hiển thị đúng.
 
 **Loại slide và theme**
-- [ ] Đủ các loại slide nhóm 1 và 2 (nhóm 3 nếu không bị cắt). *(Nhóm 1 và 2 đủ; nhóm 3 chưa làm.)*
+- [x] Đủ các loại slide nhóm 1 và 2 (nhóm 3 nếu không bị cắt). *(Đủ cả nhóm 3.)*
 - [ ] Mọi slide nhóm 1 và 2 chạy hết các bước chỉ bằng Tiếp/Lùi (bút trình chiếu). *(Nhóm 1 và 2 đạt với bàn phím; chưa thử bút thật.)*
 - [x] Mỗi slide hoạt động có phản hồi âm thanh/hiệu ứng và phím `A`/`R`.
-- [ ] Bảng điểm đội, đồng hồ đếm ngược dùng được trong Present và file export.
+- [ ] Bảng điểm đội, đồng hồ đếm ngược dùng được trong Present và file export. *(Có trong Present và `lesson.html`; file export chưa làm.)*
 - [x] Mỗi slide có ô ghi chú cho giáo viên, không hiện khi trình chiếu.
 - [x] 5 theme; âm thanh và hiệu ứng tắt được.
 - [x] Thêm một loại slide mới chỉ cần thêm một thư mục trong `templates/`.

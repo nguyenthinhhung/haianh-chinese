@@ -1,0 +1,69 @@
+.ls-slide[data-slide-type="lucky-wheel"] .ls-lw {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(60 * var(--u));
+}
+.ls-slide[data-slide-type="lucky-wheel"] .ls-lw-wheel {
+  height: 100%;
+  max-width: 60%;
+  overflow: visible;
+}
+.ls-slide[data-slide-type="lucky-wheel"] .ls-lw-rotor {
+  transform-box: view-box;
+  transform-origin: 0 0;
+}
+.ls-slide[data-slide-type="lucky-wheel"] .ls-lw-seg path {
+  fill: var(--seg);
+  stroke: var(--ls-surface);
+  stroke-width: 1.5;
+  transition: opacity 0.3s ease;
+}
+.ls-slide[data-slide-type="lucky-wheel"] .ls-lw-c1 { --seg: var(--ls-c1); }
+.ls-slide[data-slide-type="lucky-wheel"] .ls-lw-c2 { --seg: var(--ls-c2); }
+.ls-slide[data-slide-type="lucky-wheel"] .ls-lw-c3 { --seg: var(--ls-c3); }
+.ls-slide[data-slide-type="lucky-wheel"] .ls-lw-c4 { --seg: var(--ls-c4); }
+.ls-slide[data-slide-type="lucky-wheel"] .ls-lw-c5 { --seg: var(--ls-c5); }
+.ls-slide[data-slide-type="lucky-wheel"] .ls-lw-c6 { --seg: var(--ls-c6); }
+.ls-slide[data-slide-type="lucky-wheel"] .ls-lw-seg text {
+  fill: #fff;
+  font-family: var(--ls-font-latin);
+  font-weight: 800;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+.ls-slide[data-slide-type="lucky-wheel"] .ls-lw-seg text[lang="zh-CN"] {
+  font-family: var(--ls-font-hanzi);
+  font-weight: 700;
+}
+.ls-slide[data-slide-type="lucky-wheel"] .ls-lw-picked path {
+  opacity: 0.3;
+}
+.ls-slide[data-slide-type="lucky-wheel"] .ls-lw-hit path {
+  stroke: var(--ls-fg);
+  stroke-width: 3;
+}
+.ls-slide[data-slide-type="lucky-wheel"] .ls-lw-hub {
+  fill: var(--ls-surface);
+  stroke: var(--ls-fg);
+  stroke-width: 3;
+}
+.ls-slide[data-slide-type="lucky-wheel"] .ls-lw-pointer {
+  fill: var(--ls-fg);
+}
+.ls-slide[data-slide-type="lucky-wheel"] .ls-lw-result {
+  min-width: 25%;
+  color: var(--ls-accent);
+  font-size: calc(130 * var(--u));
+  font-weight: 800;
+  text-align: center;
+}
+.ls-slide[data-slide-type="lucky-wheel"] .ls-lw-result:empty {
+  display: none;
+}
+.ls-slide[data-slide-type="lucky-wheel"] .ls-lw-result[lang="zh-CN"] {
+  font-family: var(--ls-font-hanzi);
+  font-weight: 700;
+}

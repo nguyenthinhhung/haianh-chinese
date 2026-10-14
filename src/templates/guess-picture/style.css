@@ -1,0 +1,114 @@
+.ls-slide[data-slide-type="guess-picture"] .ls-gp {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(24 * var(--u));
+}
+.ls-slide[data-slide-type="guess-picture"] .ls-gp-frame {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  aspect-ratio: 4 / 3;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: calc(6 * var(--u)) solid var(--ls-surface-border);
+  border-radius: calc(var(--ls-radius) * var(--u));
+  background: var(--ls-surface);
+}
+.ls-slide[data-slide-type="guess-picture"] .ls-gp-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 0.7s ease, filter 0.7s ease;
+}
+.ls-slide[data-slide-type="guess-picture"] .ls-gp[data-focus="top-left"] .ls-gp-image { transform-origin: 15% 15%; }
+.ls-slide[data-slide-type="guess-picture"] .ls-gp[data-focus="top-right"] .ls-gp-image { transform-origin: 85% 15%; }
+.ls-slide[data-slide-type="guess-picture"] .ls-gp[data-focus="bottom-left"] .ls-gp-image { transform-origin: 15% 85%; }
+.ls-slide[data-slide-type="guess-picture"] .ls-gp[data-focus="bottom-right"] .ls-gp-image { transform-origin: 85% 85%; }
+.ls-slide[data-slide-type="guess-picture"] .ls-gp-empty {
+  color: var(--ls-muted);
+  font-size: calc(44 * var(--u));
+  font-weight: 700;
+}
+
+/* Tiles: numbered covers that open one by one. */
+.ls-slide[data-slide-type="guess-picture"] .ls-gp-tiles {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--n), 1fr);
+  grid-template-rows: repeat(var(--n), 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ls-slide[data-slide-type="guess-picture"] .ls-gp-tile {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: calc(3 * var(--u)) solid var(--ls-surface);
+  background: var(--ls-accent-2);
+  color: #fff;
+  font: inherit;
+  font-size: calc(80 * var(--u));
+  font-weight: 800;
+  cursor: pointer;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.ls-slide[data-slide-type="guess-picture"] .ls-gp-tiles li:nth-child(odd) .ls-gp-tile {
+  background: color-mix(in srgb, var(--ls-accent-2) 80%, #000);
+}
+.ls-slide[data-slide-type="guess-picture"] .ls-gp-tile.ls-gp-open {
+  opacity: 0;
+  transform: scale(0.85);
+  pointer-events: none;
+}
+.ls-slide[data-slide-type="guess-picture"] .ls-gp-solved .ls-gp-tile {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Flash: the picture shows only for a moment on each step. */
+.ls-slide[data-slide-type="guess-picture"] .ls-gp-cover {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ls-accent-2);
+  color: #fff;
+  font-size: calc(260 * var(--u));
+  font-weight: 800;
+}
+.ls-slide[data-slide-type="guess-picture"] .ls-gp-flashing .ls-gp-cover,
+.ls-slide[data-slide-type="guess-picture"] .ls-gp-solved .ls-gp-cover {
+  visibility: hidden;
+}
+/* Editing: the picture stays visible under semi-transparent covers. */
+.ls-slide[data-slide-type="guess-picture"]:not(.ls-presenting > *) .ls-gp-tile,
+.ls-slide[data-slide-type="guess-picture"]:not(.ls-presenting > *) .ls-gp-cover {
+  opacity: 0.55;
+}
+
+.ls-slide[data-slide-type="guess-picture"] .ls-gp-answer {
+  display: flex;
+  align-items: baseline;
+  gap: calc(32 * var(--u));
+}
+.ls-slide[data-slide-type="guess-picture"] .ls-gp-hanzi {
+  font-size: calc(96 * var(--u));
+  font-weight: 700;
+}
+.ls-slide[data-slide-type="guess-picture"] .ls-gp-pinyin {
+  font-size: calc(48 * var(--u));
+}
+.ls-slide[data-slide-type="guess-picture"] .ls-gp-meaning {
+  font-size: calc(46 * var(--u));
+  font-weight: 800;
+  color: var(--ls-muted);
+}

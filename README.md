@@ -3,9 +3,9 @@
 Offline-first desktop app (Tauri 2 + React + TypeScript) for teachers to build
 and present Chinese lessons for children. Design decisions: [ARCHITECTURE.md](ARCHITECTURE.md).
 
-Current state: roadmap phases 1–4 done on Windows (editor, safe save, drafts and
-recovery, undo/redo, lesson management, 13 teaching and Q&A slide types, 5 themes,
-in-app Present),
+Current state: roadmap phases 1–5 done on Windows (editor, safe save, drafts and
+recovery, undo/redo, lesson management, 18 slide types including 5 classroom games,
+5 themes, in-app Present with scoreboard, timer and random picker),
 plus web image search and Chinese text-to-speech. Status per phase:
 [ARCHITECTURE.md §8.1](ARCHITECTURE.md).
 
