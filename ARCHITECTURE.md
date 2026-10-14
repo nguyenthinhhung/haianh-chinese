@@ -12,7 +12,7 @@ phải chạm vào HTML.
 **Người dùng duy nhất của ứng dụng là giáo viên.** Học sinh chỉ xem màn hình chiếu
 và trả lời bằng lời; giáo viên là người điều khiển mọi thứ trên màn hình.
 
-> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 10).
+> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 11).
 
 ---
 
@@ -438,8 +438,10 @@ và loại slide; AI chỉ viết phần ngôn ngữ (chữ Hán, pinyin, nghĩa
 7. Kiểm tra mềm, chỉ **cảnh báo**, không chặn: thiếu từ bắt buộc (chỉ xét từ viết
    bằng chữ Hán), loại slide quá sức với lứa tuổi, số slide lệch dự kiến quá 2,
    pinyin không khớp số chữ (mỗi chữ một âm tiết cách nhau bằng dấu cách; bỏ qua
-   chuỗi có chữ Latin/số; 儿 hoá được chấp nhận). Kiểm tra này không biết pinyin
-   đúng hay sai âm. Lỗi và cảnh báo đều có nút sao chép thành lời nhắn để AI sửa.
+   chuỗi có chữ Latin/số; 儿 hoá được chấp nhận), âm tiết không phải cách đọc nào
+   của chữ đó (`misreadCharacters`, kèm cách đọc gợi ý). Một cách đọc có thật
+   nhưng sai ngữ cảnh (还 đọc hái trong 还书) không bắt được. Lỗi và cảnh báo đều
+   có nút sao chép thành lời nhắn để AI sửa. Pinyin AI bỏ trống được tự điền.
 8. Xem trước → **Tạo bài mới** (theme theo lứa tuổi) hoặc **Thêm vào cuối bài
    hiện tại** (giữ theme của bài).
 9. ID do ứng dụng gán; slide cần ảnh nhận ô placeholder cho tới khi ảnh được tự
@@ -695,8 +697,17 @@ cắt validation, ghi file an toàn, backup, recovery, hay hỗ trợ macOS.
 
 Ưu tiên sau MVP: thứ tự nét chữ (dữ liệu nét chỉ nhúng cho các chữ dùng trong
 bài), bảng Jeopardy, chế độ người trình bày (màn hình giáo viên xem ghi chú và
-slide kế tiếp, máy chiếu chỉ hiện slide), tự sinh pinyin từ chữ Hán (thư viện
-offline), ghi âm giọng giáo viên trong ứng dụng.
+slide kế tiếp, máy chiếu chỉ hiện slide), ghi âm giọng giáo viên trong ứng dụng.
+
+**Pinyin tự sinh** (`core/pinyin.ts`, thư viện `pinyin-pro`, MIT, chạy offline,
+chỉ dùng trong editor nên không vào file bài học): ô pinyin luôn đứng ngay sau
+ô chữ Hán của nó trong `editor` của template (`pinyinPairs`), nên không phải
+khai báo cặp. Pinyin theo chữ Hán khi còn trống hoặc vẫn là bản tự điền;
+giáo viên đã sửa tay thì giữ, chỉ hiện nút "Tự điền" khi pinyin không thể đúng
+(`pinyinFits`). Viết theo sách giáo khoa: chữ đa âm theo cả từ, biến điệu 一/不,
+儿 nhập vào âm trước, 子 đuôi đọc nhẹ, thêm một từ điển nhỏ các từ thanh nhẹ hay
+gặp. Đo trên 30 từ khó trước khi bổ sung: 25 đúng; các chỗ sai còn lại là thanh
+nhẹ và chữ đa âm hiếm.
 
 Chưa làm:
 - Hoạt động do học sinh tự thao tác (bảng tương tác, máy tính bảng, bài tập về nhà).
@@ -712,6 +723,13 @@ Chưa làm:
 ---
 
 ## 12. Lịch sử thay đổi
+
+### Rev 11
+
+| Thay đổi | Lý do |
+| --- | --- |
+| Tự sinh pinyin khi soạn và khi nhập bài AI; kiểm tra pinyin AI sai âm | Gõ dấu thanh bằng tay chậm và dễ sai; bộ kiểm tra cũ chỉ bắt sai số âm tiết. |
+| So pinyin với mọi cách đọc của từng chữ thay vì so nguyên văn với bản tự sinh | Bản tự sinh có thể khác sách (thanh nhẹ) mà vẫn đúng; so nguyên văn sẽ báo nhầm. |
 
 ### Rev 10
 

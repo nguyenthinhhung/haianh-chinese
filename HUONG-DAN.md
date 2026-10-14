@@ -28,6 +28,12 @@ Bài học nằm trong thư mục **Tài liệu → Chinese Lesson Studio**, m�
   pinyin vì đó là đáp án).
 - Ô **Ghi chú cho giáo viên** dưới slide: chỉ thầy cô thấy, không hiện khi chiếu.
 
+### Pinyin
+
+Gõ chữ Hán là ô pinyin tự điền, có dấu thanh. Đã sửa tay pinyin thì ứng dụng giữ
+nguyên; nút **Tự điền** cạnh ô Pinyin chỉ hiện khi pinyin đang ghi không khớp chữ
+Hán. Pinyin tự điền nên được xem lại với từ đọc nhẹ hoặc chữ nhiều cách đọc.
+
 ### Ảnh và âm thanh
 
 - **Tìm ảnh…**: tìm trên mạng (từ khoá điền sẵn theo nghĩa của từ), bấm vào ảnh
