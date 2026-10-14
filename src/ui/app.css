@@ -659,6 +659,8 @@ textarea {
 }
 .list-item {
   position: relative;
+  /* A fieldset never shrinks below its content by default; a long summary line must not widen the panel. */
+  min-width: 0;
   margin: 0;
   padding: 10px 12px 2px;
   border: 1px solid var(--border);
