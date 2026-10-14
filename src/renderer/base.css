@@ -203,3 +203,184 @@ html.ls-present body {
     break-after: page;
   }
 }
+
+/* Classroom tools over a presented deck (scoreboard, timer, picker, help).
+   Sized in vmin so they stay readable on any projector. */
+.ls-deck.ls-presenting .ls-tools {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  font-family: var(--ls-font-latin);
+}
+.ls-deck.ls-presenting .ls-tools > * {
+  pointer-events: auto;
+}
+.ls-deck.ls-presenting .ls-tools [hidden] {
+  display: none !important;
+}
+/* :where keeps this below the specific tool rules, e.g. the timer's size. */
+.ls-deck.ls-presenting .ls-tools :where(button) {
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.ls-deck.ls-presenting .ls-score {
+  position: absolute;
+  top: 1.2vmin;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 1vmin;
+  padding: 0.8vmin;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.55);
+  color: #fff;
+  font-size: 2.4vmin;
+  white-space: nowrap;
+}
+.ls-deck.ls-presenting .ls-score-team {
+  display: flex;
+  align-items: center;
+  gap: 0.6vmin;
+  padding: 0.4vmin 1.2vmin;
+  border: 0.35vmin solid transparent;
+  border-radius: 999px;
+  background: var(--team);
+}
+.ls-deck.ls-presenting .ls-score-team[data-team="1"] { --team: var(--ls-c1); }
+.ls-deck.ls-presenting .ls-score-team[data-team="2"] { --team: var(--ls-c2); }
+.ls-deck.ls-presenting .ls-score-team[data-team="3"] { --team: var(--ls-c3); }
+.ls-deck.ls-presenting .ls-score-team[data-team="4"] { --team: var(--ls-c4); }
+.ls-deck.ls-presenting .ls-score-current {
+  border-color: #fff;
+  box-shadow: 0 0 0 0.4vmin rgb(255 255 255 / 0.35);
+}
+.ls-deck.ls-presenting .ls-score-bump {
+  animation: ls-bump 0.45s ease;
+}
+@keyframes ls-bump {
+  40% {
+    transform: scale(1.18);
+  }
+}
+.ls-deck.ls-presenting .ls-score-name,
+.ls-deck.ls-presenting .ls-score-step {
+  padding: 0.2vmin 0.8vmin;
+  border: 0;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.2);
+  color: #fff;
+}
+.ls-deck.ls-presenting .ls-score-name {
+  background: none;
+  font-weight: 800;
+}
+.ls-deck.ls-presenting .ls-score-value {
+  min-width: 2.2em;
+  font-size: 1.4em;
+  font-weight: 800;
+  text-align: center;
+}
+.ls-deck.ls-presenting .ls-score-tools {
+  display: flex;
+  gap: 0.5vmin;
+  font-size: 0.8em;
+}
+.ls-deck.ls-presenting .ls-score-step:disabled {
+  opacity: 0.4;
+}
+.ls-deck.ls-presenting .ls-timer {
+  position: absolute;
+  top: 1.2vmin;
+  right: 1.2vmin;
+  min-width: 14vmin;
+  padding: 0.6vmin 2vmin;
+  border: 0;
+  border-radius: 1.6vmin;
+  background: rgb(0 0 0 / 0.6);
+  color: #fff;
+  font-size: 6vmin;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.ls-deck.ls-presenting .ls-timer-running {
+  background: rgb(42 111 151 / 0.85);
+}
+.ls-deck.ls-presenting .ls-timer-done {
+  background: #d64545;
+  animation: ls-blink 0.8s ease-in-out 4;
+}
+@keyframes ls-blink {
+  50% {
+    opacity: 0.4;
+  }
+}
+.ls-deck.ls-presenting .ls-picker,
+.ls-deck.ls-presenting .ls-help {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 3vmin 5vmin;
+  border-radius: 3vmin;
+  background: rgb(255 255 255 / 0.97);
+  color: #1f2933;
+  box-shadow: 0 2vmin 6vmin rgb(0 0 0 / 0.4);
+  text-align: center;
+}
+.ls-deck.ls-presenting .ls-picker-title {
+  font-size: 4vmin;
+  font-weight: 800;
+}
+.ls-deck.ls-presenting .ls-picker-number {
+  font-size: 26vmin;
+  font-weight: 800;
+  line-height: 1;
+  color: #d64545;
+  font-variant-numeric: tabular-nums;
+}
+.ls-deck.ls-presenting .ls-picker-size {
+  font-size: 2.4vmin;
+}
+.ls-deck.ls-presenting .ls-picker-size input {
+  width: 9vmin;
+  font: inherit;
+}
+.ls-deck.ls-presenting .ls-help {
+  min-width: 60vmin;
+  text-align: left;
+  font-size: 2.6vmin;
+}
+.ls-deck.ls-presenting .ls-help-title {
+  margin-bottom: 1.5vmin;
+  font-size: 4vmin;
+  font-weight: 800;
+}
+.ls-deck.ls-presenting .ls-help-row {
+  display: flex;
+  gap: 2vmin;
+  padding: 0.5vmin 0;
+}
+.ls-deck.ls-presenting .ls-help kbd {
+  min-width: 26vmin;
+  font-family: ui-monospace, Consolas, monospace;
+  font-weight: 700;
+}
+.ls-deck.ls-presenting > .ls-digits {
+  position: fixed;
+  bottom: 3vmin;
+  left: 50%;
+  z-index: 21;
+  transform: translateX(-50%);
+  padding: 1vmin 3vmin;
+  border-radius: 2vmin;
+  background: rgb(0 0 0 / 0.7);
+  color: #fff;
+  font-size: 7vmin;
+  font-weight: 800;
+}
+.ls-deck.ls-presenting > .ls-digits[hidden] {
+  display: none;
+}

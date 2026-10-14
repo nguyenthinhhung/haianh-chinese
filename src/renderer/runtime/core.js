@@ -145,7 +145,16 @@
   /* Presents the slides of a `.ls-deck` element one at a time.
    * options: start (slide index), onChange(index), onExit() (Esc),
    * toggleFullscreen(). Returns a controller; destroy() removes every
-   * listener and restores the deck. */
+   * listener and restores the deck.
+   *
+   * An interaction factory is called as factory(slideEl, ctx) with
+   * ctx = { tools, feedback(kind) }. Besides { steps, show(n) } it may return
+   * hooks for activities that are more than a sequence of steps (games):
+   *   next() / prev()  return true when they used the key themselves
+   *   pick(n)          a number typed or clicked by the teacher (cell n)
+   *   enter() / leave() the slide becomes current / stops being current
+   *   revealAll() / reset()  replace the default A / R behaviour
+   *   usesScores       show the scoreboard while the slide is current */
   LS.mount = function (deck, options) {
     options = options || {};
     var slides = Array.prototype.filter.call(deck.children, function (el) {
@@ -155,11 +164,24 @@
 
     deck.classList.add("ls-presenting");
 
+    var index = -1;
+    var step = 0;
+    var tools = LS.createTools
+      ? LS.createTools(deck, function (kind) {
+          LS.feedback(kind, slides[index]);
+        })
+      : null;
+
     var controllers = slides.map(function (el) {
       var factory = factories[el.getAttribute("data-slide-type")] || revealController;
       var c = null;
       try {
-        c = factory(el);
+        c = factory(el, {
+          tools: tools,
+          feedback: function (kind) {
+            LS.feedback(kind, el);
+          },
+        });
       } catch (e) {
         if (window.console) console.error(e);
       }
@@ -171,8 +193,32 @@
     progress.setAttribute("aria-hidden", "true");
     deck.appendChild(progress);
 
-    var index = -1;
-    var step = 0;
+    /* Numbers typed for games are collected so two-digit cells work; they
+     * are sent after a short pause or on Enter. */
+    var digitsBox = document.createElement("div");
+    digitsBox.className = "ls-digits";
+    digitsBox.hidden = true;
+    deck.appendChild(digitsBox);
+    var digits = "";
+    var digitsTimer = null;
+
+    function flushDigits() {
+      if (digitsTimer) clearTimeout(digitsTimer);
+      digitsTimer = null;
+      var n = parseInt(digits, 10);
+      digits = "";
+      digitsBox.hidden = true;
+      var c = controllers[index];
+      if (!isNaN(n) && c.pick) c.pick(n);
+    }
+
+    function typeDigit(d) {
+      digits = (digits + d).slice(-2);
+      digitsBox.textContent = digits;
+      digitsBox.hidden = false;
+      if (digitsTimer) clearTimeout(digitsTimer);
+      digitsTimer = setTimeout(flushDigits, 900);
+    }
 
     function stopMedia(slide) {
       var media = slide.querySelectorAll("audio");
@@ -187,10 +233,25 @@
       controllers[index].show(n);
     }
 
+    function call(c, hook) {
+      if (!c[hook]) return false;
+      try {
+        return c[hook]();
+      } catch (e) {
+        if (window.console) console.error(e);
+        return false;
+      }
+    }
+
     /* Entering a slide always starts it from the beginning. */
     function go(i) {
       i = Math.max(0, Math.min(slides.length - 1, i));
-      if (index >= 0 && index !== i) stopMedia(slides[index]);
+      if (index >= 0 && index !== i) {
+        stopMedia(slides[index]);
+        call(controllers[index], "leave");
+      }
+      digits = "";
+      digitsBox.hidden = true;
       for (var k = 0; k < slides.length; k++) {
         var current = k === i;
         slides[k].classList.toggle("ls-current", current);
@@ -198,22 +259,54 @@
       }
       index = i;
       setStep(0);
+      call(controllers[i], "enter");
+      if (controllers[i].usesScores && tools) tools.showScores();
       progress.style.width = ((i + 1) / slides.length) * 100 + "%";
       if (options.onChange) options.onChange(i);
     }
 
     function next() {
-      if (step < controllers[index].steps) setStep(step + 1);
+      var c = controllers[index];
+      if (call(c, "next")) return;
+      if (step < c.steps) setStep(step + 1);
       else if (index < slides.length - 1) go(index + 1);
     }
 
     function prev() {
+      var c = controllers[index];
+      if (call(c, "prev")) return;
       if (step > 0) setStep(step - 1);
       else if (index > 0) go(index - 1);
     }
 
+    function revealAll() {
+      var c = controllers[index];
+      if (!call(c, "revealAll")) setStep(c.steps);
+    }
+
+    function reset() {
+      var c = controllers[index];
+      if (!call(c, "reset")) setStep(0);
+    }
+
     function onKey(e) {
       if (e.ctrlKey || e.metaKey || e.altKey || isTyping(e.target)) return;
+      var c = controllers[index];
+      var digit = /^(Digit|Numpad)(\d)$/.exec(e.code || "");
+      if (digit && c.pick && !e.shiftKey) {
+        typeDigit(digit[2]);
+        e.preventDefault();
+        return;
+      }
+      if (e.key === "Enter" && digits) {
+        flushDigits();
+        e.preventDefault();
+        return;
+      }
+      if (tools && tools.onKey(e, !!c.pick)) {
+        e.preventDefault();
+        return;
+      }
       var handled = true;
       switch (e.key) {
         case "ArrowRight":
@@ -237,11 +330,11 @@
           break;
         case "a":
         case "A":
-          setStep(controllers[index].steps);
+          revealAll();
           break;
         case "r":
         case "R":
-          setStep(0);
+          reset();
           break;
         case "f":
         case "F":
@@ -269,7 +362,8 @@
         }
         return;
       }
-      if (target && target.closest && target.closest("a, button, input, select, textarea")) return;
+      /* Controls (game cells, tool buttons) handle their own clicks. */
+      if (target && target.closest && target.closest("a, button, input, select, textarea, label, .ls-tools")) return;
       next();
     }
 
@@ -281,17 +375,19 @@
       next: next,
       prev: prev,
       go: go,
-      revealAll: function () {
-        setStep(controllers[index].steps);
-      },
-      reset: function () {
-        setStep(0);
-      },
+      revealAll: revealAll,
+      reset: reset,
+      tools: tools,
       destroy: function () {
         document.removeEventListener("keydown", onKey);
         deck.removeEventListener("click", onClick);
+        if (digitsTimer) clearTimeout(digitsTimer);
         stopMedia(slides[index]);
-        if (progress.parentNode) progress.parentNode.removeChild(progress);
+        call(controllers[index], "leave");
+        if (tools) tools.destroy();
+        [progress, digitsBox].forEach(function (node) {
+          if (node.parentNode) node.parentNode.removeChild(node);
+        });
         deck.classList.remove("ls-presenting");
       },
     };

@@ -7,6 +7,7 @@ let loading: Promise<void> | undefined;
 
 export function loadRuntime(): Promise<void> {
   loading ??= import("./core.js").then(async () => {
+    await import("./tools.js");
     const interactions = import.meta.glob("../../templates/*/interaction.js");
     await Promise.all(Object.values(interactions).map((load) => load()));
   });

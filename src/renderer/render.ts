@@ -6,6 +6,7 @@ import baseCss from "./base.css?raw";
 import { esc } from "./escape";
 import { FONT_CSS } from "./fonts";
 import runtimeCore from "./runtime/core.js?raw";
+import runtimeTools from "./runtime/tools.js?raw";
 
 export interface RenderEnv {
   templates: TemplateRegistry;
@@ -80,9 +81,9 @@ export function editorCss(env: RenderEnv): string {
   );
 }
 
-/** Core runtime plus only the interactions of templates the lesson uses. */
+/** Core runtime and classroom tools, plus only the interactions of templates the lesson uses. */
 export function lessonRuntime(doc: LessonDocument, env: RenderEnv): string {
   const interactions = usedTemplates(doc, env).flatMap((t) => (t.interaction ? [t.interaction.source] : []));
   // Nothing in the runtime may close the inline <script> it is embedded in.
-  return [runtimeCore, ...interactions].join("\n").replace(/<\/script/gi, "<\/script");
+  return [runtimeCore, runtimeTools, ...interactions].join("\n").replace(/<\/script/gi, "<\/script");
 }
