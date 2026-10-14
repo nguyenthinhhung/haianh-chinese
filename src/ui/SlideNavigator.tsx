@@ -19,6 +19,8 @@ interface Props {
   onSelect(id: string | undefined): void;
   /** Slides holding pictures picked automatically that still need a look. */
   toReview?: ReadonlySet<string>;
+  /** Called after a slide is deleted, with its position, so the editor can say how to undo. */
+  onRemoved?(index: number): void;
 }
 
 const DRAG_THRESHOLD_PX = 5;
@@ -103,7 +105,7 @@ function useThumbDrag(session: LessonSession, onSelect: (id: string) => void) {
   return { listRef, gap: drag?.gap ?? null, draggingFrom: drag?.from ?? null, handlers };
 }
 
-export function SlideNavigator({ session, env, selectedId, onSelect, toReview }: Props) {
+export function SlideNavigator({ session, env, selectedId, onSelect, toReview, onRemoved }: Props) {
   const { templates } = useServices();
   const [adding, setAdding] = useState(false);
   const { doc } = session;
@@ -121,11 +123,22 @@ export function SlideNavigator({ session, env, selectedId, onSelect, toReview }:
     onSelect(newId);
   }
 
-  function remove() {
-    if (!selectedId) return;
-    const neighbour = doc.slides[selectedIndex + 1] ?? doc.slides[selectedIndex - 1];
-    session.update((d) => removeSlide(d, selectedId));
-    onSelect(neighbour?.id);
+  function remove(slideId = selectedId) {
+    const index = doc.slides.findIndex((s) => s.id === slideId);
+    if (!slideId || index < 0) return;
+    session.update((d) => removeSlide(d, slideId));
+    // Deleting another slide keeps the selection; deleting the selected one moves it to a neighbour.
+    if (slideId === selectedId) onSelect((doc.slides[index + 1] ?? doc.slides[index - 1])?.id);
+    onRemoved?.(index);
+  }
+
+  /** Delete (or Backspace) removes the selected slide while the slide list has focus. */
+  function onKeyDown(e: React.KeyboardEvent) {
+    if (e.key !== "Delete" && e.key !== "Backspace") return;
+    const target = e.target as HTMLElement;
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) || target.isContentEditable) return;
+    e.preventDefault();
+    remove();
   }
 
   function duplicate() {
@@ -140,7 +153,7 @@ export function SlideNavigator({ session, env, selectedId, onSelect, toReview }:
   }
 
   return (
-    <nav className="navigator" aria-label="Danh sách slide">
+    <nav className="navigator" aria-label="Danh sách slide" onKeyDown={onKeyDown}>
       <ol className={`thumbs${gap !== null ? " dragging" : ""}`} ref={listRef}>
         {doc.slides.map((slide, i) => (
           <li
@@ -166,6 +179,9 @@ export function SlideNavigator({ session, env, selectedId, onSelect, toReview }:
                 </span>
               )}
               <SlideView doc={doc} slide={slide} env={env} />
+            </button>
+            <button type="button" className="thumb-delete" title={`Xoá slide ${i + 1} (phím Delete)`} aria-label={`Xoá slide ${i + 1}`} onClick={() => remove(slide.id)}>
+              ✕
             </button>
           </li>
         ))}
@@ -215,8 +231,8 @@ export function SlideNavigator({ session, env, selectedId, onSelect, toReview }:
           <button type="button" title="Nhân bản" disabled={selectedIndex < 0} onClick={duplicate}>
             ⧉
           </button>
-          <button type="button" title="Xoá slide" disabled={selectedIndex < 0} onClick={remove}>
-            🗑
+          <button type="button" className="danger" title="Xoá slide đang chọn (phím Delete)" disabled={selectedIndex < 0} onClick={() => remove()}>
+            Xoá
           </button>
         </div>
       </div>

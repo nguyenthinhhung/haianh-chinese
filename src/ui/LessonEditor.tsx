@@ -216,7 +216,14 @@ export function LessonEditor({ lesson, onClose }: Props) {
         />
       )}
 
-      <SlideNavigator session={session} env={env} selectedId={slide?.id} onSelect={setSelectedId} toReview={toReviewSlides} />
+      <SlideNavigator
+        session={session}
+        env={env}
+        selectedId={slide?.id}
+        onSelect={setSelectedId}
+        toReview={toReviewSlides}
+        onRemoved={(index) => setNotice({ text: `Đã xoá slide ${index + 1}. Bấm Ctrl+Z để lấy lại.` })}
+      />
 
       <main className="workspace">
         <div className="stage-wrap">

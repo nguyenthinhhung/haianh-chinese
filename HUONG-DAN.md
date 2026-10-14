@@ -20,7 +20,8 @@ Bài học nằm trong thư mục **Tài liệu → Chinese Lesson Studio**, m�
   và chọn theme (lần sau ứng dụng nhớ theme đã chọn).
 - Cột trái là danh sách slide: **+ Thêm slide** mở bảng các loại slide, mỗi loại
   có một dòng mô tả; kéo thả để đổi thứ tự, các nút bên dưới để lên/xuống, nhân
-  bản, xoá.
+  bản, xoá. Xoá nhanh: rê chuột lên slide và bấm **✕** ở góc, hoặc chọn slide rồi
+  bấm phím **Delete**. Lỡ xoá thì **Ctrl+Z**.
 - Cột phải là nội dung slide đang chọn. Gõ đến đâu, slide ở giữa đổi đến đó.
   Danh sách dài (các từ, các thẻ…) thu gọn mỗi mục còn một dòng; bấm vào để sửa,
   hoặc **Mở tất cả**. Mục có lỗi luôn tự mở.
