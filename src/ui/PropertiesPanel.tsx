@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { AGE_PROFILES, ageRangeLabel } from "../core/ages";
 import { addAsset, setSettings, setSlideField, setTheme } from "../core/document";
 import { checkLimits, getIn, type Path } from "../core/fields";
 import type { LessonDocument, Slide } from "../core/schema";
@@ -369,9 +370,13 @@ function LessonProperties({ session }: { session: LessonSession }) {
           Theme
         </label>
         <select id="lesson-theme" value={doc.theme.id} onChange={(e) => session.update((d) => setTheme(d, e.target.value))}>
-          {themes.list().map((t) => (
+          {themes
+            .list()
+            .map((t) => ({ t, youngest: AGE_PROFILES.findIndex((a) => t.ages.includes(a.id)) }))
+            .sort((a, b) => a.youngest - b.youngest)
+            .map(({ t }) => (
             <option key={t.id} value={t.id}>
-              {t.label}
+              {t.label} ({ageRangeLabel(t.ages)})
             </option>
           ))}
         </select>

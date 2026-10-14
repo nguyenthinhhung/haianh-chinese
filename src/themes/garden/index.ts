@@ -41,6 +41,7 @@ const grass = svgUrl(`
 export const garden: Theme = {
   id: "garden",
   label: "Vườn hoa",
+  ages: ["preschool", "lower-primary"],
   css: css.replace("var(--decor-flowers)", flowers).replace("var(--decor-grass)", grass),
 };
 

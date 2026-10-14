@@ -27,6 +27,7 @@ const stars = svgUrl(`
 export const space: Theme = {
   id: "space",
   label: "Vũ trụ",
+  ages: ["lower-primary", "upper-primary"],
   css: css.replace("var(--decor-planet)", planet).replace("var(--decor-stars)", stars),
 };
 

@@ -35,6 +35,7 @@ const bamboo = svgUrl(`
 export const panda: Theme = {
   id: "panda",
   label: "Gấu trúc",
+  ages: ["preschool", "lower-primary"],
   css: css.replace("var(--decor-panda)", face).replace("var(--decor-bamboo)", bamboo),
 };
 

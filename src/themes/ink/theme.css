@@ -1,0 +1,45 @@
+/* Ink-wash painting on rice paper: quiet colours for older students, with a
+   muted categorical palette that stays readable on the warm background. */
+.ls-deck[data-theme="ink"] {
+  --ls-bg: #f6f0e4;
+  --ls-fg: #1d1d1b;
+  --ls-muted: #5f5a52;
+  --ls-accent: #b23a2b;
+  --ls-accent-2: #3d5a6c;
+  --ls-surface: #fffbf2;
+  --ls-surface-border: #e2d6bf;
+  --ls-pinyin: #3d5a6c;
+  --ls-good: #4f7a32;
+  --ls-radius: 14;
+  --ls-c1: #b23a2b;
+  --ls-c2: #3d5a6c;
+  --ls-c3: #4f7a32;
+  --ls-c4: #9a6a12;
+  --ls-c5: #6b4c7a;
+  --ls-c6: #9c4a6a;
+}
+.ls-deck[data-theme="ink"] .ls-slide {
+  background: radial-gradient(ellipse at 20% 0%, #fbf7ee 0%, var(--ls-bg) 60%);
+}
+.ls-deck[data-theme="ink"] .ls-slide::before,
+.ls-deck[data-theme="ink"] .ls-slide::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+.ls-deck[data-theme="ink"] .ls-slide::before {
+  top: 3%;
+  left: 2%;
+  width: 5%;
+  aspect-ratio: 1;
+  background-image: var(--decor-seal);
+}
+.ls-deck[data-theme="ink"] .ls-slide::after {
+  right: 0;
+  bottom: 0;
+  width: 26%;
+  aspect-ratio: 2.6;
+  background-image: var(--decor-mountains);
+}

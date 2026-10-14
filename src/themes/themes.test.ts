@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createThemeRegistry } from ".";
+import { AGE_PROFILES } from "../core/ages";
 
 const themes = createThemeRegistry().list();
 
@@ -29,6 +30,10 @@ describe.each(themes.map((t) => [t.id, t] as const))("theme %s", (id, theme) => 
   });
 });
 
-it("ships the five MVP themes", () => {
-  expect(themes.map((t) => t.id).sort()).toEqual(["classic", "garden", "ocean", "panda", "space"]);
+it("ships the MVP themes plus two for older students", () => {
+  expect(themes.map((t) => t.id).sort()).toEqual(["classic", "garden", "ink", "notebook", "ocean", "panda", "space"]);
+});
+
+it("has a theme for every age", () => {
+  for (const a of AGE_PROFILES) expect(themes.some((t) => t.ages.includes(a.id)), a.id).toBe(true);
 });

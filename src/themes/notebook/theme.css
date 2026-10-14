@@ -1,0 +1,46 @@
+/* Squared exercise-book paper: each square is 4% of the slide width, and the
+   heights below keep them square on the 16:9 stage. */
+.ls-deck[data-theme="notebook"] {
+  --ls-bg: #fdfdf8;
+  --ls-fg: #1f2a3a;
+  --ls-muted: #56627a;
+  --ls-accent: #d1495b;
+  --ls-accent-2: #2e6fb7;
+  --ls-surface: #ffffff;
+  --ls-surface-border: #c9d8ec;
+  --ls-pinyin: #2e6fb7;
+  --ls-radius: 18;
+}
+.ls-deck[data-theme="notebook"] .ls-slide {
+  background-color: var(--ls-bg);
+  background-image:
+    linear-gradient(to right, #e3ecf7 1px, transparent 1px),
+    linear-gradient(to bottom, #e3ecf7 1px, transparent 1px),
+    linear-gradient(to right, transparent 5.5%, #f3b8bf 5.5%, #f3b8bf 5.7%, transparent 5.7%);
+  background-size:
+    4% 7.111%,
+    4% 7.111%,
+    100% 100%;
+}
+.ls-deck[data-theme="notebook"] .ls-slide::before,
+.ls-deck[data-theme="notebook"] .ls-slide::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+.ls-deck[data-theme="notebook"] .ls-slide::before {
+  top: 3%;
+  left: 0.8%;
+  width: 4.2%;
+  aspect-ratio: 1;
+  background-image: var(--decor-grid);
+}
+.ls-deck[data-theme="notebook"] .ls-slide::after {
+  right: 2%;
+  bottom: 3%;
+  width: 14%;
+  aspect-ratio: 5;
+  background-image: var(--decor-pencil);
+}

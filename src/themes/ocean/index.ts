@@ -25,6 +25,7 @@ const waves = svgUrl(`
 export const ocean: Theme = {
   id: "ocean",
   label: "Đại dương",
+  ages: ["lower-primary", "upper-primary"],
   css: css.replace("var(--decor-fish)", fish).replace("var(--decor-waves)", waves),
 };
 
