@@ -3,6 +3,7 @@ import { ageProfile } from "./ages";
 import { slotKey } from "./autoImages";
 import { describeContentPath, type Path } from "./fields";
 import { newId } from "./ids";
+import { fillMissingPinyin } from "./pinyin";
 import {
   BLUEPRINTS,
   DURATIONS,
@@ -185,10 +186,13 @@ export function parseAiLesson(text: string, registry: TemplateRegistry): AiImpor
       }
       return;
     }
+    // Pinyin the AI left out is filled in, as long as the result still fits the schema.
+    const filled = template.schema.safeParse(fillMissingPinyin(parsed.data, template.editor));
+    const slideContent = filled.success ? filled.data : parsed.data;
     const notes = typeof item?.notes === "string" ? item.notes.trim().slice(0, 5000) : "";
     const id = newId("s");
     for (const [path, words] of imageKeywords(content, template.editor)) imageQueries.set(slotKey(id, path), words);
-    slides.push({ id, type, content: parsed.data, ...(notes ? { notes } : {}) });
+    slides.push({ id, type, content: slideContent, ...(notes ? { notes } : {}) });
   });
   if (errors.length) return { ok: false, errors };
   const title = typeof envelope.title === "string" && envelope.title.trim() ? envelope.title.trim().slice(0, 120) : "";

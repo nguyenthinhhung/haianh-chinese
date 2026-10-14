@@ -1,9 +1,12 @@
+import { misreadCharacters } from "./pinyin";
 import type { Slide } from "./schema";
 import type { TemplateRegistry } from "./templateRegistry";
 
 /**
  * Catches pinyin that cannot match its characters: one syllable per Chinese
- * character, written apart. It cannot tell a wrong reading from a right one.
+ * character, written apart, and each syllable one of the readings its
+ * character has. A reading that exists but does not fit the word (还 read
+ * hái in 还书) is not caught.
  */
 
 /** Pinyin field → the field holding the characters it spells, in order of preference. */
@@ -28,7 +31,13 @@ function mismatch(hanzi: string, pinyin: string): string | null {
   if (!pinyin.trim() || !CHECKABLE.test(hanzi)) return null;
   const chars = hanzi.match(HAN) ?? [];
   const sounds = syllables(pinyin);
-  if (!chars.length || sounds.length === chars.length) return null;
+  if (!chars.length) return null;
+  if (sounds.length === chars.length) {
+    const wrong = misreadCharacters(hanzi, pinyin);
+    if (!wrong.length) return null;
+    const detail = wrong.map((w) => `${w.char} ghi "${w.wrote}"${w.expected ? `, thường đọc là ${w.expected}` : ""}`).join("; ");
+    return `pinyin của "${hanzi}" có âm không khớp chữ: ${detail}`;
+  }
   // 儿 after another character is usually read together with it (哪儿 nǎr).
   const erhua = chars.filter((c, i) => c === "儿" && i > 0).length;
   if (erhua && sounds.length === chars.length - erhua) return null;
