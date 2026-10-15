@@ -218,7 +218,9 @@ describe("normalizeRequest", () => {
 
   it("swaps a kind the age cannot use and drops activities the plan does not offer", () => {
     const r = normalizeRequest({ ...DEFAULT_REQUEST, age: "preschool", kind: "grammar", activities: ["fill-blank", "memory"] });
-    expect(r.kind).toBe(lessonKindsFor("preschool")[0]!.id);
+    // Falls back to the default kind, which every age can use.
+    expect(r.kind).toBe(DEFAULT_REQUEST.kind);
+    expect(lessonKindsFor("preschool").map((k) => k.id)).toContain(r.kind);
     expect(r.activities).toEqual(["memory"]);
   });
 });
