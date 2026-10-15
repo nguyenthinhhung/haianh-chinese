@@ -1,17 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { addSlide, duplicateSlide, moveSlide, removeSlide } from "../core/document";
-import type { TemplateCategory } from "../core/template";
 import type { RenderEnv } from "../renderer/render";
 import { useServices } from "./services";
 import { SHORTCUTS } from "./shortcuts";
+import { SlidePicker, rememberSlideType } from "./SlidePicker";
 import { SlideView } from "./SlideView";
 import type { LessonSession } from "./useLessonSession";
-
-const CATEGORY_LABELS: Record<TemplateCategory, string> = {
-  teach: "Dạy",
-  qa: "Hỏi đáp",
-  game: "Trò chơi",
-};
 
 interface Props {
   session: LessonSession;
@@ -123,6 +117,7 @@ export function SlideNavigator({ session, env, selectedId, onSelect, toReview, o
 
   function add(type: string) {
     setAdding(false);
+    rememberSlideType(type);
     let newId = "";
     session.update((d) => {
       const r = addSlide(d, templates, type, selectedId);
@@ -282,25 +277,7 @@ export function SlideNavigator({ session, env, selectedId, onSelect, toReview, o
           <button type="button" className="primary" onClick={() => setAdding((v) => !v)} aria-expanded={adding}>
             + Thêm slide
           </button>
-          {adding && (
-            <div className="menu" role="menu">
-              {(Object.keys(CATEGORY_LABELS) as TemplateCategory[]).map((cat) => {
-                const list = templates.list(cat);
-                if (!list.length) return null;
-                return (
-                  <div key={cat} className="menu-group">
-                    <span className="menu-group-label">{CATEGORY_LABELS[cat]}</span>
-                    {list.map((t) => (
-                      <button key={t.type} type="button" role="menuitem" onClick={() => add(t.type)}>
-                        <span className="menu-item-label">{t.label}</span>
-                        <span className="menu-item-desc">{t.description}</span>
-                      </button>
-                    ))}
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          {adding && <SlidePicker onPick={add} onClose={() => setAdding(false)} />}
         </div>
         <div className="icon-row">
           <button type="button" title="Lên" disabled={selectedIndex <= 0} onClick={() => move(selectedId!, selectedIndex - 1)}>
