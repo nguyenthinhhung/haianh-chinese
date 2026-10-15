@@ -67,6 +67,7 @@ export const guessPicture: SlideTemplate<GuessPictureContent> = {
     );
   },
   css,
+  blankHeading: "Đây là gì?",
   editor: [
     { kind: "text", key: "heading", label: "Tiêu đề", lang: "vi" },
     { kind: "asset", key: "image", label: "Ảnh cần đoán", assetKind: "image", searchFrom: ["meaning", "hanzi"], autoImage: true },

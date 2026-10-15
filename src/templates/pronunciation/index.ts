@@ -80,6 +80,7 @@ export const pronunciation: SlideTemplate<PronunciationContent> = {
     );
   },
   css,
+  blankHeading: "语音",
   editor: [
     { kind: "text", key: "heading", label: "Tiêu đề", lang: "zh", placeholder: "语音：词重音" },
     { kind: "text", key: "rule", label: "Quy tắc (tiếng Việt)", lang: "vi", multiline: true },

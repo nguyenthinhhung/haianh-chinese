@@ -1,4 +1,5 @@
 import { produce, type Draft } from "immer";
+import { blankContent } from "./blank";
 import { collectAssetRefs, type Path } from "./fields";
 import { newId } from "./ids";
 import { SCHEMA_VERSION, type Asset, type LessonDocument, type LessonSettings, type Slide } from "./schema";
@@ -37,15 +38,20 @@ function slideIndex(doc: LessonDocument | Draft<LessonDocument>, slideId: string
   return i;
 }
 
-/** Inserts a new slide of `type` after `afterSlideId` (or at the end) and returns its ID. */
+/**
+ * Inserts a new slide of `type` after `afterSlideId` (or at the end) and
+ * returns its ID. The slide starts empty for the teacher to fill in; `sample`
+ * gives it the template's sample content instead.
+ */
 export function addSlide(
   doc: LessonDocument,
   registry: TemplateRegistry,
   type: string,
   afterSlideId?: string,
+  { sample = false }: { sample?: boolean } = {},
 ): { doc: LessonDocument; slideId: string } {
   const template = registry.require(type);
-  const slide: Slide = { id: newId("s"), type, content: template.defaults() };
+  const slide: Slide = { id: newId("s"), type, content: sample ? template.defaults() : blankContent(template) };
   const next = produce(doc, (d) => {
     const at = afterSlideId ? slideIndex(d, afterSlideId) + 1 : d.slides.length;
     d.slides.splice(at, 0, slide);

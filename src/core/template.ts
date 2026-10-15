@@ -106,6 +106,8 @@ export interface SlideTemplate<C = unknown> {
   /** CSS for this template, scoped under `.ls-slide[data-slide-type="<type>"]`. */
   css: string;
   editor: EditorFieldSpec;
+  /** Heading of a slide added by hand, when the sample's heading is about the sample itself. */
+  blankHeading?: string;
   /** Content keys the app fills in itself (e.g. fetched stroke data); they have no form field. */
   managedKeys?: string[];
   interaction?: InteractionModule;

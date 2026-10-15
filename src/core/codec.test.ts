@@ -25,7 +25,7 @@ describe("LessonCodec", () => {
 
   it("round-trips a slide of every registered type with its defaults", () => {
     let doc = createFromSample("blank", "Mọi loại slide", "0.0.0");
-    for (const t of env.templates.list()) doc = addSlide(doc, env.templates, t.type).doc;
+    for (const t of env.templates.list()) doc = addSlide(doc, env.templates, t.type, undefined, { sample: true }).doc;
     expect(roundTrip(doc)).toEqual({ ok: true, doc });
   });
 

@@ -110,6 +110,7 @@ export const grammar: SlideTemplate<GrammarContent> = {
     );
   },
   css,
+  blankHeading: "Ngữ pháp",
   editor: [
     { kind: "text", key: "heading", label: "Tiêu đề", lang: "vi" },
     {

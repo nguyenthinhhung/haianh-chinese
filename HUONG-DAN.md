@@ -20,7 +20,9 @@ Bài học nằm trong thư mục **Tài liệu → Chinese Lesson Studio**, m�
   và chọn theme (lần sau ứng dụng nhớ theme đã chọn).
 - Cột trái là danh sách slide: **+ Thêm slide** mở bảng chọn chia nhóm (Dạy, Hỏi
   đáp & luyện tập, Trò chơi), có mục **Dùng gần đây** (14 dạng cô dùng gần nhất) và ô **tìm** (gõ không dấu
-  cũng được, Enter để thêm dạng đầu tiên); kéo thả để đổi thứ tự. **Chuột phải** vào một slide để
+  cũng được, Enter để thêm dạng đầu tiên); kéo thả để đổi thứ tự. Slide mới bắt
+  đầu trống (chỉ có tiêu đề), gõ thẳng vào các ô; bài được lưu vào file khi các ô
+  bắt buộc của slide mới đã có chữ. **Chuột phải** vào một slide để
   nhân bản, lên/xuống hoặc xoá. Phím tắt: **Ctrl+D** nhân bản slide đang chọn,
   **Delete** xoá slide đang chọn. Lỡ xoá thì **Ctrl+Z**.
 - **Kiểm tra bài** (thanh trên cùng) trước khi dạy: liệt kê theo từng slide các

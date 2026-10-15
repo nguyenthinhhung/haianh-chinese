@@ -28,11 +28,25 @@ describe("document commands", () => {
     expect(doc).toEqual(snapshot);
   });
 
-  it("adds a valid slide after the given one", () => {
+  it("adds an empty slide after the given one, ready to fill in", () => {
     const doc = base();
     const { doc: next, slideId } = addSlide(doc, templates, "vocabulary", doc.slides[0]!.id);
     expect(next.slides.map((s) => s.id)).toEqual([doc.slides[0]!.id, slideId, doc.slides[1]!.id]);
-    expect(validateLesson(next, templates).ok).toBe(true);
+    expect(next.slides[1]!.content).toMatchObject({ heading: "Từ vựng", words: [{ hanzi: "", meaning: "" }] });
+    // Valid once the teacher types the word.
+    const filled = setSlideField(next, slideId, ["words", 0, "hanzi"], "猫");
+    expect(validateLesson(filled, templates).ok).toBe(true);
+    // The template's sample is still there for whoever asks for it.
+    expect(validateLesson(addSlide(doc, templates, "vocabulary", undefined, { sample: true }).doc, templates).ok).toBe(true);
+  });
+
+  it("leaves no sample text in a new slide of any kind", () => {
+    const HAN = /\p{Script=Han}/u;
+    for (const t of templates.list()) {
+      const { doc } = addSlide(base(), templates, t.type);
+      const { heading: _heading, ...rest } = doc.slides.at(-1)!.content as Record<string, unknown>;
+      expect(JSON.stringify(rest), t.type).not.toMatch(HAN);
+    }
   });
 
   it("duplicates with a fresh ID and keeps IDs stable when reordering", () => {
@@ -85,7 +99,7 @@ describe("document commands", () => {
 
   it("appends imported slides at the end and keeps the document valid", () => {
     const doc = base();
-    const extra = addSlide(doc, templates, "quiz").doc.slides.at(-1)!;
+    const extra = addSlide(doc, templates, "quiz", undefined, { sample: true }).doc.slides.at(-1)!;
     const next = insertSlides(doc, [{ ...extra, id: "s_appended01" }]);
     expect(next.slides.map((s) => s.id).at(-1)).toBe("s_appended01");
     expect(next.slides).toHaveLength(doc.slides.length + 1);
@@ -95,7 +109,7 @@ describe("document commands", () => {
 
   it("inserts imported slides right after a chosen slide, in their order", () => {
     const doc = base();
-    const extra = addSlide(doc, templates, "quiz").doc.slides.at(-1)!;
+    const extra = addSlide(doc, templates, "quiz", undefined, { sample: true }).doc.slides.at(-1)!;
     const after = doc.slides[1]!.id;
     const next = insertSlides(doc, [{ ...extra, id: "s_inserted01" }, { ...extra, id: "s_inserted02" }], after);
     expect(next.slides.map((s) => s.id).slice(1, 4)).toEqual([after, "s_inserted01", "s_inserted02"]);

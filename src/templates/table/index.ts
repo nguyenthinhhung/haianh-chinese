@@ -68,6 +68,7 @@ export const table: SlideTemplate<TableContent> = {
     );
   },
   css,
+  blankHeading: "",
   editor: [
     { kind: "text", key: "heading", label: "Tiêu đề", lang: "vi" },
     { kind: "text", key: "columns", label: "Tiêu đề cột (ngăn bằng |)", lang: "vi", placeholder: "Chủ ngữ | Trạng ngữ | Vị ngữ" },

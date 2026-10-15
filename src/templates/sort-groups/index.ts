@@ -89,6 +89,7 @@ export const sortGroups: SlideTemplate<SortGroupsContent> = {
     );
   },
   css,
+  blankHeading: "Phân nhóm",
   editor: [
     { kind: "text", key: "heading", label: "Tiêu đề", lang: "vi" },
     {

@@ -89,6 +89,7 @@ export const flashcard: SlideTemplate<FlashcardContent> = {
     );
   },
   css,
+  blankHeading: "Thẻ lật",
   interaction: { source: interaction },
   editor: [
     { kind: "text", key: "heading", label: "Tiêu đề", lang: "vi" },
