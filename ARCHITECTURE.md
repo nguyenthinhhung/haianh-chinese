@@ -12,7 +12,7 @@ phải chạm vào HTML.
 **Người dùng duy nhất của ứng dụng là giáo viên.** Học sinh chỉ xem màn hình chiếu
 và trả lời bằng lời; giáo viên là người điều khiển mọi thứ trên màn hình.
 
-> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 17).
+> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 18).
 
 ---
 
@@ -756,6 +756,14 @@ Chưa làm:
 ---
 
 ## 12. Lịch sử thay đổi
+
+### Rev 18
+
+| Thay đổi | Lý do |
+| --- | --- |
+| Khung bài của giáo viên (`core/lessonForm.ts`): lưu thứ tự, loại slide, tiêu đề và ghi chú của một bài làm khung; AI soạn bài mới đúng theo khung (dạng bài `form`, dàn ý vẫn chỉnh được). Lưu trên máy (localStorage) như các mẫu cách dạy | Giáo viên muốn mọi bài cùng một khung theo giáo trình, rồi tự chèn phần riêng; mỗi lớp một bản bằng Nhân bản bài. |
+| Dạng bài `textbook` (Theo giáo trình) theo thứ tự phần của HSK chuẩn; người học "Người lớn / sinh viên" (không gợi ý trò chơi trẻ con, mặc định không có trò chơi); thời lượng 2 tiết (90 phút) | Lớp người lớn học theo giáo trình, chủ yếu lý thuyết và luyện tập, buổi 90 phút (~30 slide như bài PowerPoint của giáo viên). |
+| Dạy online một màn hình: slide chuyển sang cửa sổ riêng (có viền, không toàn màn hình) để chia sẻ trong Zoom/Meet, màn hình chính thành chế độ người trình chiếu | Giáo viên dạy online qua chia sẻ màn hình, như PowerPoint. |
 
 ### Rev 17
 

@@ -74,7 +74,20 @@ Hán. Pinyin tự điền nên được xem lại với từ đọc nhẹ hoặc
 
 ### Soạn theo giáo trình
 
-1. Dựng sườn bài theo đúng các phần của giáo trình. Phần nào muốn giữ nguyên như
+**Một khung cho mọi bài.** Cách gọn nhất là để mọi bài có cùng một khung:
+- Cách 1: **Tạo bài bằng AI…**, dạng bài **Theo giáo trình**: AI làm đủ các phần
+  như trong sách (Khởi động → Bài khoá → Từ mới → Ngữ pháp → Luyện tập → Ngữ âm →
+  Vận dụng), đính kèm các trang của bài để AI lấy đúng nội dung.
+- Cách 2 (khung của riêng mình): soạn xong một bài ưng ý, vào tab **Bài học** ở cột
+  phải, đặt tên rồi bấm **Lưu làm khung bài**. Từ đó, khi **Tạo bài bằng AI…**,
+  chọn **Khung: tên khung** ở mục Dạng bài: AI soạn bài mới theo đúng thứ tự, loại
+  slide, tiêu đề và ghi chú của bài mẫu. Ở **Dàn ý** vẫn bớt/thêm được từng phần.
+- Cùng một bài mà mỗi lớp khác nhau: ở thư viện bấm **Nhân bản** bài đó (ví dụ
+  "Bài 11 – lớp A", "Bài 11 – lớp B") rồi chèn phần riêng cho từng lớp.
+
+Rồi trong từng bài:
+
+1. Phần nào muốn giữ nguyên như
    sách thì dùng slide **Trang sách / Ảnh lớn**: chụp màn hình trang sách (Win+Shift+S),
    bấm vào ô Ảnh rồi **Ctrl+V**; có thể gắn file nghe của trang đó.
 2. **File nghe của giáo trình** (mp3): gắn vào slide **Nghe** (kèm câu hỏi, lời bài
@@ -110,6 +123,10 @@ cô có slide đang chiếu, slide tiếp theo, ghi chú (A− / A+ đổi cỡ 
   Màn đen, Phím tắt, **Người trình chiếu**, Kết thúc). **Alt+F5** hoặc nút
   **Người trình chiếu** mở chế độ người trình chiếu ngay trên màn hình này để
   tập trước; lúc này học sinh cũng thấy, nên đừng dùng khi đang chiếu cho lớp.
+- **Dạy online** (Zoom, Google Meet… chỉ một màn hình): bấm nút **Dạy online** trên
+  thanh điều khiển. Slide chuyển sang một cửa sổ riêng tên "Trình chiếu", màn hình
+  của cô thành chế độ người trình chiếu. Trong Zoom/Meet chọn chia sẻ **cửa sổ**
+  "Trình chiếu" (không chia sẻ cả màn hình) để học sinh chỉ thấy slide.
 
 | Phím | Tác dụng |
 | --- | --- |
@@ -145,8 +162,11 @@ lật ra hình.
 
 1. **Tạo bài bằng AI…** ở thư viện, hoặc **Thêm slide bằng AI…** trong một bài (các
    slide mới được chèn ngay sau slide đang chọn).
-2. Chọn nội dung bài: chủ đề, lứa tuổi học sinh, thời lượng, dạng bài (Từ vựng,
-   Hội thoại, Mẫu câu, Ôn tập, Tổng hợp), và nếu muốn thì ghi các từ cần dạy.
+2. Chọn nội dung bài: chủ đề, người học (từ mầm non đến **người lớn / sinh viên**),
+   thời lượng (đến **2 tiết – 90 phút**), dạng bài (Theo giáo trình, Từ vựng, Hội
+   thoại, Mẫu câu, Ôn tập, Tổng hợp, hoặc **khung bài** đã lưu), và nếu muốn thì
+   ghi các từ cần dạy. Với người lớn, bài không có trò chơi trừ khi cô thêm ở Dàn ý
+   hoặc chọn ở Hoạt động.
    - **Dàn ý**: bấm − / + để đổi số slide của từng phần; về 0 là bỏ phần đó (ví
      dụ bỏ trò chơi khi tiết học ngắn). **Về dàn ý gợi ý** để làm lại.
    - **Soạn theo giáo trình**: ghi tên sách và bài (ví dụ "HSK 1, Bài 7"), rồi
