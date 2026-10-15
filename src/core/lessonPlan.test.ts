@@ -67,27 +67,46 @@ describe("blueprints", () => {
 
 describe("lesson length and adults", () => {
   it("a double lesson has more slides than a long one but still one cover and one summary", () => {
-    const long = resolvePlan(request({ kind: "textbook", age: "secondary", duration: "long" }));
-    const double = resolvePlan(request({ kind: "textbook", age: "secondary", duration: "double" }));
+    const long = resolvePlan(request({ kind: "hsk1", age: "secondary", duration: "long" }));
+    const double = resolvePlan(request({ kind: "hsk1", age: "secondary", duration: "double" }));
     expect(planSlideCount(double)).toBeGreaterThan(planSlideCount(long));
     expect(double.filter((s) => s.types.includes("cover")).map((s) => s.count)).toEqual([1]);
     expect(double.filter((s) => s.types.includes("summary")).map((s) => s.count)).toEqual([1]);
   });
 
   it("adults get no game unless the teacher asks for one", () => {
-    const steps = planOutline(request({ kind: "textbook", age: "adult" }));
+    const steps = planOutline(request({ kind: "hsk1", age: "adult" }));
     const game = steps.find((s) => s.types.includes("box-pick"))!;
     expect(game.count).toBe(0);
     expect(game.types).not.toContain("whats-missing");
-    const picked = planOutline(request({ kind: "textbook", age: "adult", activities: ["lucky-wheel", "qa-list"] }));
+    const picked = planOutline(request({ kind: "hsk1", age: "adult", activities: ["lucky-wheel", "qa-list"] }));
     expect(picked.find((s) => s.types.includes("lucky-wheel"))!.count).toBeGreaterThan(0);
   });
 
-  it("the textbook kind keeps the book's order of parts", () => {
-    const roles = resolvePlan(request({ kind: "textbook", age: "adult" })).map((s) => s.role);
-    const order = ["热身", "课文", "生词", "注释", "练习", "运用"].map((part) => roles.findIndex((r) => r.includes(part)));
-    expect(order.every((i) => i >= 0)).toBe(true);
-    expect([...order].sort((a, b) => a - b)).toEqual(order);
+  it("each HSK level keeps its book's order of parts", () => {
+    const parts = {
+      hsk1: ["热身", "课文", "生词", "注释", "练习", "语音", "运用"],
+      hsk2: ["热身", "课文", "生词", "注释", "练习", "语音", "运用"],
+      hsk3: ["热身", "课文", "生词", "注释", "练一练", "练习", "汉字", "运用"],
+      hsk4: ["热身", "课文 1–3", "注释 1–3", "练一练", "根据课文", "课文 4–5", "比一比", "练习", "扩展", "运用"],
+    } as const;
+    for (const [kind, order] of Object.entries(parts)) {
+      const roles = planOutline(request({ kind: kind as keyof typeof parts, age: "adult", duration: "long" })).map((s) => s.role);
+      const at = order.map((part) => roles.findIndex((r) => r.includes(part)));
+      expect(at.every((i) => i >= 0), kind).toBe(true);
+      expect([...at].sort((x, y) => x - y), kind).toEqual(at);
+    }
+  });
+
+  it("uses the long-text slides from HSK 3 on", () => {
+    const types = (kind: "hsk2" | "hsk3" | "hsk4") => resolvePlan(request({ kind, age: "adult", duration: "long" })).flatMap((s) => s.types);
+    expect(types("hsk2")).not.toContain("passage");
+    expect(types("hsk3")).toContain("sentence-practice");
+    expect(types("hsk4")).toEqual(expect.arrayContaining(["passage", "sentence-practice", "compare"]));
+  });
+
+  it("reads the old textbook kind as HSK 1", () => {
+    expect(normalizeRequest({ ...DEFAULT_REQUEST, kind: "textbook" }).kind).toBe("hsk1");
   });
 });
 

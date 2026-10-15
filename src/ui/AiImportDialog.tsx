@@ -397,7 +397,7 @@ function RequestForm({ request, insert, onChange }: { request: LessonRequest; in
               onClick={() => {
                 if (!window.confirm(`Xoá khung bài “${request.form!.name}”?`)) return;
                 setForms(deleteForm(request.form!.name, templates));
-                onChange({ kind: "textbook", form: null });
+                onChange({ kind: "hsk1", form: null });
               }}
             >
               Xoá khung

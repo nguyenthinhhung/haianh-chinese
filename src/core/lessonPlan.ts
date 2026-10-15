@@ -8,7 +8,7 @@ import type { TemplateRegistry } from "./templateRegistry";
  * kind of lesson; the AI only writes the language content into them.
  */
 
-export type LessonKind = "textbook" | "vocabulary" | "dialogue" | "grammar" | "review" | "mixed" | "word-focus" | "form";
+export type LessonKind = "hsk1" | "hsk2" | "hsk3" | "hsk4" | "vocabulary" | "dialogue" | "grammar" | "review" | "mixed" | "word-focus" | "form";
 export type Duration = "short" | "medium" | "long" | "double";
 
 /** What the teacher fills in before copying the prompt. */
@@ -106,15 +106,35 @@ const GAMES = ["whats-missing", "guess-picture", "box-pick", "lucky-wheel", "mem
 const COVER: BlueprintStep = { role: "Mở đầu: tên bài", types: ["cover"], count: [1, 1, 1], frame: true };
 const SUMMARY: BlueprintStep = { role: "Tổng kết: ý cần nhớ và từ vựng chính", types: ["summary"], count: [1, 1, 1], frame: true };
 
-export const BLUEPRINTS: Blueprint[] = [
+const TEXTBOOK_NOTE =
+  "Giữ đúng các phần theo thứ tự trong sách; tiêu đề slide ghi tên phần như sách (ví dụ \"课文 1\", \"注释 2\", \"练一练\") để các bài giống nhau. Lấy nội dung từ các trang giáo trình giáo viên đính kèm.";
+
+const REVIEW_STEP: BlueprintStep = {
+  role: "Kiểm tra bài cũ: đọc nhanh từ của bài trước (từ lớp đã học)",
+  types: ["flashcard", "vocabulary"],
+  count: [0, 1, 1],
+};
+const USE_STEP: BlueprintStep = {
+  role: "运用 Vận dụng: câu hỏi cho hoạt động nói theo cặp (双人活动) hoặc nhóm (小组活动)",
+  types: ["qa-list"],
+  count: [1, 1, 1],
+};
+const GAME_STEP: BlueprintStep = { role: "Trò chơi cả lớp", types: GAMES, count: [0, 1, 1], activity: true };
+
+/**
+ * One blueprint per level of HSK Standard Course, whose units keep the same
+ * parts in the same order within a level but change between levels: HSK 1–2
+ * teach pronunciation and characters with short dialogues; HSK 3 adds a
+ * paragraph text and 练一练; HSK 4 has long texts, 比一比 and 扩展.
+ */
+const HSK_BLUEPRINTS: Blueprint[] = [
   {
-    id: "textbook",
-    label: "Theo giáo trình — đủ các phần như trong sách",
-    description:
-      "Bài dạy một bài của giáo trình, giữ đúng các phần theo thứ tự trong sách (kiểu HSK chuẩn: 热身 khởi động → 课文 bài khoá → 生词 từ mới → 注释 ngữ pháp → 练习 luyện tập → 语音 ngữ âm → 运用 vận dụng). Mỗi bài khoá là một slide hội thoại ghi nơi diễn ra. Tiêu đề slide ghi tên phần như trong sách (ví dụ \"课文 1\", \"注释 1\") để các bài giống nhau.",
+    id: "hsk1",
+    label: "Theo giáo trình HSK 1",
+    description: `Một bài của giáo trình HSK chuẩn 1: 热身 → 课文 (3 cảnh hội thoại ngắn, mỗi cảnh ghi nơi diễn ra) → 生词 → 注释 → 练习 → 语音 → 运用. ${TEXTBOOK_NOTE}`,
     steps: [
       COVER,
-      { role: "Kiểm tra bài cũ: đọc nhanh từ của bài trước (từ lớp đã học)", types: ["flashcard", "vocabulary"], count: [0, 1, 1] },
+      REVIEW_STEP,
       { role: "热身 Khởi động: ghép từ mới với hình", types: ["matching", "quiz"], count: [1, 1, 1] },
       { role: "课文 Bài khoá: mỗi cảnh một slide hội thoại, ghi nơi diễn ra", types: ["dialogue"], count: [2, 3, 3] },
       { role: "生词 Từ mới của bài", types: ["vocabulary", "picture-card"], count: [1, 2, 3] },
@@ -126,11 +146,88 @@ export const BLUEPRINTS: Blueprint[] = [
         activity: true,
       },
       { role: "语音 Ngữ âm: thanh điệu, nghe và đọc theo", types: ["tone-pick", "listening"], count: [0, 1, 1] },
-      { role: "运用 Vận dụng: câu hỏi cho hoạt động nói theo cặp hoặc nhóm", types: ["qa-list"], count: [1, 1, 1] },
-      { role: "Trò chơi cả lớp", types: GAMES, count: [0, 1, 1], activity: true },
+      USE_STEP,
+      GAME_STEP,
       SUMMARY,
     ],
   },
+  {
+    id: "hsk2",
+    label: "Theo giáo trình HSK 2",
+    description: `Một bài của giáo trình HSK chuẩn 2: 热身 (ghép từ với hình, rồi một hoạt động khởi động) → 课文 (4 cảnh hội thoại, mỗi cảnh 4 câu, ghi nơi diễn ra) → 生词 → 注释 → 练习 (trả lời theo bài khoá, mô tả tranh bằng câu có chỗ trống) → 语音 (trọng âm từ, ngữ điệu câu) → 运用. ${TEXTBOOK_NOTE}`,
+    steps: [
+      COVER,
+      REVIEW_STEP,
+      { role: "热身 Khởi động: ghép từ với hình, rồi một hoạt động khởi động theo chủ đề", types: ["matching", "quiz", "qa-list"], count: [1, 1, 2] },
+      { role: "课文 Bài khoá: 4 cảnh hội thoại, mỗi cảnh một slide, ghi nơi diễn ra", types: ["dialogue"], count: [3, 4, 4] },
+      { role: "生词 Từ mới của bài", types: ["vocabulary", "picture-card"], count: [1, 2, 2] },
+      { role: "注释 Ngữ pháp: mỗi điểm ngữ pháp một slide", types: ["grammar"], count: [1, 2, 3] },
+      {
+        role: "练习 Luyện tập: trả lời theo bài khoá, điền từ vào câu mô tả tranh",
+        types: ["qa-list", "fill-blank", "sentence-order", "quiz", "listening"],
+        count: [1, 2, 3],
+        activity: true,
+      },
+      { role: "语音 Ngữ âm: trọng âm từ, ngữ điệu câu; nghe và đọc theo", types: ["listening", "tone-pick"], count: [0, 1, 1] },
+      USE_STEP,
+      GAME_STEP,
+      SUMMARY,
+    ],
+  },
+  {
+    id: "hsk3",
+    label: "Theo giáo trình HSK 3",
+    description: `Một bài của giáo trình HSK chuẩn 3: 热身 → 课文 (4 bài khoá: hội thoại 5–6 lượt; từ bài 11, bài khoá 4 là một đoạn văn) → 生词 → 注释 (mỗi điểm có 练一练) → 练习 (chọn từ điền, trả lời theo bài khoá) → 汉字 (旧字新词) → 运用. Sách không in pinyin trên chữ trong bài khoá. ${TEXTBOOK_NOTE}`,
+    steps: [
+      COVER,
+      REVIEW_STEP,
+      { role: "热身 Khởi động: ghép từ với hình, rồi một hoạt động khởi động", types: ["matching", "quiz", "qa-list"], count: [1, 1, 2] },
+      { role: "课文 Bài khoá 1–4: hội thoại; bài khoá đoạn văn dùng \"passage\"", types: ["dialogue", "passage"], count: [3, 4, 4] },
+      { role: "生词 Từ mới của bài", types: ["vocabulary", "picture-card"], count: [1, 1, 2] },
+      { role: "注释 Ngữ pháp: mỗi điểm một slide, câu ví dụ lấy từ bài khoá", types: ["grammar"], count: [1, 2, 3] },
+      { role: "练一练: hoàn thành câu / đối thoại với từ gợi ý, sau mỗi điểm ngữ pháp", types: ["sentence-practice"], count: [1, 2, 3] },
+      {
+        role: "练习 Luyện tập: chọn từ điền (ngân hàng 5 từ), trả lời theo bài khoá",
+        types: ["fill-blank", "qa-list", "listening", "quiz"],
+        count: [1, 2, 3],
+        activity: true,
+      },
+      { role: "汉字 旧字新词: hai từ đã học ghép thành từ mới", types: ["matching", "vocabulary"], count: [0, 1, 1] },
+      USE_STEP,
+      GAME_STEP,
+      SUMMARY,
+    ],
+  },
+  {
+    id: "hsk4",
+    label: "Theo giáo trình HSK 4",
+    description: `Một bài của giáo trình HSK chuẩn 4 (上/下): 热身 → 课文 1–3 (hội thoại 6–8 lượt) → 注释 1–3 kèm 练一练 → câu hỏi theo bài khoá → 课文 4–5 (đoạn văn khoảng 200 chữ) → 注释 4–5 và 比一比 → 练习 (chọn từ điền: hai ngân hàng 5 từ) → 扩展 同字词 → 运用. Sách không in pinyin trên chữ trong bài khoá. ${TEXTBOOK_NOTE}`,
+    steps: [
+      COVER,
+      REVIEW_STEP,
+      { role: "热身 Khởi động: ghép từ với hình, rồi câu hỏi khảo sát / thảo luận theo chủ đề", types: ["matching", "qa-list"], count: [1, 1, 2] },
+      { role: "课文 1–3: hội thoại dài, mỗi bài khoá một slide", types: ["dialogue", "passage"], count: [2, 3, 3] },
+      { role: "注释 1–3: giải thích từ / điểm ngữ pháp, ví dụ lấy từ bài khoá", types: ["grammar"], count: [1, 2, 3] },
+      { role: "练一练: hoàn thành câu / đối thoại với từ cho sẵn", types: ["sentence-practice"], count: [1, 2, 3] },
+      { role: "根据课文内容回答问题: câu hỏi theo bài khoá", types: ["qa-list"], count: [1, 1, 2] },
+      { role: "课文 4–5: đoạn văn, mỗi bài một slide", types: ["passage"], count: [1, 2, 2] },
+      { role: "比一比: phân biệt hai từ dễ nhầm", types: ["compare"], count: [1, 1, 1] },
+      {
+        role: "练习: chọn từ điền (ngân hàng 5 từ), hoàn thành câu",
+        types: ["fill-blank", "sentence-practice", "quiz"],
+        count: [1, 1, 2],
+        activity: true,
+      },
+      { role: "扩展 同字词: các từ có chung một chữ, kèm câu ví dụ", types: ["vocabulary", "fill-blank"], count: [0, 1, 1] },
+      USE_STEP,
+      GAME_STEP,
+      SUMMARY,
+    ],
+  },
+];
+
+export const BLUEPRINTS: Blueprint[] = [
+  ...HSK_BLUEPRINTS,
   {
     id: "vocabulary",
     label: "Từ vựng — học từ mới qua hình ảnh",
@@ -278,7 +375,9 @@ export function normalizeRequest(raw: unknown): LessonRequest {
   const form = normalizeForm(r.form);
   const kinds = lessonKindsFor(age);
   const fallback = kinds.find((b) => b.id === DEFAULT_REQUEST.kind) ?? kinds[0]!;
-  const kind: LessonKind = r.kind === "form" && form ? "form" : (kinds.find((b) => b.id === r.kind) ?? fallback).id;
+  // "textbook" was the HSK 1 kind before each level had its own.
+  const asked = r.kind === "textbook" ? "hsk1" : r.kind;
+  const kind: LessonKind = asked === "form" && form ? "form" : (kinds.find((b) => b.id === asked) ?? fallback).id;
   const duration = DURATIONS.some((d) => d.id === r.duration) ? (r.duration as Duration) : DEFAULT_REQUEST.duration;
   const offered = activityChoices(kind, age);
   const activities = Array.isArray(r.activities) ? offered.filter((t) => (r.activities as unknown[]).includes(t)) : [];
