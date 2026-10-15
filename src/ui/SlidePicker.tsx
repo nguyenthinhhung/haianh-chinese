@@ -11,7 +11,8 @@ const CATEGORIES: { id: TemplateCategory; label: string }[] = [
 
 // The slide types this teacher added last, kept on this computer.
 const RECENT_KEY = "ls.recentSlideTypes";
-const MAX_RECENT = 6;
+/** As many as the chooser shows without scrolling: seven rows of two. */
+const MAX_RECENT = 14;
 
 function loadRecent(): string[] {
   try {
