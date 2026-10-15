@@ -12,7 +12,7 @@ phải chạm vào HTML.
 **Người dùng duy nhất của ứng dụng là giáo viên.** Học sinh chỉ xem màn hình chiếu
 và trả lời bằng lời; giáo viên là người điều khiển mọi thứ trên màn hình.
 
-> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 19).
+> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 20).
 
 ---
 
@@ -289,6 +289,10 @@ thể bổ sung dần mà không ảnh hưởng các loại đã có.
 | `dialogue` | Các lượt thoại theo vai, có ảnh nhân vật. Tuỳ chọn nơi diễn ra (在饭馆, như giáo trình ghi từng cảnh) và một file nghe cho cả bài (bài nghe của giáo trình). |
 | `grammar` | Cấu trúc, giải thích, câu ví dụ có tô màu thành phần. |
 | `passage` | Bài khoá dài (HSK 3–4): đoạn văn hoặc hội thoại nhiều lượt, đến 400 chữ, kèm hộp 生词 và file nghe. Tiếp lần lượt thay chữ Hán bằng pinyin rồi bản dịch, vì ba bản cùng lúc không vừa slide. |
+| `word-study` | Từ mới như slide 生词 của giáo viên: 1–2 thẻ từ, một chữ viết theo thứ tự nét trong ô 田字格 (Tiếp viết lần lượt từng nét), câu ví dụ, ảnh. Nét viết (SVG path của Make Me a Hanzi qua hanzi-writer-data) do Rust tải (`hanzi_strokes`) khi giáo viên gõ chữ và lưu trong slide (`strokes`, `strokesFor`; `managedKeys` của template), nên trình chiếu và file export không cần mạng. |
+| `word-family` | 旧字新词 (ghép hai từ cũ thành từ mới) hoặc 扩展 同字词 (các từ có chung một chữ, chữ chung được tô màu); Tiếp hiện từng từ. |
+| `table` | Bảng: ô ngăn bằng `|`, ô trống để lớp điền; tuỳ chọn hiện từng hàng. Dùng cho bảng ngữ pháp kiểu sách, bảng 运用, bảng số / giờ. |
+| `culture` | Văn hoá / 俗语: ảnh, câu tục ngữ kèm pinyin, đoạn đọc; Tiếp hiện bản dịch. |
 | `compare` | 比一比: hai từ dễ nhầm, điểm giống, 1–3 điểm khác (hiện từng ý), bảng chọn từ ✓/✗ cho tối đa 5 câu. |
 | `summary` | Điểm cần nhớ, từ vựng chính. |
 
@@ -301,6 +305,9 @@ Giáo viên đặt câu hỏi, học sinh trả lời bằng lời, giáo viên 
 | --- | --- | --- |
 | `qa-list` | Hỏi đáp về bài khoá/hội thoại: 1–6 câu hỏi (chữ Hán hoặc tiếng Việt), đáp án ẩn bên cạnh. | Mỗi lần Tiếp hiện đáp án một câu. |
 | `sentence-practice` | 练一练: hoàn thành câu/đối thoại với từ cho sẵn (hiện trong ngoặc như sách), hoặc dịch câu; 1–5 câu. | Mỗi lần Tiếp hiện đáp án mẫu một câu. |
+| `speaking` | 对话练习 / 双人活动 / 小组活动 / 复述: hình gợi ý kèm từ để thay, cặp hỏi–đáp mẫu trong bong bóng, cấu trúc phải dùng ("dùng ít nhất N"). | Không có bước; giáo viên điều khiển bằng lời. |
+| `picture-talk` | Mô tả tranh (练习 3 của HSK 2–3): 1–4 tranh, mỗi tranh một câu có chỗ trống. | Mỗi lần Tiếp hiện đáp án một tranh. |
+| `pronunciation` | 语音: quy tắc và các dòng đọc theo, chấm đỏ dưới âm tiết có trọng âm, mũi tên ngữ điệu, nút nghe. | Không có bước. |
 | `listening` | Bài nghe: file của giáo trình (hoặc giọng đọc tạo từ lời), 0–4 câu hỏi, lời bài nghe có pinyin và nghĩa. | Mỗi lần Tiếp hiện đáp án một câu, cuối cùng hiện lời bài nghe. |
 | `quiz` | Hỏi cả lớp; đề là chữ, ảnh hoặc audio ("nghe và chọn hình"); 2–4 lựa chọn đánh số/chữ cái để trẻ gọi tên; có biến thể Đúng/Sai. | Hiện câu hỏi → hiện đáp án đúng (sáng lên + âm thanh). |
 | `matching` | Hai cột chữ Hán ↔ nghĩa, hoặc ↔ hình khi `rightAs: "image"` (ảnh tự tìm theo nghĩa); trẻ nói cặp nào đi với nhau. | Mỗi lần Tiếp nối thêm một cặp. |
@@ -759,6 +766,14 @@ Chưa làm:
 ---
 
 ## 12. Lịch sử thay đổi
+
+### Rev 20
+
+| Thay đổi | Lý do |
+| --- | --- |
+| Bút viết lên slide khi trình chiếu (`P`, chọn màu, `E` xoá; nét theo slide) nằm trong runtime | Video bài dạy HSK1 cô tham khảo: thầy viết bút đỏ lên slide gần như liên tục (ghi pinyin, gạch chân, đánh dấu). |
+| Slide `word-study` (chữ viết theo thứ tự nét), `table`, `speaking`, `picture-talk`, `word-family`, `culture`, `pronunciation`; Hội thoại kiểu "như sách"; Thẻ lật úp chỉ có số | Đủ các dạng trang trong giáo trình HSK 1–4 và trong bài dạy mẫu: 生词 kèm cách viết, 课文 như sách rồi dịch nghĩa, 对话练习, 运用, 描述图片, 旧字新词 / 扩展, 文化 / 俗语, 语音, ôn từ bằng thẻ úp. |
+| Lệnh Rust `hanzi_strokes`: tải nét viết một chữ từ jsDelivr (hanzi-writer-data), chỉ nhận đúng một chữ Hán và chỉ nhận path gồm lệnh M/L/Q/C/Z và số | Nét viết cần dữ liệu ~9.000 chữ; tải theo chữ khi cần thay vì gói cả bộ vào ứng dụng. Dữ liệu Make Me a Hanzi theo giấy phép Arphic Public License / LGPL, được phép dùng lại. |
 
 ### Rev 19
 

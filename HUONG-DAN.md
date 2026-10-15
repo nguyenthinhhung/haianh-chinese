@@ -68,8 +68,8 @@ Hán. Pinyin tự điền nên được xem lại với từ đọc nhẹ hoặc
 
 | Nhóm | Loại |
 | --- | --- |
-| Dạy | Trang bìa, Trang sách / Ảnh lớn, Từ vựng, Thẻ hình (có thể thêm từ loại, cách dùng, câu ví dụ cho học sinh lớn), Thẻ lật, Hội thoại (đến 8 lượt), Bài khoá / Đoạn văn, Ngữ pháp, So sánh (比一比), Tổng kết |
-| Hỏi đáp | Hỏi đáp (câu hỏi bài khoá, đáp án hiện dần), Nghe, Trắc nghiệm (cả Đúng/Sai), Ghép cặp, Điền chỗ trống (đến 6 câu), Luyện câu (练一练), Sắp xếp câu, Chọn thanh điệu, Phân nhóm |
+| Dạy | Trang bìa, Trang sách / Ảnh lớn, Từ vựng, Thẻ hình (có thể thêm từ loại, cách dùng, câu ví dụ cho học sinh lớn), Từ mới kèm cách viết, Mở rộng từ (旧字新词 / 扩展), Thẻ lật (cả thẻ úp chỉ có số), Hội thoại (bong bóng hoặc như sách, đến 8 lượt), Bài khoá / Đoạn văn, Ngữ pháp, Bảng, So sánh (比一比), Văn hoá / 俗语, Tổng kết |
+| Hỏi đáp | Hỏi đáp (câu hỏi bài khoá, đáp án hiện dần), Nghe, Hoạt động nói (对话练习), Trắc nghiệm (cả Đúng/Sai), Ghép cặp, Điền chỗ trống (đến 6 câu), Luyện câu (练一练), Mô tả tranh, Sắp xếp câu, Chọn thanh điệu, Ngữ âm (语音), Phân nhóm |
 | Trò chơi | Cái gì biến mất?, Đoán hình, Hộp bí mật, Vòng quay may mắn, Lật cặp |
 
 ### Soạn theo giáo trình
@@ -110,6 +110,21 @@ Một vài cách nhập đặc biệt:
   phải dùng" hiện trong ngoặc như sách: （肯定）. Cũng dùng để dịch câu Việt → Trung.
 - **So sánh (比一比)**: hai từ, điểm giống, các điểm khác (hiện từng ý), và bảng
   "Chọn từ" đánh ✓/✗ cho từng câu.
+- **Từ mới kèm cách viết**: 1–2 thẻ từ (pinyin, chữ Hán, từ loại, nghĩa), một chữ
+  trong ô 田字格 và câu ví dụ. Gõ chữ cần tập viết vào ô **Chữ tập viết**: khi có
+  mạng, nét viết tự tải về và được lưu trong bài (trình chiếu không cần mạng). Khi
+  chiếu, bấm Tiếp là chữ được viết lần lượt từng nét; R để viết lại.
+- **Hội thoại → Kiểu trình bày "Như sách"**: dòng A/B có pinyin trên chữ, ảnh cảnh
+  bên phải. Tiếp lần 1 ẩn pinyin (cả lớp đọc chữ), lần 2 hiện khung "Dịch nghĩa".
+- **Bảng**: tiêu đề cột và các ô ngăn bằng `|`; ô để trống để cả lớp điền (dùng bút
+  viết lên khi chiếu). Bật "hiện từng hàng" để bấm Tiếp mở từng hàng.
+- **Hoạt động nói**: hình gợi ý, cặp hỏi–đáp mẫu trong bong bóng thoại (chỗ thay
+  viết `……`), danh sách cấu trúc a, b, c… và "dùng ít nhất N". Dùng cho 对话练习,
+  双人活动, 小组活动, 复述.
+- **Ngữ âm**: pinyin viết cách âm tiết (`bīng xiāng`); chọn âm tiết có trọng âm
+  (chấm đỏ) hoặc ngữ điệu cuối câu (↗ / ↘). Mỗi dòng có nút nghe.
+- **Thẻ lật → Mặt trước "Úp"**: lưới thẻ chỉ có số, bấm hoặc gõ số để lật ra chữ
+  Hán và pinyin — để ôn từ bài trước.
 
 ## 4. Trình chiếu
 
@@ -147,6 +162,7 @@ cô có slide đang chiếu, slide tiếp theo, ghi chú (A− / A+ đổi cỡ 
 | T | Đồng hồ đếm ngược: chạy / dừng (Shift+T: tắt). Bấm vào đồng hồ để đổi thời gian |
 | N | Gọi một số thứ tự học sinh ngẫu nhiên (Shift+N: tắt) |
 | B / W | Màn hình đen / trắng để cả lớp nhìn cô; bấm phím bất kỳ để quay lại slide |
+| P | **Bút**: viết, gạch chân, khoanh lên slide bằng chuột (chọn màu ở góc trên). E xoá nét; nét tự xoá khi sang slide khác. Khi có máy chiếu, rê chuột sang màn chiếu để viết |
 | G | Xem tất cả slide, bấm vào một slide để chuyển đến |
 | H | Bảng phím tắt |
 | Esc | Thoát trình chiếu |
