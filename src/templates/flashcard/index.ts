@@ -89,6 +89,7 @@ export const flashcard: SlideTemplate<FlashcardContent> = {
     );
   },
   css,
+  fromWords: { list: "cards", max: 8, item: (w) => ({ hanzi: w.hanzi, pinyin: w.pinyin, meaning: w.meaning, pos: "", ...(w.image ? { image: w.image } : {}), ...(w.audio ? { audio: w.audio } : {}) }) },
   blankHeading: "Thẻ lật",
   interaction: { source: interaction },
   editor: [

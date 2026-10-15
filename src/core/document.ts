@@ -3,6 +3,7 @@ import { blankContent } from "./blank";
 import { collectAssetRefs, type Path } from "./fields";
 import { newId } from "./ids";
 import { SCHEMA_VERSION, type Asset, type LessonDocument, type LessonSettings, type Slide } from "./schema";
+import type { LessonWordLike } from "./template";
 import type { TemplateRegistry } from "./templateRegistry";
 
 /**
@@ -176,4 +177,40 @@ export function touchUpdatedAt(doc: LessonDocument, appVersion: string, now = ne
     d.metadata.updatedAt = now.toISOString();
     d.metadata.appVersion = appVersion;
   });
+}
+
+/** Replaces a slide's whole content, e.g. with the template's sample or an empty one. */
+export function setSlideContent(doc: LessonDocument, slideId: string, content: unknown): LessonDocument {
+  return produce(doc, (d) => {
+    d.slides[slideIndex(d, slideId)]!.content = structuredClone(content);
+  });
+}
+
+/**
+ * Fills a slide's word list with the lesson's words from other slides: its
+ * filled items stay, empty ones give way, and words it already has are not
+ * repeated. Returns how many words were added.
+ */
+export function fillFromLessonWords(
+  doc: LessonDocument,
+  registry: TemplateRegistry,
+  slideId: string,
+  words: LessonWordLike[],
+): { doc: LessonDocument; added: number } {
+  const slide = doc.slides[slideIndex(doc, slideId)]!;
+  const template = registry.require(slide.type);
+  const spec = template.fromWords;
+  const field = template.editor.find((f) => f.key === spec?.list);
+  if (!spec || field?.kind !== "list") return { doc, added: 0 };
+  const content = slide.content as Record<string, unknown>;
+  const current = Array.isArray(content[spec.list]) ? (content[spec.list] as unknown[]) : [];
+  // An item still as the "+" button made it holds nothing yet.
+  const blank = JSON.stringify(field.newItem());
+  const filled = current.filter((item) => JSON.stringify(item) !== blank);
+  const present = JSON.stringify(filled);
+  const fresh = words.filter((w) => !present.includes(`"${w.hanzi}"`)).map((w) => spec.item(w));
+  const next = [...filled, ...fresh].slice(0, spec.max);
+  const added = next.length - filled.length;
+  if (!added) return { doc, added: 0 };
+  return { doc: setSlideField(doc, slideId, [spec.list], next), added };
 }

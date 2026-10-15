@@ -125,6 +125,7 @@ export const tonePick: SlideTemplate<TonePickContent> = {
     );
   },
   css,
+  fromWords: { list: "items", max: 6, item: (w) => ({ hanzi: w.hanzi, pinyin: w.pinyin }) },
   editor: [
     { kind: "text", key: "heading", label: "Tiêu đề", lang: "vi" },
     {

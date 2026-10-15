@@ -76,6 +76,7 @@ export const summary: SlideTemplate<SummaryContent> = {
     );
   },
   css,
+  fromWords: { list: "words", max: 12, item: (w) => ({ hanzi: w.hanzi, pinyin: w.pinyin }) },
   editor: [
     { kind: "text", key: "heading", label: "Tiêu đề", lang: "vi" },
     {

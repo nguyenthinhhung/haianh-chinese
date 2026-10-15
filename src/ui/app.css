@@ -1459,3 +1459,20 @@ input.library-search {
 .present-root.presenter button.presenter-pen-color--on {
   border-color: #fff;
 }
+/* Quick fill buttons at the top of a slide's properties. */
+.slide-fill {
+  margin: 4px 0 12px;
+}
+.slide-fill-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.slide-fill-buttons button {
+  padding: 4px 10px;
+  font-size: 13px;
+}
+.slide-fill-note {
+  margin: 6px 0 0;
+  font-size: 13px;
+}

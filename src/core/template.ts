@@ -106,6 +106,11 @@ export interface SlideTemplate<C = unknown> {
   /** CSS for this template, scoped under `.ls-slide[data-slide-type="<type>"]`. */
   css: string;
   editor: EditorFieldSpec;
+  /**
+   * The slide's list can be filled with words taught elsewhere in the lesson
+   * ("Lấy từ trong bài"): `item` turns one into a list item.
+   */
+  fromWords?: { list: string; max: number; item(word: LessonWordLike): unknown };
   /** Heading of a slide added by hand, when the sample's heading is about the sample itself. */
   blankHeading?: string;
   /** Content keys the app fills in itself (e.g. fetched stroke data); they have no form field. */
@@ -115,3 +120,12 @@ export interface SlideTemplate<C = unknown> {
 
 /** Erases the content type so templates of different shapes share one registry. */
 export type AnySlideTemplate = SlideTemplate<any>;
+
+/** A word of the lesson as `fromWords` receives it (see core/lessonWords). */
+export interface LessonWordLike {
+  hanzi: string;
+  pinyin: string;
+  meaning: string;
+  image?: string;
+  audio?: string;
+}

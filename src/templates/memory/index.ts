@@ -79,6 +79,7 @@ export const memory: SlideTemplate<MemoryContent> = {
     );
   },
   css,
+  fromWords: { list: "pairs", max: 8, item: (w) => ({ a: w.hanzi, b: w.meaning, ...(w.image ? { bImage: w.image } : {}) }) },
   editor: [
     { kind: "text", key: "heading", label: "Tiêu đề", lang: "vi" },
     {

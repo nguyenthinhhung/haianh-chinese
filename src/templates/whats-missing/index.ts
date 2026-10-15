@@ -63,6 +63,7 @@ export const whatsMissing: SlideTemplate<WhatsMissingContent> = {
     );
   },
   css,
+  fromWords: { list: "items", max: 8, item: (w) => ({ hanzi: w.hanzi, pinyin: w.pinyin, ...(w.image ? { image: w.image } : {}) }) },
   editor: [
     { kind: "text", key: "heading", label: "Tiêu đề", lang: "vi" },
     {

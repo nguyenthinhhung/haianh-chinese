@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { markReviewed } from "../core/autoImages";
-import { addAsset, setSettings, setSlideField, setTheme } from "../core/document";
+import { blankContent } from "../core/blank";
+import { addAsset, fillFromLessonWords, setSettings, setSlideContent, setSlideField, setTheme } from "../core/document";
+import { lessonWordEntries } from "../core/lessonWords";
+import { SHORTCUTS } from "./shortcuts";
 import { checkLimits, getIn, type Path } from "../core/fields";
 import { formFromLesson } from "../core/lessonForm";
 import type { LessonDocument, Slide } from "../core/schema";
@@ -444,6 +447,63 @@ function Field(props: FieldProps) {
   );
 }
 
+/**
+ * Quick ways to fill a slide: the lesson's words from other slides, the
+ * template's sample, or nothing at all. Each is one step to undo.
+ */
+function SlideFill({ session, slide }: { session: LessonSession; slide: Slide }) {
+  const { templates } = useServices();
+  const template = templates.require(slide.type);
+  const [note, setNote] = useState<string | null>(null);
+  const undo = `${SHORTCUTS.undo} để hoàn tác.`;
+
+  function takeLessonWords() {
+    const words = lessonWordEntries(session.doc, templates, slide.id);
+    if (!words.length) return setNote("Các slide khác trong bài chưa có từ nào để lấy.");
+    let added = 0;
+    session.update((d) => {
+      const r = fillFromLessonWords(d, templates, slide.id, words);
+      added = r.added;
+      return r.doc;
+    });
+    setNote(added ? `Đã thêm ${added} từ trong bài; bỏ bớt từ không dùng ở danh sách bên dưới. ${undo}` : "Các từ trong bài đều đã có ở slide này (hoặc danh sách đã đầy).");
+  }
+
+  return (
+    <div className="slide-fill">
+      <div className="slide-fill-buttons">
+        {template.fromWords && (
+          <button type="button" onClick={takeLessonWords} title="Điền các từ đã có ở những slide khác trong bài, kèm pinyin, nghĩa, ảnh">
+            Lấy từ trong bài
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => {
+            session.update((d) => setSlideContent(d, slide.id, template.defaults()));
+            setNote(`Đã điền nội dung mẫu. ${undo}`);
+          }}
+          title="Điền ví dụ mẫu để xem dạng slide này trông thế nào"
+        >
+          Nội dung mẫu
+        </button>
+        <button
+          type="button"
+          className="danger"
+          onClick={() => {
+            session.update((d) => setSlideContent(d, slide.id, blankContent(template)));
+            setNote(`Đã xoá nội dung slide. ${undo}`);
+          }}
+          title="Xoá hết chữ, ảnh, âm thanh của slide này để soạn lại từ đầu"
+        >
+          Xoá nội dung
+        </button>
+      </div>
+      {note && <p className="slide-fill-note muted">{note}</p>}
+    </div>
+  );
+}
+
 function SlideProperties({ session, slide }: { session: LessonSession; slide: Slide }) {
   const { templates } = useServices();
   const template = templates.require(slide.type);
@@ -451,6 +511,8 @@ function SlideProperties({ session, slide }: { session: LessonSession; slide: Sl
   return (
     <div className="props-section">
       <h3>{template.label}</h3>
+      {/* Keyed by slide, so a note about one slide does not stay on the next. */}
+      <SlideFill key={slide.id} session={session} slide={slide} />
       {template.editor.map((field) => (
         <Field
           key={field.key}

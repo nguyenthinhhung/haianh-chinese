@@ -22,7 +22,14 @@ Bài học nằm trong thư mục **Tài liệu → Chinese Lesson Studio**, m�
   đáp & luyện tập, Trò chơi), có mục **Dùng gần đây** (14 dạng cô dùng gần nhất) và ô **tìm** (gõ không dấu
   cũng được, Enter để thêm dạng đầu tiên); kéo thả để đổi thứ tự. Slide mới bắt
   đầu trống (chỉ có tiêu đề), gõ thẳng vào các ô; bài được lưu vào file khi các ô
-  bắt buộc của slide mới đã có chữ. **Chuột phải** vào một slide để
+  bắt buộc của slide mới đã có chữ.
+- Đầu cột phải của mỗi slide có ba nút (đều hoàn tác được bằng Ctrl+Z):
+  - **Lấy từ trong bài** (Từ vựng, Thẻ lật, Ghép cặp, Lật cặp, Cái gì biến mất?,
+    Tổng kết, Vòng quay, Chọn thanh điệu): điền các từ đã có ở những slide khác của
+    bài, kèm pinyin, nghĩa, ảnh; bỏ bớt từ không dùng. Rất tiện cho phần ôn tập
+    và trò chơi sau phần dạy từ.
+  - **Nội dung mẫu**: điền ví dụ để xem dạng slide này trông thế nào.
+  - **Xoá nội dung**: đưa slide về trống để soạn lại. **Chuột phải** vào một slide để
   nhân bản, lên/xuống hoặc xoá. Phím tắt: **Ctrl+D** nhân bản slide đang chọn,
   **Delete** xoá slide đang chọn. Lỡ xoá thì **Ctrl+Z**.
 - **Kiểm tra bài** (thanh trên cùng) trước khi dạy: liệt kê theo từng slide các

@@ -94,6 +94,7 @@ export const vocabulary: SlideTemplate<VocabularyContent> = {
     );
   },
   css,
+  fromWords: { list: "words", max: 8, item: (w) => ({ hanzi: w.hanzi, pinyin: w.pinyin, meaning: w.meaning, pos: "", ...(w.image ? { image: w.image } : {}), ...(w.audio ? { audio: w.audio } : {}) }) },
   editor: [
     { kind: "text", key: "heading", label: "Tiêu đề", lang: "vi" },
     {

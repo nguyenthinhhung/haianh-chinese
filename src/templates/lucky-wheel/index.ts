@@ -67,6 +67,7 @@ export const luckyWheel: SlideTemplate<LuckyWheelContent> = {
     );
   },
   css,
+  fromWords: { list: "segments", max: 12, item: (w) => ({ text: w.hanzi }) },
   editor: [
     { kind: "text", key: "heading", label: "Tiêu đề", lang: "vi" },
     {

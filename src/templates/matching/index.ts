@@ -83,6 +83,7 @@ export const matching: SlideTemplate<MatchingContent> = {
     );
   },
   css,
+  fromWords: { list: "pairs", max: 6, item: (w) => ({ left: w.hanzi, leftPinyin: w.pinyin, right: w.meaning, ...(w.image ? { rightImage: w.image } : {}) }) },
   editor: [
     { kind: "text", key: "heading", label: "Tiêu đề", lang: "vi" },
     {
