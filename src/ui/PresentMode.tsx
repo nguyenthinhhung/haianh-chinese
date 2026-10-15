@@ -273,7 +273,9 @@ export function PresentMode({ doc, env, dir, start, presenterView = false, onExi
           {state.blank && <span className="present-blank-badge">Màn chiếu đang {state.blank === "black" ? "đen" : "trắng"}</span>}
         </div>
       )}
-      <div ref={host} className={presenter ? "present-host present-stage" : "present-host"} />
+      {/* Where the show runs on a single screen. Hidden while it runs in another
+          window: it shares the copy's grid cell and would take its mouse. */}
+      <div ref={host} className={presenter ? "present-host present-stage" : "present-host"} hidden={mode === "remote"} />
       {mode === "local" && localView === "show" && (
         <ShowToolbar
           driver={driver}
