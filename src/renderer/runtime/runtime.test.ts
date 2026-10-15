@@ -131,6 +131,36 @@ describe("listening", () => {
   });
 });
 
+describe("translation", () => {
+  it("vocabulary shows the meanings and reveals each word's characters in turn", () => {
+    const words = [
+      { hanzi: "苹果", pinyin: "píng guǒ", meaning: "quả táo", pos: "" },
+      { hanzi: "", pinyin: "", meaning: "quả chuối", pos: "" },
+    ];
+    present([{ type: "vocabulary", content: { heading: "", words, hideMeaning: false, translate: true } }, { type: "cover" }]);
+    expect([...current().querySelectorAll(".ls-vocab-question")].map((q) => q.textContent)).toEqual(["quả táo", "quả chuối"]);
+    // Only the word with characters has an answer to show.
+    expect(current().querySelectorAll(".ls-vocab-answer")).toHaveLength(1);
+    press("ArrowRight");
+    expect(current().querySelector(".ls-vocab-answer")!.classList.contains("ls-revealed")).toBe(true);
+    press("ArrowRight");
+    expect(current().dataset.slideType).toBe("cover");
+  });
+
+  it("grammar shows the Vietnamese examples and reveals each Chinese sentence", () => {
+    const content = {
+      ...(env.templates.require("grammar").defaults() as object),
+      pattern: [{ text: "Chủ ngữ", note: "" }, { text: "是", note: "" }],
+      translate: true,
+    };
+    present([{ type: "grammar", content }]);
+    expect(current().querySelectorAll(".ls-gr-question")).toHaveLength(2);
+    press("ArrowRight");
+    expect(current().querySelectorAll(".ls-gr-answer.ls-revealed")).toHaveLength(1);
+    expect(current().querySelector(".ls-gr-text")!.getAttribute("lang")).toBe("vi");
+  });
+});
+
 describe("textbook-style slides", () => {
   it("a dialogue laid out as in the book hides its pinyin, then shows the translation", () => {
     const content = { ...(env.templates.require("dialogue").defaults() as object), layout: "book", subtitle: "Bài khoá 1" };

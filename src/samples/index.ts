@@ -28,6 +28,7 @@ export function createFromSample(sample: SampleId, title: string, appVersion: st
       { hanzi: "橙子", pinyin: "chéng zi", meaning: "quả cam", pos: "" },
     ],
     hideMeaning: true,
+    translate: false,
   };
   return {
     ...doc,

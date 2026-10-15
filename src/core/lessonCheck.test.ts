@@ -30,7 +30,7 @@ describe("lessonIssues", () => {
     const issues = lessonIssues(lesson({ id: "s_cover0001", type: "cover", content: { title: "动物" } }, vocab), templates);
     expect(issues.every((i) => i.slideIndex === 1 && i.slideId === "s_vocab0001")).toBe(true);
     const text = issues.map((i) => `${i.level}: ${i.message}`);
-    expect(text).toContain("error: từ 2, Chữ Hán: Không được để trống");
+    expect(text).toContain("error: từ 2, Chữ Hán: Cần chữ Hán hoặc nghĩa");
     expect(text.some((t) => t.startsWith("warning: từ 3, Nghĩa: Dài hơn"))).toBe(true);
     expect(text.some((t) => t.startsWith('warning: Pinyin của "猫" có âm không khớp chữ'))).toBe(true);
     expect(text).toContain("warning: Chưa có ảnh: con mèo, hươu cao cổ rất rất rất rất cao.");

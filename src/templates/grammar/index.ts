@@ -1,19 +1,22 @@
 import { z } from "zod";
 import type { SlideTemplate } from "../../core/template";
 import { esc } from "../../renderer/escape";
-import { splitParts, vi } from "../../renderer/helpers";
+import { autoText, splitParts, vi } from "../../renderer/helpers";
 import css from "./style.css?raw";
 
 const part = z.object({
-  text: z.string().regex(/\S/, "Không được để trống").max(16),
+  text: z.string().regex(/\S/, "Không được để trống").max(24),
   note: z.string().max(30).default(""),
 });
 
-const example = z.object({
-  hanzi: z.string().regex(/\S/, "Không được để trống").max(60),
-  pinyin: z.string().max(160).default(""),
-  meaning: z.string().max(120).default(""),
-});
+const example = z
+  .object({
+    hanzi: z.string().max(60).default(""),
+    pinyin: z.string().max(160).default(""),
+    meaning: z.string().max(120).default(""),
+  })
+  // An example may be given only in Vietnamese, for the class to translate.
+  .refine((e) => /\S/.test(e.hanzi) || /\S/.test(e.meaning), { message: "Cần câu chữ Hán hoặc nghĩa", path: ["hanzi"] });
 
 const schema = z.object({
   heading: z.string().max(60).default(""),
@@ -21,6 +24,8 @@ const schema = z.object({
   explanation: z.string().max(300).default(""),
   examples: z.array(example).max(4, "Tối đa 4 câu ví dụ").default([]),
   stepByStep: z.boolean().default(true),
+  /** The class translates the examples: the Vietnamese shows, Next reveals the Chinese. */
+  translate: z.boolean().default(false),
 });
 
 export type GrammarContent = z.output<typeof schema>;
@@ -42,7 +47,7 @@ export const grammar: SlideTemplate<GrammarContent> = {
   order: 60,
   schema,
   aiSchemaHint:
-    'Cấu trúc ngữ pháp có tô màu thành phần. {"heading"?: tiêu đề, "pattern": [{"text": thành phần, ví dụ "主语" hoặc "是", "note"?: giải thích ngắn tiếng Việt}], "explanation"?: giải thích tiếng Việt, "examples": [{"hanzi": câu ví dụ, các thành phần ngăn bằng " / " theo đúng thứ tự pattern, "pinyin": cũng ngăn bằng " / ", "meaning": nghĩa tiếng Việt}] (tối đa 4), "stepByStep"?: true để hiện từng ví dụ khi bấm Tiếp}',
+    'Cấu trúc ngữ pháp có tô màu thành phần. {"heading"?: tiêu đề, "pattern": [{"text": thành phần, ví dụ "主语" hoặc "是", "note"?: giải thích ngắn tiếng Việt}], "explanation"?: giải thích tiếng Việt, "examples": [{"hanzi": câu ví dụ, các thành phần ngăn bằng " / " theo đúng thứ tự pattern, "pinyin": cũng ngăn bằng " / ", "meaning": nghĩa tiếng Việt}] (tối đa 4), "stepByStep"?: true để hiện từng ví dụ khi bấm Tiếp, "translate"?: true để cả lớp dịch câu ví dụ: hiện tiếng Việt, bấm Tiếp hiện câu chữ Hán và pinyin}',
   defaults: () => ({
     heading: "Câu với 是",
     pattern: [
@@ -56,10 +61,11 @@ export const grammar: SlideTemplate<GrammarContent> = {
       { hanzi: "他 / 是 / 老师", pinyin: "tā / shì / lǎo shī", meaning: "Anh ấy là giáo viên." },
     ],
     stepByStep: true,
+    translate: false,
   }),
   limits: {
     heading: { maxChars: 40 },
-    "pattern.*.text": { maxChars: 6 },
+    "pattern.*.text": { maxChars: 12 },
     "pattern.*.note": { maxChars: 16 },
     explanation: { maxChars: 140 },
     "examples.*.hanzi": { maxChars: 24 },
@@ -72,19 +78,26 @@ export const grammar: SlideTemplate<GrammarContent> = {
         (p, i) =>
           (i > 0 ? `<span class="ls-gr-plus" aria-hidden="true">+</span>` : "") +
           `<span class="ls-gr-part ls-gr-c${(i % 5) + 1}">` +
-          `<span class="ls-gr-text" lang="zh-CN">${esc(p.text)}</span>` +
+          autoText(p.text, "span", "ls-gr-text") +
           (p.note ? vi(p.note, "span", "ls-gr-note") : "") +
           `</span>`,
       )
       .join("");
+    const chinese = (e: GrammarContent["examples"][number]) =>
+      (e.hanzi ? coloredParts(e.hanzi, "zh-CN", "ls-gr-hanzi", "") : "") +
+      (e.pinyin ? coloredParts(e.pinyin, "zh-Latn-pinyin", "ls-pinyin ls-gr-pinyin", " ") : "");
     const examples = c.examples
-      .map(
-        (e) =>
-          `<li class="ls-gr-example${c.stepByStep ? " ls-hide" : ""}"${c.stepByStep ? " data-ls-reveal" : ""}>` +
-          coloredParts(e.hanzi, "zh-CN", "ls-gr-hanzi", "") +
-          (e.pinyin ? coloredParts(e.pinyin, "zh-Latn-pinyin", "ls-pinyin ls-gr-pinyin", " ") : "") +
-          (e.meaning ? vi(e.meaning, "span", "ls-gr-meaning") : "") +
-          `</li>`,
+      .map((e) =>
+        c.translate
+          ? // The Vietnamese is the question; each Next shows one example's Chinese.
+            `<li class="ls-gr-example ls-gr-example--translate">` +
+            (e.meaning ? vi(e.meaning, "span", "ls-gr-question") : "") +
+            (e.hanzi || e.pinyin ? `<span class="ls-gr-answer ls-hide" data-ls-reveal data-ls-sound="correct">${chinese(e)}</span>` : "") +
+            `</li>`
+          : `<li class="ls-gr-example${c.stepByStep ? " ls-hide" : ""}"${c.stepByStep ? " data-ls-reveal" : ""}>` +
+            chinese(e) +
+            (e.meaning ? vi(e.meaning, "span", "ls-gr-meaning") : "") +
+            `</li>`,
       )
       .join("");
     return (
@@ -108,7 +121,7 @@ export const grammar: SlideTemplate<GrammarContent> = {
       max: 5,
       newItem: () => ({ text: "", note: "" }),
       fields: [
-        { kind: "text", key: "text", label: "Thành phần", lang: "zh", placeholder: "主语" },
+        { kind: "text", key: "text", label: "Thành phần (chữ Hán hoặc tiếng Việt)", lang: "zh", placeholder: "主语 / Chủ ngữ" },
         { kind: "text", key: "note", label: "Giải thích ngắn", lang: "vi", placeholder: "chủ ngữ" },
       ],
     },
@@ -122,12 +135,13 @@ export const grammar: SlideTemplate<GrammarContent> = {
       max: 4,
       newItem: () => ({ hanzi: "", pinyin: "", meaning: "" }),
       fields: [
-        { kind: "text", key: "hanzi", label: "Câu (chữ Hán)", lang: "zh", placeholder: "我 / 是 / 学生" },
+        { kind: "text", key: "hanzi", label: "Câu (chữ Hán)", lang: "zh", placeholder: "我 / 是 / 学生 — để trống nếu chỉ cho dịch" },
         { kind: "text", key: "pinyin", label: "Pinyin", lang: "pinyin", placeholder: "wǒ / shì / xué sheng" },
         { kind: "text", key: "meaning", label: "Nghĩa", lang: "vi" },
       ],
     },
-    { kind: "toggle", key: "stepByStep", label: "Hiện từng ví dụ khi bấm Tiếp" },
+    { kind: "toggle", key: "translate", label: "Dạng dịch: hiện tiếng Việt, bấm Tiếp hiện câu chữ Hán" },
+    { kind: "toggle", key: "stepByStep", label: "Hiện từng ví dụ khi bấm Tiếp", when: (c: GrammarContent) => !c.translate },
   ],
 };
 

@@ -99,7 +99,7 @@ describe("parseAiLesson", () => {
     const result = parseAiLesson(JSON.stringify(bad), templates);
     expect(result.ok).toBe(false);
     if (result.ok) return;
-    expect(result.errors).toContain("Slide 2 (Từ vựng), từ 2, Chữ Hán: Không được để trống");
+    expect(result.errors).toContain("Slide 2 (Từ vựng), từ 2, Chữ Hán: Cần chữ Hán hoặc nghĩa");
     expect(result.errors.some((e) => e.startsWith('Slide 3: loại slide "nope"'))).toBe(true);
   });
 

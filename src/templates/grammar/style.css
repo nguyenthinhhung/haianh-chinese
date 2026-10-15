@@ -93,3 +93,13 @@
   font-weight: 700;
   color: var(--ls-muted);
 }
+
+/* Translation: the Vietnamese example is the question, the Chinese the answer. */
+.ls-slide[data-slide-type="grammar"] .ls-gr-question {
+  font-size: calc(40 * var(--u));
+  font-weight: 700;
+}
+.ls-slide[data-slide-type="grammar"] .ls-gr-answer {
+  display: flex;
+  flex-direction: column;
+}

@@ -68,3 +68,15 @@
   width: calc(56 * var(--u));
   height: calc(56 * var(--u));
 }
+
+/* Translation: the Vietnamese meaning is the question, the characters the answer. */
+.ls-slide[data-slide-type="vocabulary"] .ls-vocab-question {
+  font-size: calc(var(--hanzi, 96) * 0.42 * var(--u));
+  font-weight: 700;
+  text-align: center;
+}
+.ls-slide[data-slide-type="vocabulary"] .ls-vocab-answer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}

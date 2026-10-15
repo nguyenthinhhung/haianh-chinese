@@ -26,12 +26,14 @@ describe("validateLesson", () => {
   it("locates content errors in the teacher's terms", () => {
     const doc = createFromSample("fruits", "Hoa quả", "0.0.0");
     const raw = structuredClone(doc) as any;
+    // A word needs its characters or its meaning; this one has neither.
     raw.slides[1].content.words[1].hanzi = "  ";
+    raw.slides[1].content.words[1].meaning = "";
     const result = validateLesson(raw, templates);
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.issues[0]!.path).toEqual(["slides", 1, "content", "words", 1, "hanzi"]);
-      expect(formatIssue(result.issues[0]!, raw, templates)).toBe("Slide 2, từ 2, Chữ Hán: Không được để trống");
+      expect(formatIssue(result.issues[0]!, raw, templates)).toBe("Slide 2, từ 2, Chữ Hán: Cần chữ Hán hoặc nghĩa");
     }
   });
 

@@ -100,6 +100,12 @@ Rồi trong từng bài:
    soạn giải thích từng từ, ngữ pháp đi kèm, luyện tập và chủ đề nói; các slide
    được chèn ngay sau slide đang chọn, không có trang bìa hay tổng kết.
 
+**Cho học sinh dịch**: ở slide **Từ vựng** và **Ngữ pháp**, bật **Dạng dịch**: slide chỉ
+hiện tiếng Việt, cả lớp dịch, bấm Tiếp hiện chữ Hán và pinyin làm đáp án (từng từ,
+từng câu). Ô chữ Hán có thể để trống nếu cô chỉ muốn cả lớp dịch bằng lời; chỉ cần
+có chữ Hán hoặc nghĩa. Thành phần cấu trúc ngữ pháp gõ được bằng tiếng Việt
+("Chủ ngữ", "Trạng ngữ thời gian"). Dịch cả câu dài thì dùng **Luyện câu (练一练)**.
+
 Một vài cách nhập đặc biệt:
 - **Điền chỗ trống**: đặt từ cần điền trong ngoặc vuông: `我[是]学生。`
 - **Ngữ pháp**, **Sắp xếp câu**: ngăn các thành phần bằng dấu `/`: `我 / 是 / 学生`
