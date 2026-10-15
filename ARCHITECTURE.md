@@ -771,7 +771,7 @@ Chưa làm:
 
 | Thay đổi | Lý do |
 | --- | --- |
-| Bút viết lên slide khi trình chiếu (`P`, chọn màu, `E` xoá; nét theo slide) nằm trong runtime | Video bài dạy HSK1 cô tham khảo: thầy viết bút đỏ lên slide gần như liên tục (ghi pinyin, gạch chân, đánh dấu). |
+| Bút viết lên slide khi trình chiếu (`P`, chọn màu, `E` xoá; nét theo slide) nằm trong runtime. Nét lưu theo toạ độ slide (0–1) nên vẽ được ở cả màn chiếu lẫn bản sao ở màn người trình chiếu; hai bên gửi nhau từng nét (`onInk`, tin nhắn `ink`/`pen-color`) | Video bài dạy HSK1 cô tham khảo: thầy viết bút đỏ lên slide gần như liên tục (ghi pinyin, gạch chân, đánh dấu). |
 | Slide `word-study` (chữ viết theo thứ tự nét), `table`, `speaking`, `picture-talk`, `word-family`, `culture`, `pronunciation`; Hội thoại kiểu "như sách"; Thẻ lật úp chỉ có số | Đủ các dạng trang trong giáo trình HSK 1–4 và trong bài dạy mẫu: 生词 kèm cách viết, 课文 như sách rồi dịch nghĩa, 对话练习, 运用, 描述图片, 旧字新词 / 扩展, 文化 / 俗语, 语音, ôn từ bằng thẻ úp. |
 | Lệnh Rust `hanzi_strokes`: tải nét viết một chữ từ jsDelivr (hanzi-writer-data), chỉ nhận đúng một chữ Hán và chỉ nhận path gồm lệnh M/L/Q/C/Z và số | Nét viết cần dữ liệu ~9.000 chữ; tải theo chữ khi cần thay vì gói cả bộ vào ứng dụng. Dữ liệu Make Me a Hanzi theo giấy phép Arphic Public License / LGPL, được phép dùng lại. |
 

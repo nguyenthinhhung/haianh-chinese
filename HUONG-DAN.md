@@ -162,7 +162,7 @@ cô có slide đang chiếu, slide tiếp theo, ghi chú (A− / A+ đổi cỡ 
 | T | Đồng hồ đếm ngược: chạy / dừng (Shift+T: tắt). Bấm vào đồng hồ để đổi thời gian |
 | N | Gọi một số thứ tự học sinh ngẫu nhiên (Shift+N: tắt) |
 | B / W | Màn hình đen / trắng để cả lớp nhìn cô; bấm phím bất kỳ để quay lại slide |
-| P | **Bút**: viết, gạch chân, khoanh lên slide bằng chuột (chọn màu ở góc trên). E xoá nét; nét tự xoá khi sang slide khác. Khi có máy chiếu, rê chuột sang màn chiếu để viết |
+| P | **Bút**: viết, gạch chân, khoanh lên slide bằng chuột (chọn màu ở góc trên). E xoá nét; nét tự xoá khi sang slide khác. Khi có máy chiếu hoặc dạy online, viết được ở cả hai màn: trên slide ở màn người trình chiếu hoặc trên màn chiếu, nét hiện ở cả hai |
 | G | Xem tất cả slide, bấm vào một slide để chuyển đến |
 | H | Bảng phím tắt |
 | Esc | Thoát trình chiếu |

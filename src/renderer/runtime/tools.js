@@ -41,7 +41,7 @@
 
   /* Builds the tool layer inside a presented deck. feedback(kind) plays a
    * runtime sound. Returns the tools API used by the runtime and games. */
-  LS.createTools = function (deck, feedback) {
+  LS.createTools = function (deck, feedback, hooks) {
     var layer = el("div", "ls-tools");
     layer.setAttribute("aria-live", "polite");
     deck.appendChild(layer);
@@ -185,14 +185,28 @@
     }
 
     /* ---- Pen: write on the slide, as with PowerPoint's pen. The ink belongs
-     * to the slide on screen and is wiped when the slide changes. ---- */
+     * to the slide on screen and is wiped when the slide changes. Strokes are
+     * kept in slide coordinates (0–1 across and down the slide), so the same
+     * ink can be drawn on a projector and on the presenter's copy alike;
+     * hooks.onInk hears every change for that copy. ---- */
     var INK_COLORS = ["#e11d48", "#2563eb", "#16a34a", "#111827"];
     var ink = el("canvas", "ls-ink");
     layer.insertBefore(ink, layer.firstChild);
     var inkCtx = ink.getContext ? ink.getContext("2d") : null;
     var penOn = false;
     var penColor = INK_COLORS[0];
-    var stroke = null;
+    var strokes = [];
+    var drawing = null;
+
+    function emitInk(event) {
+      if (hooks && hooks.onInk) {
+        try {
+          hooks.onInk(event);
+        } catch (e) {
+          if (window.console) console.error(e);
+        }
+      }
+    }
 
     var penBar = el("div", "ls-pen");
     penBar.hidden = true;
@@ -203,8 +217,7 @@
       b.setAttribute("aria-label", "Màu bút");
       b.addEventListener("click", function (e) {
         e.stopPropagation();
-        penColor = color;
-        markColor();
+        setPenColor(color);
       });
       penBar.appendChild(b);
       return b;
@@ -232,58 +245,112 @@
     }
     markColor();
 
+    /* The slide on screen, which ink coordinates are relative to. */
+    function slideBox() {
+      var slide = deck.querySelector(".ls-slide.ls-current");
+      var r = (slide || layer).getBoundingClientRect();
+      return { left: r.left, top: r.top, width: r.width || 1, height: r.height || 1 };
+    }
+    function toSlide(e) {
+      var b = slideBox();
+      return [(e.clientX - b.left) / b.width, (e.clientY - b.top) / b.height];
+    }
     function sizeInk() {
       var r = layer.getBoundingClientRect();
       var dpr = window.devicePixelRatio || 1;
       ink.width = Math.max(1, Math.round(r.width * dpr));
       ink.height = Math.max(1, Math.round(r.height * dpr));
       if (inkCtx) inkCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      redraw();
     }
-    function clearInk() {
+    /* Draws points [x0, y0, x1, y1, …] of a stroke, from index `from` on. */
+    function paint(stroke, from) {
+      if (!inkCtx || stroke.points.length < 4) return;
+      var b = slideBox();
+      var origin = ink.getBoundingClientRect();
+      var ox = b.left - origin.left;
+      var oy = b.top - origin.top;
+      var p = stroke.points;
+      var start = Math.max(0, (from || 0) - 2);
+      inkCtx.strokeStyle = stroke.color;
+      inkCtx.lineWidth = Math.max(3, b.width / 320);
+      inkCtx.lineCap = "round";
+      inkCtx.lineJoin = "round";
+      inkCtx.beginPath();
+      inkCtx.moveTo(ox + p[start] * b.width, oy + p[start + 1] * b.height);
+      for (var i = start + 2; i < p.length; i += 2) inkCtx.lineTo(ox + p[i] * b.width, oy + p[i + 1] * b.height);
+      inkCtx.stroke();
+    }
+    function wipe() {
       if (!inkCtx) return;
       inkCtx.save();
       inkCtx.setTransform(1, 0, 0, 1, 0, 0);
       inkCtx.clearRect(0, 0, ink.width, ink.height);
       inkCtx.restore();
     }
+    function redraw() {
+      wipe();
+      strokes.forEach(function (s) {
+        paint(s, 0);
+      });
+    }
+    function clearInk(silent) {
+      strokes = [];
+      drawing = null;
+      wipe();
+      if (!silent) emitInk({ type: "clear" });
+    }
     function setPen(on) {
       penOn = on;
       penBar.hidden = !on;
       ink.classList.toggle("ls-ink-on", on);
       if (on && ink.width <= 1) sizeInk();
+      emitInk({ type: "pen", on: penOn, color: penColor });
     }
-    function inkPoint(e) {
-      var r = ink.getBoundingClientRect();
-      return { x: e.clientX - r.left, y: e.clientY - r.top };
+    function setPenColor(color) {
+      if (INK_COLORS.indexOf(color) < 0) return;
+      penColor = color;
+      markColor();
+      emitInk({ type: "pen", on: penOn, color: penColor });
     }
+    /* A stroke drawn somewhere else (the presenter's copy of this slide). */
+    function addStroke(stroke) {
+      if (!stroke || INK_COLORS.indexOf(stroke.color) < 0 || !Array.isArray(stroke.points)) return;
+      var points = stroke.points.slice(0, 4000).filter(function (n) {
+        return typeof n === "number" && n > -0.5 && n < 1.5;
+      });
+      if (points.length < 4 || points.length % 2) return;
+      var s = { color: stroke.color, points: points };
+      strokes.push(s);
+      paint(s, 0);
+    }
+
     ink.addEventListener("pointerdown", function (e) {
-      if (!penOn || !inkCtx) return;
+      if (!penOn) return;
       e.preventDefault();
-      if (ink.setPointerCapture) ink.setPointerCapture(e.pointerId);
-      stroke = inkPoint(e);
-      inkCtx.strokeStyle = penColor;
-      inkCtx.lineWidth = Math.max(3, ink.getBoundingClientRect().width / 400);
-      inkCtx.lineCap = "round";
-      inkCtx.lineJoin = "round";
+      try {
+        ink.setPointerCapture(e.pointerId);
+      } catch (err) {
+        /* No capture (e.g. a pointer already gone): the stroke still draws. */
+      }
+      drawing = { color: penColor, points: toSlide(e) };
+      strokes.push(drawing);
     });
     ink.addEventListener("pointermove", function (e) {
-      if (!stroke || !inkCtx) return;
-      var p = inkPoint(e);
-      inkCtx.beginPath();
-      inkCtx.moveTo(stroke.x, stroke.y);
-      inkCtx.lineTo(p.x, p.y);
-      inkCtx.stroke();
-      stroke = p;
+      if (!drawing) return;
+      var p = toSlide(e);
+      drawing.points.push(p[0], p[1]);
+      paint(drawing, drawing.points.length - 2);
     });
     function endStroke() {
-      stroke = null;
+      if (drawing && drawing.points.length >= 4) emitInk({ type: "stroke", stroke: drawing });
+      drawing = null;
     }
     ink.addEventListener("pointerup", endStroke);
     ink.addEventListener("pointercancel", endStroke);
     ink.addEventListener("click", function (e) {
       e.stopPropagation();
     });
-    // A new size means a new canvas; the slide's ink does not survive it.
     window.addEventListener("resize", sizeInk);
     sizeInk();
 
@@ -349,10 +416,14 @@
       penOn: function () {
         return penOn;
       },
-      clearInk: clearInk,
-      /* The slide changed: its ink goes with it. */
-      onSlide: function () {
+      setPenColor: setPenColor,
+      addStroke: addStroke,
+      clearInk: function () {
         clearInk();
+      },
+      /* The slide changed: its ink goes with it (the presenter's copy follows the slide itself). */
+      onSlide: function () {
+        clearInk(true);
       },
       showScores: function () {
         board.hidden = false;

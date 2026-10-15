@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { LessonDocument } from "../core/schema";
 import { renderSlide, type RenderEnv } from "../renderer/render";
-import type { BlankMode, PresentState } from "../renderer/runtime/load";
+import { INK_COLORS, type BlankMode, type PresentState } from "../renderer/runtime/load";
 import { SlideView, StaticDeck } from "./SlideView";
 
 /** What the presenter's buttons act on: the runtime here, or the slide show on the other screen. */
@@ -65,8 +65,8 @@ interface Props {
   onOwnWindow?(): void;
   /** The slides are in their own window on this screen (teaching online). */
   online?: boolean;
-  /** The slides run in another window, where the pen has to be used. */
-  remote?: boolean;
+  /** The slide show's pen, when it runs in another window: colours are picked here too. */
+  pen?: { on: boolean; color: string; setColor(color: string): void };
 }
 
 /**
@@ -74,7 +74,7 @@ interface Props {
  * timer, next slide, notes and every control. Its grid cells sit around the
  * current slide, which the caller places in the `current` area.
  */
-export function PresenterView({ doc, env, state, driver, onShowAll, onEnd, onHide, onOwnWindow, online, remote }: Props) {
+export function PresenterView({ doc, env, state, driver, onShowAll, onEnd, onHide, onOwnWindow, online, pen }: Props) {
   const watch = useStopwatch();
   const [notesSize, setNotesSize] = useState(readNotesSize);
   const slide = doc.slides[state.index];
@@ -176,12 +176,22 @@ export function PresenterView({ doc, env, state, driver, onShowAll, onEnd, onHid
           □ Màn trắng
         </button>
         <span className="presenter-sep" />
-        {tool(
-          "✎ Bút",
-          "p",
-          remote
-            ? "Bút viết lên slide (P). Rê chuột sang cửa sổ trình chiếu để viết; E xoá nét."
-            : "Bút viết lên slide (P); E xoá nét",
+        {tool(pen?.on ? "✎ Tắt bút" : "✎ Bút", "p", "Bút viết lên slide (P), ngay trên slide ở màn này hoặc trên màn chiếu; E xoá nét")}
+        {pen?.on && (
+          <span className="presenter-pen" role="group" aria-label="Màu bút">
+            {INK_COLORS.map((c) => (
+              <button
+                key={c}
+                type="button"
+                className={c === pen.color ? "presenter-pen-color presenter-pen-color--on" : "presenter-pen-color"}
+                style={{ background: c }}
+                aria-label="Màu bút"
+                onMouseDown={noFocus}
+                onClick={() => pen.setColor(c)}
+              />
+            ))}
+            {tool("Xoá nét", "e", "Xoá nét trên slide (E)")}
+          </span>
         )}
         {tool("Hiện đáp án", "a", "Hiện hết đáp án của slide (A)")}
         {tool("Làm lại", "r", "Làm lại slide từ đầu (R)")}

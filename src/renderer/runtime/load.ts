@@ -20,8 +20,29 @@ export interface PresentController {
   go(index: number): void;
   /** Blacks or whites out the screen; null brings the slide back. */
   blank(mode: BlankMode | null): void;
+  tools: PresentTools | null;
   destroy(): void;
 }
+
+/** The pen of the classroom tools, as the presenter view drives it. */
+export interface PresentTools {
+  pen(on?: boolean): void;
+  setPenColor(color: string): void;
+  /** Draws a stroke made on the presenter's copy of the slide. */
+  addStroke(stroke: InkStroke): void;
+  clearInk(): void;
+}
+
+/** A pen stroke: points [x0, y0, x1, y1, …] across and down the slide, from 0 to 1. */
+export interface InkStroke {
+  color: string;
+  points: number[];
+}
+
+export type InkEvent = { type: "pen"; on: boolean; color: string } | { type: "stroke"; stroke: InkStroke } | { type: "clear" };
+
+/** The pen colours the runtime offers. */
+export const INK_COLORS = ["#e11d48", "#2563eb", "#16a34a", "#111827"];
 
 export type BlankMode = "black" | "white";
 
@@ -38,6 +59,7 @@ export interface MountOptions {
   start?: number;
   onChange?(index: number): void;
   onState?(state: PresentState): void;
+  onInk?(event: InkEvent): void;
   onExit?(): void;
   toggleFullscreen?(): void;
 }

@@ -145,7 +145,9 @@
   /* Presents the slides of a `.ls-deck` element one at a time.
    * options: start (slide index), onChange(index), onExit() (Esc),
    * toggleFullscreen(), onState({ index, step, steps, blank }) after every
-   * move, step or blank-screen change (for a presenter view). Returns a
+   * move, step or blank-screen change (for a presenter view), onInk(event)
+   * for every pen change: { type: "pen", on, color }, { type: "stroke",
+   * stroke: { color, points } } in slide coordinates, or { type: "clear" }. Returns a
    * controller; destroy() removes every listener and restores the deck.
    *
    * An interaction factory is called as factory(slideEl, ctx) with
@@ -168,9 +170,13 @@
     var index = -1;
     var step = 0;
     var tools = LS.createTools
-      ? LS.createTools(deck, function (kind) {
-          LS.feedback(kind, slides[index]);
-        })
+      ? LS.createTools(
+          deck,
+          function (kind) {
+            LS.feedback(kind, slides[index]);
+          },
+          { onInk: options.onInk },
+        )
       : null;
 
     var controllers = slides.map(function (el) {

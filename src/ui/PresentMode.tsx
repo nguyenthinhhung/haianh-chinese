@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { LessonDocument } from "../core/schema";
 import type { Channel } from "../platform/screens";
 import { renderDeck, type RenderEnv } from "../renderer/render";
-import { loadRuntime, type PresentController, type PresentState } from "../renderer/runtime/load";
+import { INK_COLORS, loadRuntime, type InkStroke, type PresentController, type PresentState } from "../renderer/runtime/load";
+import { InkOverlay } from "./InkOverlay";
 import { elementPath, type ToAudience, type ToPresenter } from "./presentLink";
 import { PresenterView, ShowToolbar, SlideGrid, type PresentDriver } from "./PresenterView";
 import { useServices } from "./services";
@@ -35,6 +36,8 @@ export function PresentMode({ doc, env, dir, start, presenterView = false, onExi
   const [localView, setLocalView] = useState<"show" | "presenter">(presenterView ? "presenter" : "show");
   const [state, setState] = useState<PresentState>({ index: start, step: 0, steps: 0, blank: null });
   const [mirror, setMirror] = useState("");
+  /** The slide show's pen, and the ink on its current slide, for the presenter's copy. */
+  const [ink, setInk] = useState<{ pen: boolean; color: string; strokes: InkStroke[] }>({ pen: false, color: INK_COLORS[0]!, strokes: [] });
   const [grid, setGrid] = useState(false);
   /** The slides are in a window of their own on this screen, for sharing in a video call. */
   const [online, setOnline] = useState(false);
@@ -163,6 +166,11 @@ export function PresentMode({ doc, env, dir, start, presenterView = false, onExi
       else if (m.type === "state") {
         setState(m.state);
         setMirror(m.html);
+      } else if (m.type === "ink") {
+        const e = m.ink;
+        if (e.type === "pen") setInk((i) => ({ ...i, pen: e.on, color: e.color }));
+        else if (e.type === "stroke") setInk((i) => ({ ...i, strokes: [...i.strokes, e.stroke] }));
+        else setInk((i) => ({ ...i, strokes: [] }));
       } else if (m.type === "exit") end();
     });
     const onKey = (e: KeyboardEvent) => {
@@ -218,8 +226,17 @@ export function PresentMode({ doc, env, dir, start, presenterView = false, onExi
     };
   }, [mode]);
 
+  // Ink belongs to one slide; the slide show wipes its own when the slide changes.
+  useEffect(() => setInk((i) => (i.strokes.length ? { ...i, strokes: [] } : i)), [state.index]);
+
+  function inkOnCopy(stroke: InkStroke) {
+    setInk((i) => ({ ...i, strokes: [...i.strokes, stroke] }));
+    channel.current?.send({ type: "ink", stroke } satisfies ToAudience);
+  }
+
   /** A click on the copy of the slide is replayed on the projector (game cells, cards, sound buttons). */
   function onMirrorClick(e: React.MouseEvent) {
+    if (ink.pen) return;
     const slide = (e.currentTarget as HTMLElement).querySelector(".ls-slide");
     const target = e.target as Element;
     const path = slide && slide.contains(target) ? elementPath(slide, target) : null;
@@ -242,12 +259,17 @@ export function PresentMode({ doc, env, dir, start, presenterView = false, onExi
           onHide={mode === "local" ? () => setLocalView("show") : undefined}
           onOwnWindow={mode === "local" ? () => void moveToOwnWindow() : undefined}
           online={online}
-          remote={mode === "remote"}
+          pen={
+            mode === "remote"
+              ? { on: ink.pen, color: ink.color, setColor: (color) => channel.current?.send({ type: "pen-color", color } satisfies ToAudience) }
+              : undefined
+          }
         />
       )}
       {mode === "remote" && (
         <div className="present-stage present-mirror" onClick={onMirrorClick} title="Bấm vào slide như bấm trên màn chiếu">
           {mirror ? <StaticDeck doc={doc} env={env} html={mirror} presenting /> : <p className="present-waiting">Đang mở màn hình trình chiếu…</p>}
+          <InkOverlay strokes={ink.strokes} pen={ink.pen} color={ink.color} onStroke={inkOnCopy} />
           {state.blank && <span className="present-blank-badge">Màn chiếu đang {state.blank === "black" ? "đen" : "trắng"}</span>}
         </div>
       )}

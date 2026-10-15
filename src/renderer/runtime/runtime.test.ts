@@ -4,14 +4,14 @@ import type { LessonDocument } from "../../core/schema";
 import { createFromSample } from "../../samples";
 import { testEnv } from "../../test/env";
 import { lessonRuntime, renderDeck } from "../render";
-import type { MountOptions, PresentController, PresentState } from "./load";
+import type { InkEvent, MountOptions, PresentController, PresentState, PresentTools } from "./load";
 
 const env = testEnv();
 
 interface Controller extends PresentController {
   revealAll(): void;
   reset(): void;
-  tools: { scores(): number[]; current(): number } | null;
+  tools: (PresentTools & { scores(): number[]; current(): number }) | null;
 }
 
 let controller: Controller | null = null;
@@ -225,6 +225,28 @@ describe("classroom tools", () => {
     expect(exits).toEqual([]);
     press("Escape");
     expect(exits).toEqual([1]);
+  });
+
+  it("reports the pen and each stroke, so the other screen can show the same ink", () => {
+    const events: InkEvent[] = [];
+    const c = present([{ type: "cover" }], 0, { onInk: (e) => events.push(e) });
+    press("p");
+    const ink = host.querySelector<HTMLCanvasElement>(".ls-ink")!;
+    const at = (type: string, x: number, y: number) => ink.dispatchEvent(new PointerEvent(type, { clientX: x, clientY: y, pointerId: 1, bubbles: true }));
+    at("pointerdown", 0.1, 0.2);
+    at("pointermove", 0.3, 0.4);
+    at("pointerup", 0.3, 0.4);
+    press("e");
+    expect(events.map((e) => e.type)).toEqual(["pen", "stroke", "clear"]);
+    expect(events[0]).toMatchObject({ on: true, color: "#e11d48" });
+    const stroke = events[1] as Extract<InkEvent, { type: "stroke" }>;
+    expect(stroke.stroke.points).toHaveLength(4);
+    // Strokes from the presenter's copy are drawn without being reported back.
+    c.tools!.addStroke({ color: "#2563eb", points: [0, 0, 0.5, 0.5] });
+    c.tools!.addStroke({ color: "javascript:alert(1)", points: [0, 0, 1, 1] });
+    c.tools!.setPenColor("#16a34a");
+    expect(events.map((e) => e.type)).toEqual(["pen", "stroke", "clear", "pen"]);
+    expect(events.at(-1)).toMatchObject({ color: "#16a34a" });
   });
 
   it("H shows the shortcut list", () => {

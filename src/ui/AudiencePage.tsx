@@ -47,6 +47,12 @@ export function AudiencePage() {
         case "blank":
           c?.blank(m.mode);
           break;
+        case "ink":
+          c?.tools?.addStroke(m.stroke);
+          break;
+        case "pen-color":
+          c?.tools?.setPenColor(m.color);
+          break;
         case "click": {
           const slide = host.current?.querySelector(".ls-slide.ls-current");
           const target = slide && elementAt(slide, m.path);
@@ -104,6 +110,7 @@ export function AudiencePage() {
             schedule();
           },
           onExit: () => channel.send({ type: "exit" } satisfies ToPresenter),
+          onInk: (ink) => channel.send({ type: "ink", ink } satisfies ToPresenter),
           toggleFullscreen: () => void persistence.isFullscreen().then((on) => persistence.setFullscreen(!on)),
         }) ?? null;
       observer.observe(deck, { subtree: true, childList: true, attributes: true, characterData: true });

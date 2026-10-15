@@ -1,5 +1,5 @@
 import type { LessonDocument } from "../core/schema";
-import type { BlankMode, PresentState } from "../renderer/runtime/load";
+import type { BlankMode, InkEvent, InkStroke, PresentState } from "../renderer/runtime/load";
 
 /**
  * Messages between the presenter view (laptop) and the slide show on the
@@ -13,12 +13,17 @@ export type ToAudience =
   | { type: "go"; index: number }
   | { type: "click"; path: number[] }
   | { type: "blank"; mode: BlankMode | null }
+  /** Pen use on the presenter's copy of the slide. */
+  | { type: "ink"; stroke: InkStroke }
+  | { type: "pen-color"; color: string }
   | { type: "end" };
 
 export type ToPresenter =
   | { type: "ready" }
   /** `html` is the current slide as the class sees it, for the presenter's copy. */
   | { type: "state"; state: PresentState; html: string }
+  /** Pen use on the slide show, for the presenter's copy. */
+  | { type: "ink"; ink: InkEvent }
   | { type: "exit" };
 
 /** Position of `el` under `root` as child indexes, so a click can be replayed on the other screen. */
