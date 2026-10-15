@@ -68,16 +68,17 @@ Hán. Pinyin tự điền nên được xem lại với từ đọc nhẹ hoặc
 
 | Nhóm | Loại |
 | --- | --- |
-| Dạy | Trang bìa, Trang sách / Ảnh lớn, Từ vựng, Thẻ hình (có thể thêm từ loại, cách dùng, câu ví dụ cho học sinh lớn), Thẻ lật, Hội thoại, Ngữ pháp, Tổng kết |
-| Hỏi đáp | Hỏi đáp (câu hỏi bài khoá, đáp án hiện dần), Nghe, Trắc nghiệm (cả Đúng/Sai), Ghép cặp, Điền chỗ trống, Sắp xếp câu, Chọn thanh điệu, Phân nhóm |
+| Dạy | Trang bìa, Trang sách / Ảnh lớn, Từ vựng, Thẻ hình (có thể thêm từ loại, cách dùng, câu ví dụ cho học sinh lớn), Thẻ lật, Hội thoại (đến 8 lượt), Bài khoá / Đoạn văn, Ngữ pháp, So sánh (比一比), Tổng kết |
+| Hỏi đáp | Hỏi đáp (câu hỏi bài khoá, đáp án hiện dần), Nghe, Trắc nghiệm (cả Đúng/Sai), Ghép cặp, Điền chỗ trống (đến 6 câu), Luyện câu (练一练), Sắp xếp câu, Chọn thanh điệu, Phân nhóm |
 | Trò chơi | Cái gì biến mất?, Đoán hình, Hộp bí mật, Vòng quay may mắn, Lật cặp |
 
 ### Soạn theo giáo trình
 
 **Một khung cho mọi bài.** Cách gọn nhất là để mọi bài có cùng một khung:
-- Cách 1: **Tạo bài bằng AI…**, dạng bài **Theo giáo trình**: AI làm đủ các phần
-  như trong sách (Khởi động → Bài khoá → Từ mới → Ngữ pháp → Luyện tập → Ngữ âm →
-  Vận dụng), đính kèm các trang của bài để AI lấy đúng nội dung.
+- Cách 1: **Tạo bài bằng AI…**, dạng bài **Theo giáo trình HSK 1 / 2 / 3 / 4**: AI
+  làm đủ các phần đúng thứ tự của quyển đó (ví dụ HSK 4: Khởi động → 课文 1–3 →
+  注释 kèm 练一练 → câu hỏi bài khoá → 课文 4–5 → 比一比 → Luyện tập → 扩展 → Vận
+  dụng). Đính kèm các trang của bài để AI lấy đúng nội dung.
 - Cách 2 (khung của riêng mình): soạn xong một bài ưng ý, vào tab **Bài học** ở cột
   phải, đặt tên rồi bấm **Lưu làm khung bài**. Từ đó, khi **Tạo bài bằng AI…**,
   chọn **Khung: tên khung** ở mục Dạng bài: AI soạn bài mới theo đúng thứ tự, loại
@@ -102,6 +103,13 @@ Một vài cách nhập đặc biệt:
 - **Điền chỗ trống**: đặt từ cần điền trong ngoặc vuông: `我[是]学生。`
 - **Ngữ pháp**, **Sắp xếp câu**: ngăn các thành phần bằng dấu `/`: `我 / 是 / 学生`
 - **Chọn thanh điệu**: gõ pinyin có dấu (`mǎ`), thanh điệu được lấy tự động.
+- **Bài khoá / Đoạn văn** (HSK 3–4): mỗi đoạn một dòng; hội thoại thì mỗi lượt một
+  dòng, ví dụ `王静：……`. Khi chiếu, Tiếp lần 1 thay chữ Hán bằng pinyin, lần 2 bằng
+  bản dịch. Hộp 生词 hiện bên cạnh như trong sách.
+- **Luyện câu (练一练)**: chỗ trống viết `____`; đối thoại mỗi lượt một dòng; ô "Từ
+  phải dùng" hiện trong ngoặc như sách: （肯定）. Cũng dùng để dịch câu Việt → Trung.
+- **So sánh (比一比)**: hai từ, điểm giống, các điểm khác (hiện từng ý), và bảng
+  "Chọn từ" đánh ✓/✗ cho từng câu.
 
 ## 4. Trình chiếu
 

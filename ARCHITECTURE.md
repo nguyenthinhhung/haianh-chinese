@@ -12,7 +12,7 @@ phải chạm vào HTML.
 **Người dùng duy nhất của ứng dụng là giáo viên.** Học sinh chỉ xem màn hình chiếu
 và trả lời bằng lời; giáo viên là người điều khiển mọi thứ trên màn hình.
 
-> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 18).
+> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 19).
 
 ---
 
@@ -288,6 +288,8 @@ thể bổ sung dần mà không ảnh hưởng các loại đã có.
 | `flashcard` | Thẻ lật: mặt trước ảnh (lật ra chữ Hán) hoặc chữ Hán (lật ra ảnh), mặt sau kèm pinyin và nghĩa. Tiếp lật thẻ kế tiếp còn úp; giáo viên cũng bấm chuột hoặc gõ số để lật thẻ bất kỳ, bấm lại thì úp xuống; Lùi úp lại theo thứ tự đã lật. |
 | `dialogue` | Các lượt thoại theo vai, có ảnh nhân vật. Tuỳ chọn nơi diễn ra (在饭馆, như giáo trình ghi từng cảnh) và một file nghe cho cả bài (bài nghe của giáo trình). |
 | `grammar` | Cấu trúc, giải thích, câu ví dụ có tô màu thành phần. |
+| `passage` | Bài khoá dài (HSK 3–4): đoạn văn hoặc hội thoại nhiều lượt, đến 400 chữ, kèm hộp 生词 và file nghe. Tiếp lần lượt thay chữ Hán bằng pinyin rồi bản dịch, vì ba bản cùng lúc không vừa slide. |
+| `compare` | 比一比: hai từ dễ nhầm, điểm giống, 1–3 điểm khác (hiện từng ý), bảng chọn từ ✓/✗ cho tối đa 5 câu. |
 | `summary` | Điểm cần nhớ, từ vựng chính. |
 
 **Nhóm 2 — Hỏi đáp trên lớp (MVP)**
@@ -298,6 +300,7 @@ Giáo viên đặt câu hỏi, học sinh trả lời bằng lời, giáo viên 
 | Template | Giáo viên dùng thế nào | Các bước khi bấm Tiếp |
 | --- | --- | --- |
 | `qa-list` | Hỏi đáp về bài khoá/hội thoại: 1–6 câu hỏi (chữ Hán hoặc tiếng Việt), đáp án ẩn bên cạnh. | Mỗi lần Tiếp hiện đáp án một câu. |
+| `sentence-practice` | 练一练: hoàn thành câu/đối thoại với từ cho sẵn (hiện trong ngoặc như sách), hoặc dịch câu; 1–5 câu. | Mỗi lần Tiếp hiện đáp án mẫu một câu. |
 | `listening` | Bài nghe: file của giáo trình (hoặc giọng đọc tạo từ lời), 0–4 câu hỏi, lời bài nghe có pinyin và nghĩa. | Mỗi lần Tiếp hiện đáp án một câu, cuối cùng hiện lời bài nghe. |
 | `quiz` | Hỏi cả lớp; đề là chữ, ảnh hoặc audio ("nghe và chọn hình"); 2–4 lựa chọn đánh số/chữ cái để trẻ gọi tên; có biến thể Đúng/Sai. | Hiện câu hỏi → hiện đáp án đúng (sáng lên + âm thanh). |
 | `matching` | Hai cột chữ Hán ↔ nghĩa, hoặc ↔ hình khi `rightAs: "image"` (ảnh tự tìm theo nghĩa); trẻ nói cặp nào đi với nhau. | Mỗi lần Tiếp nối thêm một cặp. |
@@ -756,6 +759,13 @@ Chưa làm:
 ---
 
 ## 12. Lịch sử thay đổi
+
+### Rev 19
+
+| Thay đổi | Lý do |
+| --- | --- |
+| Dạng bài "Theo giáo trình" tách thành HSK 1, 2, 3, 4, mỗi cấp đúng thứ tự phần của quyển đó (đối chiếu sách HSK chuẩn 1–4) | Cấu trúc bài đổi theo cấp: HSK 2 có 4 cảnh hội thoại; HSK 3 thêm đoạn văn, 练一练, bỏ 语音; HSK 4 có 5 bài khoá dài, 比一比, 扩展. |
+| Slide `passage`, `sentence-practice`, `compare`; Hội thoại đến 8 lượt × 60 chữ, Điền chỗ trống đến 6 câu | Bài khoá HSK 3–4 dài (6–8 lượt, đoạn văn ~200 chữ); bài tập chọn từ điền có 5 câu một ngân hàng từ. |
 
 ### Rev 18
 
