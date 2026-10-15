@@ -15,6 +15,10 @@ const line = z.object({
 
 const schema = z.object({
   heading: z.string().max(60).default(""),
+  /** Where it happens, as textbooks label each scene: 在饭馆. */
+  scene: z.string().max(30).default(""),
+  /** One recording of the whole dialogue, e.g. the textbook's track. */
+  track: AssetIdRef.optional(),
   nameA: z.string().max(20).default(""),
   imageA: AssetIdRef.optional(),
   nameB: z.string().max(20).default(""),
@@ -51,9 +55,10 @@ export const dialogue: SlideTemplate<DialogueContent> = {
   order: 50,
   schema,
   aiSchemaHint:
-    'Hội thoại 2 nhân vật, 1–6 câu. {"heading"?: tiêu đề tiếng Việt, "nameA": tên nhân vật A, "nameB": tên nhân vật B, "lines": [{"speaker": "a" hoặc "b", "hanzi", "pinyin": có dấu thanh, "meaning": nghĩa tiếng Việt}], "stepByStep"?: true để hiện từng câu khi bấm Tiếp}',
+    'Hội thoại 2 nhân vật, 1–6 câu. {"heading"?: tiêu đề tiếng Việt, "scene"?: nơi diễn ra bằng chữ Hán như giáo trình ghi (ví dụ "在饭馆"), "nameA": tên nhân vật A, "nameB": tên nhân vật B, "lines": [{"speaker": "a" hoặc "b", "hanzi", "pinyin": có dấu thanh, "meaning": nghĩa tiếng Việt}], "stepByStep"?: true để hiện từng câu khi bấm Tiếp}',
   defaults: () => ({
     heading: "Hội thoại",
+    scene: "",
     nameA: "小明",
     nameB: "小红",
     lines: [
@@ -65,6 +70,7 @@ export const dialogue: SlideTemplate<DialogueContent> = {
   }),
   limits: {
     heading: { maxChars: 40 },
+    scene: { maxChars: 12 },
     nameA: { maxChars: 10 },
     nameB: { maxChars: 10 },
     "lines.*.hanzi": { maxChars: 16 },
@@ -94,14 +100,20 @@ export const dialogue: SlideTemplate<DialogueContent> = {
         );
       })
       .join("");
+    const track = audioButton(ctx, c.track, `${ctx.slideId}-track`, "Nghe cả bài hội thoại");
     return (
       (c.heading ? vi(c.heading, "h2", "ls-heading") : "") +
+      (c.scene || track
+        ? `<div class="ls-dlg-scene">${c.scene ? zh(c.scene, "span", "ls-dlg-place") : ""}${track}</div>`
+        : "") +
       `<ol class="ls-dlg-lines" data-count="${c.lines.length}">${lines}</ol>`
     );
   },
   css,
   editor: [
     { kind: "text", key: "heading", label: "Tiêu đề", lang: "vi" },
+    { kind: "text", key: "scene", label: "Nơi diễn ra (như giáo trình ghi)", lang: "zh", placeholder: "在饭馆" },
+    { kind: "asset", key: "track", label: "File nghe cả bài (ví dụ bài nghe của giáo trình)", assetKind: "audio" },
     { kind: "text", key: "nameA", label: "Tên nhân vật A", lang: "zh", placeholder: "小明" },
     { kind: "asset", key: "imageA", label: "Ảnh nhân vật A", assetKind: "image", searchFrom: ["nameA"] },
     { kind: "text", key: "nameB", label: "Tên nhân vật B", lang: "zh", placeholder: "小红" },

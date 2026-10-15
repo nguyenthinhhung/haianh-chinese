@@ -99,6 +99,38 @@ describe("steps", () => {
   });
 });
 
+describe("listening", () => {
+  it("shows each answer in turn, then the script, then moves on", () => {
+    present([
+      {
+        type: "listening",
+        content: {
+          heading: "Nghe",
+          script: "A：你去哪儿？\nB：我去商店。",
+          scriptPinyin: "",
+          scriptMeaning: "",
+          questions: [
+            { question: "A 问什么？", answer: "去哪儿" },
+            { question: "B 去哪儿？", answer: "商店" },
+          ],
+          showScript: true,
+        },
+      },
+      { type: "cover" },
+    ]);
+    const script = () => current().querySelector(".ls-ln-script")!;
+    press("ArrowRight");
+    press("ArrowRight");
+    expect(current().querySelectorAll(".ls-ln-answer.ls-revealed")).toHaveLength(2);
+    expect(script().classList.contains("ls-revealed")).toBe(false);
+    press("ArrowRight");
+    expect(script().classList.contains("ls-revealed")).toBe(true);
+    expect(script().querySelectorAll(".ls-ln-line")).toHaveLength(2);
+    press("ArrowRight");
+    expect(current().dataset.slideType).toBe("cover");
+  });
+});
+
 describe("blank screen", () => {
   it("B blacks the screen; the next key only brings the slide back", () => {
     const vocab = env.templates.require("vocabulary").defaults() as { hideMeaning: boolean };

@@ -96,3 +96,23 @@
   width: calc(64 * var(--u));
   height: calc(64 * var(--u));
 }
+/* Scene label and the recording of the whole dialogue, under the heading. */
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-scene {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(20 * var(--u));
+  margin: calc(-16 * var(--u)) 0 calc(16 * var(--u));
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-place {
+  padding: calc(6 * var(--u)) calc(24 * var(--u));
+  border-radius: 999px;
+  background: var(--ls-accent-2);
+  color: #fff;
+  font-size: calc(36 * var(--u));
+  font-weight: 700;
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-scene .ls-play {
+  width: calc(64 * var(--u));
+  height: calc(64 * var(--u));
+}
