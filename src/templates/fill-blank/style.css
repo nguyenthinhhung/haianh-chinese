@@ -55,6 +55,28 @@
 .ls-slide[data-slide-type="fill-blank"] .ls-fb-sentences[data-count="4"] .ls-fb-hanzi {
   font-size: calc(66 * var(--u));
 }
+/* Five or six sentences, as in HSK 3–4 word-bank exercises. */
+.ls-slide[data-slide-type="fill-blank"] .ls-fb:has(.ls-fb-sentences[data-count="5"]),
+.ls-slide[data-slide-type="fill-blank"] .ls-fb:has(.ls-fb-sentences[data-count="6"]) {
+  gap: calc(24 * var(--u));
+}
+.ls-slide[data-slide-type="fill-blank"] .ls-fb-sentences[data-count="5"],
+.ls-slide[data-slide-type="fill-blank"] .ls-fb-sentences[data-count="6"] {
+  gap: calc(14 * var(--u));
+  text-align: left;
+}
+.ls-slide[data-slide-type="fill-blank"] .ls-fb-sentences[data-count="5"] .ls-fb-hanzi,
+.ls-slide[data-slide-type="fill-blank"] .ls-fb-sentences[data-count="6"] .ls-fb-hanzi {
+  font-size: calc(46 * var(--u));
+}
+.ls-slide[data-slide-type="fill-blank"] .ls-fb-sentences[data-count="5"] .ls-fb-pinyin,
+.ls-slide[data-slide-type="fill-blank"] .ls-fb-sentences[data-count="6"] .ls-fb-pinyin {
+  font-size: calc(26 * var(--u));
+}
+.ls-slide[data-slide-type="fill-blank"] .ls-fb:has(.ls-fb-sentences[data-count="5"]) .ls-fb-chip,
+.ls-slide[data-slide-type="fill-blank"] .ls-fb:has(.ls-fb-sentences[data-count="6"]) .ls-fb-chip {
+  font-size: calc(42 * var(--u));
+}
 .ls-slide[data-slide-type="fill-blank"] .ls-fb-pinyin {
   font-size: calc(40 * var(--u));
 }

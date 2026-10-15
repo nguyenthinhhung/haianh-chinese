@@ -131,6 +131,28 @@ describe("listening", () => {
   });
 });
 
+describe("HSK 3–4 slides", () => {
+  it("a passage shows its pinyin, then its translation, each in place of the one before", () => {
+    present([{ type: "passage" }, { type: "cover" }]);
+    const shown = () => [...current().querySelectorAll(".ls-ps-view.ls-revealed")].map((v) => v.className.match(/--(\w+)/)![1]);
+    press("ArrowRight");
+    expect(shown()).toEqual(["pinyin"]);
+    press("ArrowRight");
+    expect(shown()).toEqual(["pinyin", "meaning"]);
+    press("ArrowRight");
+    expect(current().dataset.slideType).toBe("cover");
+  });
+
+  it("a comparison reveals each difference, then the answer of each sentence", () => {
+    present([{ type: "compare" }]);
+    const defaults = env.templates.require("compare").defaults() as { differences: unknown[]; checks: unknown[] };
+    press("a");
+    expect(current().querySelectorAll(".ls-cmp-diff.ls-revealed")).toHaveLength(defaults.differences.length);
+    // Each sentence's row reveals a mark under both words in one step.
+    expect(current().querySelectorAll(".ls-cmp-cell .ls-revealed")).toHaveLength(defaults.checks.length * 2);
+  });
+});
+
 describe("blank screen", () => {
   it("B blacks the screen; the next key only brings the slide back", () => {
     const vocab = env.templates.require("vocabulary").defaults() as { hideMeaning: boolean };

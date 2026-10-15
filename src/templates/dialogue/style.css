@@ -22,6 +22,13 @@
   --avatar: 88;
   gap: calc(10 * var(--u));
 }
+/* HSK 3–4 texts: up to 8 turns of longer lines. */
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-lines[data-count="7"],
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-lines[data-count="8"] {
+  --hanzi: 32;
+  --avatar: 64;
+  gap: calc(6 * var(--u));
+}
 .ls-slide[data-slide-type="dialogue"] .ls-dlg-line {
   position: relative;
   display: flex;

@@ -1,0 +1,66 @@
+.ls-slide[data-slide-type="sentence-practice"] .ls-sp {
+  --text: 50;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(28 * var(--u));
+  min-height: 0;
+  margin: 0;
+  padding: 0 0 0 calc(70 * var(--u));
+}
+.ls-slide[data-slide-type="sentence-practice"] .ls-sp[data-count="4"],
+.ls-slide[data-slide-type="sentence-practice"] .ls-sp[data-count="5"] {
+  --text: 38;
+  gap: calc(16 * var(--u));
+}
+.ls-slide[data-slide-type="sentence-practice"] .ls-sp-item {
+  font-size: calc(var(--text) * var(--u));
+}
+.ls-slide[data-slide-type="sentence-practice"] .ls-sp-item::marker {
+  color: var(--ls-accent);
+  font-weight: 800;
+}
+.ls-slide[data-slide-type="sentence-practice"] .ls-sp-prompt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: calc(4 * var(--u)) calc(16 * var(--u));
+}
+.ls-slide[data-slide-type="sentence-practice"] .ls-sp-line {
+  flex-basis: 100%;
+  line-height: 1.4;
+}
+/* The bracketed word sits at the end of the last line, as in the book. */
+.ls-slide[data-slide-type="sentence-practice"] .ls-sp-line:has(+ .ls-sp-hint) {
+  flex-basis: auto;
+}
+.ls-slide[data-slide-type="sentence-practice"] .ls-sp-gap {
+  display: inline-block;
+  width: calc(var(--text) * 5 * var(--u));
+  margin: 0 calc(6 * var(--u));
+  border-bottom: calc(4 * var(--u)) solid var(--ls-muted);
+  vertical-align: baseline;
+}
+.ls-slide[data-slide-type="sentence-practice"] .ls-sp-hint {
+  color: var(--ls-accent);
+  font-weight: 800;
+}
+.ls-slide[data-slide-type="sentence-practice"] .ls-sp-answer {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 calc(16 * var(--u));
+  margin-top: calc(6 * var(--u));
+  padding: calc(4 * var(--u)) calc(20 * var(--u));
+  border-radius: calc(12 * var(--u));
+  background: color-mix(in srgb, var(--ls-good) 14%, transparent);
+  border-left: calc(6 * var(--u)) solid var(--ls-good);
+}
+.ls-slide[data-slide-type="sentence-practice"] .ls-sp-answer-text {
+  font-weight: 700;
+  color: var(--ls-good);
+}
+.ls-slide[data-slide-type="sentence-practice"] .ls-sp-answer-pinyin {
+  font-size: 0.6em;
+}

@@ -14,7 +14,7 @@ export function parseBlanks(text: string): { text: string; blank: boolean }[] {
 
 const sentence = z
   .object({
-    text: z.string().regex(/\S/, "Không được để trống").max(80),
+    text: z.string().regex(/\S/, "Không được để trống").max(100),
     pinyin: z.string().max(200).default(""),
     meaning: z.string().max(120).default(""),
   })
@@ -25,7 +25,7 @@ const sentence = z
 
 const schema = z.object({
   heading: z.string().max(60).default(""),
-  sentences: z.array(sentence).min(1, "Cần ít nhất 1 câu").max(4, "Tối đa 4 câu"),
+  sentences: z.array(sentence).min(1, "Cần ít nhất 1 câu").max(6, "Tối đa 6 câu"),
   bank: z.boolean().default(true),
   distractors: z.string().max(80).default(""),
 });
@@ -40,7 +40,7 @@ export const fillBlank: SlideTemplate<FillBlankContent> = {
   order: 130,
   schema,
   aiSchemaHint:
-    'Câu có chỗ trống, mỗi lần bấm Tiếp điền một chỗ. {"heading"?: tiêu đề, "sentences": [{"text": câu chữ Hán, đặt từ cần điền trong [ ] ví dụ "我[是]学生", "pinyin"?: pinyin, cũng đặt phần trống trong [ ], "meaning"?: nghĩa tiếng Việt}] (1–4 câu), "bank"?: true để hiện ô gợi ý từ, "distractors"?: từ gây nhiễu ngăn bằng " / "}',
+    'Câu có chỗ trống, mỗi lần bấm Tiếp điền một chỗ. {"heading"?: tiêu đề, "sentences": [{"text": câu chữ Hán, đặt từ cần điền trong [ ] ví dụ "我[是]学生", "pinyin"?: pinyin, cũng đặt phần trống trong [ ], "meaning"?: nghĩa tiếng Việt}] (1–6 câu; HSK 3–4 có thể là đối thoại ngắn "A：… B：…" trên một dòng), "bank"?: true để hiện ô gợi ý từ, "distractors"?: từ gây nhiễu ngăn bằng " / "}',
   defaults: () => ({
     heading: "Điền từ còn thiếu",
     sentences: [
@@ -52,7 +52,7 @@ export const fillBlank: SlideTemplate<FillBlankContent> = {
   }),
   limits: {
     heading: { maxChars: 40 },
-    "sentences.*.text": { maxChars: 20 },
+    "sentences.*.text": { maxChars: 30 },
     "sentences.*.pinyin": { maxChars: 50 },
     "sentences.*.meaning": { maxChars: 50 },
   },
@@ -122,7 +122,7 @@ export const fillBlank: SlideTemplate<FillBlankContent> = {
       label: "Câu (đặt từ cần điền trong [ ])",
       itemLabel: "câu",
       min: 1,
-      max: 4,
+      max: 6,
       newItem: () => ({ text: "", pinyin: "", meaning: "" }),
       fields: [
         { kind: "text", key: "text", label: "Câu (chữ Hán)", lang: "zh", placeholder: "我[是]学生。" },

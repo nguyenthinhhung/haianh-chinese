@@ -7,9 +7,9 @@ import css from "./style.css?raw";
 
 const line = z.object({
   speaker: z.enum(["a", "b"]).default("a"),
-  hanzi: z.string().regex(/\S/, "Không được để trống").max(40),
-  pinyin: z.string().max(120).default(""),
-  meaning: z.string().max(120).default(""),
+  hanzi: z.string().regex(/\S/, "Không được để trống").max(60),
+  pinyin: z.string().max(200).default(""),
+  meaning: z.string().max(160).default(""),
   audio: AssetIdRef.optional(),
 });
 
@@ -23,7 +23,7 @@ const schema = z.object({
   imageA: AssetIdRef.optional(),
   nameB: z.string().max(20).default(""),
   imageB: AssetIdRef.optional(),
-  lines: z.array(line).min(1, "Cần ít nhất 1 câu").max(6, "Tối đa 6 câu"),
+  lines: z.array(line).min(1, "Cần ít nhất 1 câu").max(8, "Tối đa 8 câu"),
   stepByStep: z.boolean().default(true),
 });
 
@@ -55,7 +55,7 @@ export const dialogue: SlideTemplate<DialogueContent> = {
   order: 50,
   schema,
   aiSchemaHint:
-    'Hội thoại 2 nhân vật, 1–6 câu. {"heading"?: tiêu đề tiếng Việt, "scene"?: nơi diễn ra bằng chữ Hán như giáo trình ghi (ví dụ "在饭馆"), "nameA": tên nhân vật A, "nameB": tên nhân vật B, "lines": [{"speaker": "a" hoặc "b", "hanzi", "pinyin": có dấu thanh, "meaning": nghĩa tiếng Việt}], "stepByStep"?: true để hiện từng câu khi bấm Tiếp}',
+    'Hội thoại 2 nhân vật, 1–8 câu (HSK 3–4: 6–8 lượt, câu dài hơn). {"heading"?: tiêu đề tiếng Việt, "scene"?: nơi diễn ra bằng chữ Hán như giáo trình ghi (ví dụ "在饭馆"), "nameA": tên nhân vật A, "nameB": tên nhân vật B, "lines": [{"speaker": "a" hoặc "b", "hanzi", "pinyin": có dấu thanh, "meaning": nghĩa tiếng Việt}], "stepByStep"?: true để hiện từng câu khi bấm Tiếp}',
   defaults: () => ({
     heading: "Hội thoại",
     scene: "",
@@ -73,9 +73,9 @@ export const dialogue: SlideTemplate<DialogueContent> = {
     scene: { maxChars: 12 },
     nameA: { maxChars: 10 },
     nameB: { maxChars: 10 },
-    "lines.*.hanzi": { maxChars: 16 },
-    "lines.*.pinyin": { maxChars: 48 },
-    "lines.*.meaning": { maxChars: 48 },
+    "lines.*.hanzi": { maxChars: 30 },
+    "lines.*.pinyin": { maxChars: 90 },
+    "lines.*.meaning": { maxChars: 80 },
   },
   render(c, ctx) {
     const people = {
@@ -124,7 +124,7 @@ export const dialogue: SlideTemplate<DialogueContent> = {
       label: "Câu thoại",
       itemLabel: "câu",
       min: 1,
-      max: 6,
+      max: 8,
       newItem: newLine,
       fields: [
         {

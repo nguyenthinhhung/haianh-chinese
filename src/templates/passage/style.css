@@ -1,0 +1,109 @@
+.ls-slide[data-slide-type="passage"] .ls-body {
+  padding: calc(48 * var(--u)) calc(72 * var(--u));
+}
+.ls-slide[data-slide-type="passage"] .ls-ps-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(24 * var(--u));
+  margin-bottom: calc(20 * var(--u));
+}
+.ls-slide[data-slide-type="passage"] .ls-ps-head .ls-heading {
+  margin: 0;
+}
+.ls-slide[data-slide-type="passage"] .ls-ps-head .ls-play {
+  width: calc(64 * var(--u));
+  height: calc(64 * var(--u));
+}
+.ls-slide[data-slide-type="passage"] .ls-ps {
+  --text: 54;
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: calc(40 * var(--u));
+  min-height: 0;
+}
+.ls-slide[data-slide-type="passage"] .ls-ps[data-size="medium"] {
+  --text: 46;
+}
+.ls-slide[data-slide-type="passage"] .ls-ps[data-size="long"] {
+  --text: 38;
+}
+.ls-slide[data-slide-type="passage"] .ls-ps--words {
+  grid-template-columns: 1fr calc(420 * var(--u));
+}
+/* The three views share one place; a later one, once shown, covers the one before. */
+.ls-slide[data-slide-type="passage"] .ls-ps-text {
+  display: grid;
+  align-items: center;
+  min-height: 0;
+  padding: calc(28 * var(--u)) calc(40 * var(--u));
+  border-radius: calc(var(--ls-radius) * var(--u));
+  background: var(--ls-surface);
+  border: calc(2 * var(--u)) solid var(--ls-surface-border);
+}
+.ls-slide[data-slide-type="passage"] .ls-ps-view {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  gap: calc(14 * var(--u));
+}
+.ls-slide[data-slide-type="passage"] .ls-ps-view:has(~ .ls-ps-view.ls-revealed) {
+  visibility: hidden;
+}
+/* In the editor only the Chinese shows; the other views are steps. */
+.ls-slide[data-slide-type="passage"]:not(.ls-presenting > *) .ls-ps-view.ls-hide {
+  display: none;
+}
+.ls-slide[data-slide-type="passage"] .ls-ps-line {
+  margin: 0;
+  font-size: calc(var(--text) * var(--u));
+  line-height: 1.55;
+  text-indent: 2em;
+}
+.ls-slide[data-slide-type="passage"] .ls-ps-turn {
+  text-indent: 0;
+}
+.ls-slide[data-slide-type="passage"] .ls-ps-view--pinyin .ls-ps-line,
+.ls-slide[data-slide-type="passage"] .ls-ps-view--meaning .ls-ps-line {
+  font-size: calc(var(--text) * 0.72 * var(--u));
+}
+.ls-slide[data-slide-type="passage"] .ls-ps-speaker {
+  font-weight: 800;
+  color: var(--ls-accent);
+}
+.ls-slide[data-slide-type="passage"] .ls-ps-words {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: calc(20 * var(--u)) calc(28 * var(--u));
+  border-radius: calc(var(--ls-radius) * var(--u));
+  background: var(--ls-surface);
+  border: calc(2 * var(--u)) dashed var(--ls-accent-2);
+}
+.ls-slide[data-slide-type="passage"] .ls-ps-words-title {
+  margin: 0 0 calc(12 * var(--u));
+  font-size: calc(36 * var(--u));
+  color: var(--ls-accent-2);
+}
+.ls-slide[data-slide-type="passage"] .ls-ps-words ol {
+  display: flex;
+  flex-direction: column;
+  gap: calc(10 * var(--u));
+  margin: 0;
+  padding: 0 0 0 calc(36 * var(--u));
+  font-size: calc(26 * var(--u));
+}
+.ls-slide[data-slide-type="passage"] .ls-ps-words li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 calc(12 * var(--u));
+}
+.ls-slide[data-slide-type="passage"] .ls-ps-word {
+  font-size: calc(34 * var(--u));
+  font-weight: 700;
+}
+.ls-slide[data-slide-type="passage"] .ls-ps-word-meaning {
+  color: var(--ls-muted);
+}
