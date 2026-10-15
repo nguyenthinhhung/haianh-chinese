@@ -25,7 +25,8 @@ const schema = z.object({
 export type FlashcardContent = z.output<typeof schema>;
 type Card = FlashcardContent["cards"][number];
 
-const newCard = (): Card => ({ hanzi: "字", pinyin: "zì", meaning: "chữ", pos: "" });
+// Empty, so the teacher types straight in; the form shows hints instead.
+const newCard = (): Card => ({ hanzi: "", pinyin: "", meaning: "", pos: "" });
 
 export const flashcard: SlideTemplate<FlashcardContent> = {
   type: "flashcard",
@@ -110,9 +111,9 @@ export const flashcard: SlideTemplate<FlashcardContent> = {
       max: 8,
       newItem: newCard,
       fields: [
-        { kind: "text", key: "hanzi", label: "Chữ Hán", lang: "zh" },
+        { kind: "text", key: "hanzi", label: "Chữ Hán", lang: "zh", placeholder: "苹果" },
         { kind: "text", key: "pinyin", label: "Pinyin", lang: "pinyin" },
-        { kind: "text", key: "meaning", label: "Nghĩa", lang: "vi" },
+        { kind: "text", key: "meaning", label: "Nghĩa", lang: "vi", placeholder: "quả táo" },
         { kind: "text", key: "pos", label: "Từ loại (nếu cần)", lang: "vi", placeholder: "động từ" },
         {
           kind: "asset",

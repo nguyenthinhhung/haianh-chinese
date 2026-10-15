@@ -29,7 +29,8 @@ const schema = z.object({
 export type VocabularyContent = z.output<typeof schema>;
 type Word = VocabularyContent["words"][number];
 
-const newWord = (): Word => ({ hanzi: "字", pinyin: "zì", meaning: "chữ", pos: "" });
+// Empty, so the teacher types straight in; the form shows hints instead.
+const newWord = (): Word => ({ hanzi: "", pinyin: "", meaning: "", pos: "" });
 
 export const vocabulary: SlideTemplate<VocabularyContent> = {
   type: "vocabulary",
@@ -106,7 +107,7 @@ export const vocabulary: SlideTemplate<VocabularyContent> = {
       fields: [
         { kind: "text", key: "hanzi", label: "Chữ Hán", lang: "zh", placeholder: "để trống nếu chỉ cho dịch bằng lời" },
         { kind: "text", key: "pinyin", label: "Pinyin", lang: "pinyin" },
-        { kind: "text", key: "meaning", label: "Nghĩa", lang: "vi" },
+        { kind: "text", key: "meaning", label: "Nghĩa", lang: "vi", placeholder: "quả táo" },
         { kind: "text", key: "pos", label: "Từ loại (nếu cần)", lang: "vi", placeholder: "động từ" },
         { kind: "asset", key: "image", label: "Ảnh", assetKind: "image", searchFrom: ["meaning", "hanzi"], autoImage: true },
         { kind: "asset", key: "audio", label: "Âm thanh", assetKind: "audio", speakFrom: "hanzi", autoAudio: true },

@@ -39,7 +39,8 @@ const schema = z.object({
 export type DialogueContent = z.output<typeof schema>;
 type Line = DialogueContent["lines"][number];
 
-const newLine = (): Line => ({ speaker: "a", hanzi: "你好！", pinyin: "nǐ hǎo!", meaning: "Xin chào!" });
+// Empty, so the teacher types straight in; the form shows hints instead.
+const newLine = (): Line => ({ speaker: "a", hanzi: "", pinyin: "", meaning: "" });
 
 /**
  * The character shown in place of a picture: the first one of the name, except
@@ -211,9 +212,9 @@ export const dialogue: SlideTemplate<DialogueContent> = {
             { value: "b", label: "Nhân vật B (bên phải)" },
           ],
         },
-        { kind: "text", key: "hanzi", label: "Câu (chữ Hán)", lang: "zh" },
+        { kind: "text", key: "hanzi", label: "Câu (chữ Hán)", lang: "zh", placeholder: "你好！" },
         { kind: "text", key: "pinyin", label: "Pinyin", lang: "pinyin" },
-        { kind: "text", key: "meaning", label: "Nghĩa", lang: "vi" },
+        { kind: "text", key: "meaning", label: "Nghĩa", lang: "vi", placeholder: "Xin chào!" },
         { kind: "asset", key: "audio", label: "Âm thanh", assetKind: "audio", speakFrom: "hanzi", autoAudio: true },
       ],
     },
