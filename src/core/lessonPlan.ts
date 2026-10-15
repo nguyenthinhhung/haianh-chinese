@@ -1,4 +1,5 @@
 import { AGE_PROFILES, ageProfile, type AgeBand } from "./ages";
+import { normalizeForm, type LessonForm } from "./lessonForm";
 import type { Slide } from "./schema";
 import type { TemplateRegistry } from "./templateRegistry";
 
@@ -7,8 +8,8 @@ import type { TemplateRegistry } from "./templateRegistry";
  * kind of lesson; the AI only writes the language content into them.
  */
 
-export type LessonKind = "vocabulary" | "dialogue" | "grammar" | "review" | "mixed" | "word-focus";
-export type Duration = "short" | "medium" | "long";
+export type LessonKind = "textbook" | "vocabulary" | "dialogue" | "grammar" | "review" | "mixed" | "word-focus" | "form";
+export type Duration = "short" | "medium" | "long" | "double";
 
 /** What the teacher fills in before copying the prompt. */
 export interface LessonRequest {
@@ -38,6 +39,8 @@ export interface LessonRequest {
    * activities change, since the steps and their counts change with them.
    */
   outline: Record<string, number>;
+  /** With kind "form": the teacher's own lesson form, followed slide for slide. */
+  form: LessonForm | null;
 }
 
 export const DEFAULT_REQUEST: LessonRequest = {
@@ -53,10 +56,11 @@ export const DEFAULT_REQUEST: LessonRequest = {
   activities: [],
   notes: "",
   outline: {},
+  form: null,
 };
 
 /** Request fields that describe a way of teaching rather than one lesson's content; a preset keeps these. */
-export const PRESET_FIELDS = ["age", "kind", "duration", "activities", "outline", "notes"] as const;
+export const PRESET_FIELDS = ["age", "kind", "duration", "activities", "outline", "notes", "form"] as const;
 export type LessonPreset = { name: string; settings: Pick<LessonRequest, (typeof PRESET_FIELDS)[number]> };
 
 export function presetOf(name: string, request: LessonRequest): LessonPreset {
@@ -73,6 +77,7 @@ export const DURATIONS: { id: Duration; label: string }[] = [
   { id: "short", label: "Ngắn (khoảng 20 phút)" },
   { id: "medium", label: "Vừa (khoảng 35 phút)" },
   { id: "long", label: "Dài (khoảng 45 phút)" },
+  { id: "double", label: "2 tiết (khoảng 90 phút)" },
 ];
 
 interface BlueprintStep {
@@ -102,6 +107,30 @@ const COVER: BlueprintStep = { role: "Mở đầu: tên bài", types: ["cover"],
 const SUMMARY: BlueprintStep = { role: "Tổng kết: ý cần nhớ và từ vựng chính", types: ["summary"], count: [1, 1, 1], frame: true };
 
 export const BLUEPRINTS: Blueprint[] = [
+  {
+    id: "textbook",
+    label: "Theo giáo trình — đủ các phần như trong sách",
+    description:
+      "Bài dạy một bài của giáo trình, giữ đúng các phần theo thứ tự trong sách (kiểu HSK chuẩn: 热身 khởi động → 课文 bài khoá → 生词 từ mới → 注释 ngữ pháp → 练习 luyện tập → 语音 ngữ âm → 运用 vận dụng). Mỗi bài khoá là một slide hội thoại ghi nơi diễn ra. Tiêu đề slide ghi tên phần như trong sách (ví dụ \"课文 1\", \"注释 1\") để các bài giống nhau.",
+    steps: [
+      COVER,
+      { role: "Kiểm tra bài cũ: đọc nhanh từ của bài trước (từ lớp đã học)", types: ["flashcard", "vocabulary"], count: [0, 1, 1] },
+      { role: "热身 Khởi động: ghép từ mới với hình", types: ["matching", "quiz"], count: [1, 1, 1] },
+      { role: "课文 Bài khoá: mỗi cảnh một slide hội thoại, ghi nơi diễn ra", types: ["dialogue"], count: [2, 3, 3] },
+      { role: "生词 Từ mới của bài", types: ["vocabulary", "picture-card"], count: [1, 2, 3] },
+      { role: "注释 Ngữ pháp: mỗi điểm ngữ pháp một slide", types: ["grammar"], count: [1, 2, 3] },
+      {
+        role: "练习 Luyện tập: trả lời theo bài khoá, điền từ, sắp xếp câu",
+        types: ["qa-list", "fill-blank", "sentence-order", "quiz", "listening"],
+        count: [1, 2, 3],
+        activity: true,
+      },
+      { role: "语音 Ngữ âm: thanh điệu, nghe và đọc theo", types: ["tone-pick", "listening"], count: [0, 1, 1] },
+      { role: "运用 Vận dụng: câu hỏi cho hoạt động nói theo cặp hoặc nhóm", types: ["qa-list"], count: [1, 1, 1] },
+      { role: "Trò chơi cả lớp", types: GAMES, count: [0, 1, 1], activity: true },
+      SUMMARY,
+    ],
+  },
   {
     id: "vocabulary",
     label: "Từ vựng — học từ mới qua hình ảnh",
@@ -186,6 +215,8 @@ export interface PlanStep {
   role: string;
   types: string[];
   count: number;
+  /** The teacher's guidance for this step, from her lesson form. */
+  note?: string;
 }
 
 /** A step of the outline the teacher can adjust before copying the prompt. */
@@ -199,7 +230,16 @@ export interface OutlineStep extends PlanStep {
 /** Most slides a teacher can give one outline step. */
 const MAX_STEP_SLIDES = 6;
 
-const DURATION_INDEX: Record<Duration, 0 | 1 | 2> = { short: 0, medium: 1, long: 2 };
+const DURATION_INDEX: Record<Duration, 0 | 1 | 2 | 3> = { short: 0, medium: 1, long: 2, double: 3 };
+
+/** Slides of a step for a lesson length; a double lesson has nearly twice a long one's, but one cover and one summary. */
+function countFor(step: BlueprintStep, index: 0 | 1 | 2 | 3): number {
+  if (index < 3) return step.count[index as 0 | 1 | 2];
+  if (step.frame) return step.count[2];
+  return Math.min(MAX_STEP_SLIDES, Math.round(step.count[2] * 1.8));
+}
+
+const isGameStep = (types: string[]) => types.length > 0 && types.every((t) => GAMES.includes(t));
 
 function blueprint(kind: LessonKind): Blueprint {
   return BLUEPRINTS.find((b) => b.id === kind) ?? BLUEPRINTS[0]!;
@@ -222,6 +262,7 @@ export function lessonKindsFor(age: AgeBand): Blueprint[] {
 
 /** Activity types the teacher may pick for this kind and age, in blueprint order. */
 export function activityChoices(kind: LessonKind, age: AgeBand): string[] {
+  if (kind === "form") return [];
   return [...new Set(ageSteps(kind, age).flatMap((s) => (s.activity ? s.types : [])))];
 }
 
@@ -234,8 +275,10 @@ export function normalizeRequest(raw: unknown): LessonRequest {
   const r = (raw && typeof raw === "object" ? raw : {}) as Partial<Record<keyof LessonRequest, unknown>>;
   const text = (v: unknown, max: number) => (typeof v === "string" ? v.slice(0, max) : "");
   const age = AGE_PROFILES.some((a) => a.id === r.age) ? (r.age as AgeBand) : DEFAULT_REQUEST.age;
+  const form = normalizeForm(r.form);
   const kinds = lessonKindsFor(age);
-  const kind = kinds.find((b) => b.id === r.kind)?.id ?? kinds[0]!.id;
+  const fallback = kinds.find((b) => b.id === DEFAULT_REQUEST.kind) ?? kinds[0]!;
+  const kind: LessonKind = r.kind === "form" && form ? "form" : (kinds.find((b) => b.id === r.kind) ?? fallback).id;
   const duration = DURATIONS.some((d) => d.id === r.duration) ? (r.duration as Duration) : DEFAULT_REQUEST.duration;
   const offered = activityChoices(kind, age);
   const activities = Array.isArray(r.activities) ? offered.filter((t) => (r.activities as unknown[]).includes(t)) : [];
@@ -258,6 +301,7 @@ export function normalizeRequest(raw: unknown): LessonRequest {
     activities,
     notes: text(r.notes, 2000),
     outline,
+    form,
   };
 }
 
@@ -268,14 +312,17 @@ export function normalizeRequest(raw: unknown): LessonRequest {
  * and optional steps can go down to 0; the steps a lesson relies on keep 1.
  */
 export function planOutline(request: LessonRequest, insert = false): OutlineStep[] {
+  if (request.kind === "form") return formOutline(request);
   const index = DURATION_INDEX[request.duration] ?? 1;
+  const games = ageProfile(request.age).games;
   const picked = new Set(request.activities);
   const steps: OutlineStep[] = [];
   let carried = 0;
   const pending: OutlineStep[] = [];
   for (const s of ageSteps(request.kind, request.age, insert)) {
     let types = s.types;
-    let count = s.count[index];
+    // Adults get games only when the teacher asks for them (+ in the outline, or by picking one).
+    let count = !games && isGameStep(s.types) && !s.types.some((t) => picked.has(t)) ? 0 : countFor(s, index);
     if (s.activity && picked.size) {
       const chosen = types.filter((t) => picked.has(t));
       if (!chosen.length) {
@@ -304,6 +351,17 @@ export function planOutline(request: LessonRequest, insert = false): OutlineStep
   return steps;
 }
 
+/** The teacher's own form, step for step; any step can be dropped by setting it to 0. */
+function formOutline(request: LessonRequest): OutlineStep[] {
+  return (request.form?.steps ?? []).map((s, i) => {
+    const role = `${i + 1}. ${s.role}`;
+    const chosen = request.outline[role];
+    const max = Math.max(MAX_STEP_SLIDES, s.count);
+    const count = chosen === undefined ? s.count : Math.min(max, Math.max(0, chosen));
+    return { role, types: [s.type], count, suggested: s.count, min: 0, max, ...(s.note ? { note: s.note } : {}) };
+  });
+}
+
 /**
  * The slide sequence for a request: the outline without the steps set to 0.
  * `insert`: the slides go into an existing lesson, so no cover or summary.
@@ -311,7 +369,7 @@ export function planOutline(request: LessonRequest, insert = false): OutlineStep
 export function resolvePlan(request: LessonRequest, insert = false): PlanStep[] {
   return planOutline(request, insert)
     .filter((s) => s.count > 0)
-    .map(({ role, types, count }) => ({ role, types, count }));
+    .map(({ role, types, count, note }) => ({ role, types, count, ...(note ? { note } : {}) }));
 }
 
 export function planSlideCount(plan: PlanStep[]): number {

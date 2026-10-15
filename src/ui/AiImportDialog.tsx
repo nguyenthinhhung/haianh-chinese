@@ -20,6 +20,7 @@ import { pinyinWarnings } from "../core/pinyinCheck";
 import type { LessonLocation } from "../platform/persistence";
 import type { Slide } from "../core/schema";
 import type { ImageFillRequest } from "./lessonFiles";
+import { deleteForm, loadForms } from "./lessonForms";
 import { useServices } from "./services";
 
 interface Props {
@@ -47,7 +48,7 @@ function loadRequest(): LessonRequest {
 }
 
 /** The outline's steps and counts depend on these; the teacher's step counts no longer fit after a change. */
-const OUTLINE_INPUTS = ["age", "kind", "duration", "activities"] as const;
+const OUTLINE_INPUTS = ["age", "kind", "duration", "activities", "form"] as const;
 
 function changeRequest(request: LessonRequest, patch: Partial<LessonRequest>): LessonRequest {
   const reshaped = !("outline" in patch) && OUTLINE_INPUTS.some((k) => k in patch && patch[k] !== request[k]);
@@ -313,8 +314,18 @@ function KnownFromLessons({ onAdd }: { onAdd(words: string[]): number }) {
   );
 }
 
+const FORM_PREFIX = "form:";
+
 function RequestForm({ request, insert, onChange }: { request: LessonRequest; insert: boolean; onChange(patch: Partial<LessonRequest>): void }) {
   const { templates } = useServices();
+  const [forms, setForms] = useState(() => loadForms(templates));
+  const usingForm = request.kind === "form" && request.form;
+
+  function pickKind(value: string) {
+    if (!value.startsWith(FORM_PREFIX)) return onChange({ kind: value as LessonRequest["kind"], form: null });
+    const form = forms.find((f) => f.name === value.slice(FORM_PREFIX.length));
+    if (form) onChange({ kind: "form", form });
+  }
   const activities = activityChoices(request.kind, request.age);
   const review = request.kind === "review";
   const toggle = (type: string) =>
@@ -341,9 +352,13 @@ function RequestForm({ request, insert, onChange }: { request: LessonRequest; in
           ))}
         </select>
       </label>
-      <label>
+      <label title={usingForm ? "Khung bài đã định số slide của từng phần; chỉnh ở Dàn ý bên dưới." : undefined}>
         Thời lượng
-        <select value={request.duration} onChange={(e) => onChange({ duration: e.target.value as LessonRequest["duration"] })}>
+        <select
+          value={request.duration}
+          disabled={!!usingForm}
+          onChange={(e) => onChange({ duration: e.target.value as LessonRequest["duration"] })}
+        >
           {DURATIONS.map((d) => (
             <option key={d.id} value={d.id}>
               {d.label}
@@ -353,16 +368,47 @@ function RequestForm({ request, insert, onChange }: { request: LessonRequest; in
       </label>
       <label className="ai-form-wide">
         Dạng bài
-        <select value={request.kind} onChange={(e) => onChange({ kind: e.target.value as LessonRequest["kind"] })}>
-          {/* Teaching chosen words in depth only makes sense inside an existing lesson. */}
-          {lessonKindsFor(request.age)
-            .filter((b) => insert || b.id !== "word-focus")
-            .map((b) => (
-            <option key={b.id} value={b.id}>
-              {b.label}
-            </option>
-          ))}
-        </select>
+        <span className="ai-kind">
+          <select value={usingForm ? `${FORM_PREFIX}${request.form!.name}` : request.kind} onChange={(e) => pickKind(e.target.value)}>
+            {/* Teaching chosen words in depth only makes sense inside an existing lesson. */}
+            {lessonKindsFor(request.age)
+              .filter((b) => insert || b.id !== "word-focus")
+              .map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.label}
+                </option>
+              ))}
+            {/* A form makes a whole lesson; inserted slides use the kinds above. */}
+            {forms.length > 0 && !insert && (
+              <optgroup label="Khung bài của tôi">
+                {forms.map((f) => (
+                  <option key={f.name} value={`${FORM_PREFIX}${f.name}`}>
+                    Khung: {f.name}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+          </select>
+          {usingForm && (
+            <button
+              type="button"
+              className="ghost"
+              title="Xoá khung bài này khỏi máy (bài đã soạn không bị ảnh hưởng)"
+              onClick={() => {
+                if (!window.confirm(`Xoá khung bài “${request.form!.name}”?`)) return;
+                setForms(deleteForm(request.form!.name, templates));
+                onChange({ kind: "textbook", form: null });
+              }}
+            >
+              Xoá khung
+            </button>
+          )}
+        </span>
+        {forms.length === 0 && !insert && (
+          <span className="muted">
+            Mẹo: soạn xong một bài ưng ý, vào tab <strong>Bài học</strong> bấm <strong>Lưu làm khung bài</strong> để mọi bài sau theo đúng khung đó.
+          </span>
+        )}
       </label>
       <label className="ai-form-wide">
         <span>
@@ -470,7 +516,9 @@ export function AiImportDialog({ mode, insertAfter, onImport, onClose }: Props) 
   const { templates } = useServices();
   const [request, setRequest] = useState(() => {
     const r = loadRequest();
-    return mode === "new" && r.kind === "word-focus" ? changeRequest(r, { kind: "vocabulary" }) : r;
+    if (mode === "new" && r.kind === "word-focus") return changeRequest(r, { kind: "vocabulary" });
+    if (mode === "append" && r.kind === "form") return changeRequest(r, { kind: "word-focus", form: null });
+    return r;
   });
   const [text, setText] = useState("");
   const [title, setTitle] = useState("");

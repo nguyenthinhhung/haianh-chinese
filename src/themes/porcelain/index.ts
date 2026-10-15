@@ -29,7 +29,7 @@ const scroll = svgUrl(`
 export const porcelain: Theme = {
   id: "porcelain",
   label: "Sứ Thanh Hoa",
-  ages: ["upper-primary", "secondary"],
+  ages: ["upper-primary", "secondary", "adult"],
   css: css.replace("var(--decor-vase)", vase).replace("var(--decor-scroll)", scroll),
 };
 

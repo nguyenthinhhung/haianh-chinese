@@ -24,7 +24,7 @@ const pencil = svgUrl(`
 export const notebook: Theme = {
   id: "notebook",
   label: "Vở ô ly",
-  ages: ["upper-primary", "secondary"],
+  ages: ["upper-primary", "secondary", "adult"],
   css: css.replace("var(--decor-grid)", grid).replace("var(--decor-pencil)", pencil),
 };
 

@@ -30,7 +30,7 @@ const cloud = svgUrl(`
 export const greatwall: Theme = {
   id: "greatwall",
   label: "Vạn Lý Trường Thành",
-  ages: ["lower-primary", "upper-primary", "secondary"],
+  ages: ["lower-primary", "upper-primary", "secondary", "adult"],
   css: css.replace("var(--decor-wall)", wall).replace("var(--decor-cloud)", cloud),
 };
 

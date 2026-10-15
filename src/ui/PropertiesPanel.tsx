@@ -2,11 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { markReviewed } from "../core/autoImages";
 import { addAsset, setSettings, setSlideField, setTheme } from "../core/document";
 import { checkLimits, getIn, type Path } from "../core/fields";
+import { formFromLesson } from "../core/lessonForm";
 import type { LessonDocument, Slide } from "../core/schema";
 import { hanziToPinyin, pinyinFits, pinyinPairs } from "../core/pinyin";
 import type { AnySlideTemplate, EditorField, EditorFieldSpec } from "../core/template";
 import type { ImportedAsset } from "../platform/persistence";
 import { ImageSearchDialog } from "./ImageSearchDialog";
+import { saveForm } from "./lessonForms";
 import { ThemeOptions } from "./ThemeOptions";
 import { prefersClipart } from "./useImageFill";
 import type { LessonSession } from "./useLessonSession";
@@ -520,6 +522,42 @@ function LessonProperties({ session }: { session: LessonSession }) {
           Hiệu ứng chuyển động
         </label>
       </div>
+      <SaveAsForm doc={doc} />
+    </div>
+  );
+}
+
+/**
+ * Saves this lesson's order and kinds of slides as the teacher's form, so the
+ * AI makes every later lesson the same way.
+ */
+function SaveAsForm({ doc }: { doc: LessonDocument }) {
+  const { templates } = useServices();
+  const [name, setName] = useState("");
+  const [saved, setSaved] = useState<{ name: string; parts: number } | "failed" | null>(null);
+
+  function save() {
+    const form = formFromLesson(name, doc, templates);
+    setSaved(saveForm(form, templates) ? { name: form.name, parts: form.steps.length } : "failed");
+  }
+
+  return (
+    <div className="field form-save">
+      <span className="field-label">Khung bài</span>
+      <p className="muted">
+        Lưu thứ tự và loại slide của bài này (kèm tiêu đề và ghi chú) làm khung. Khi <strong>Tạo bài bằng AI</strong>, chọn khung ở mục
+        Dạng bài để mọi bài soạn theo cùng một khung; sau đó tự chèn thêm phần riêng cho từng lớp.
+      </p>
+      <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Tên khung, ví dụ: Khung HSK1" aria-label="Tên khung bài" />
+      <button type="button" disabled={!name.trim() || !doc.slides.length} onClick={save}>
+        Lưu làm khung bài
+      </button>
+      {saved && saved !== "failed" && (
+        <span className="muted">
+          Đã lưu khung “{saved.name}” ({saved.parts} phần).
+        </span>
+      )}
+      {saved === "failed" && <span className="field-error">Không lưu được khung bài trên máy này.</span>}
     </div>
   );
 }

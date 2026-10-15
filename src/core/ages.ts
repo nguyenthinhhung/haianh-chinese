@@ -3,7 +3,7 @@
  * write, which slide types make sense, and which themes are suggested.
  */
 
-export type AgeBand = "preschool" | "lower-primary" | "upper-primary" | "secondary";
+export type AgeBand = "preschool" | "lower-primary" | "upper-primary" | "secondary" | "adult";
 
 export interface AgeProfile {
   id: AgeBand;
@@ -20,6 +20,8 @@ export interface AgeProfile {
   theme: string;
   /** Pictures found automatically are drawings rather than photos. */
   clipart: boolean;
+  /** Games are suggested by default; for adults they are there only when the teacher adds them. */
+  games: boolean;
 }
 
 export const AGE_PROFILES: AgeProfile[] = [
@@ -33,6 +35,7 @@ export const AGE_PROFILES: AgeProfile[] = [
     words: [4, 6],
     theme: "panda",
     clipart: true,
+    games: true,
   },
   {
     id: "lower-primary",
@@ -44,6 +47,7 @@ export const AGE_PROFILES: AgeProfile[] = [
     words: [5, 8],
     theme: "garden",
     clipart: true,
+    games: true,
   },
   {
     id: "upper-primary",
@@ -55,6 +59,7 @@ export const AGE_PROFILES: AgeProfile[] = [
     words: [6, 10],
     theme: "notebook",
     clipart: false,
+    games: true,
   },
   {
     id: "secondary",
@@ -66,6 +71,19 @@ export const AGE_PROFILES: AgeProfile[] = [
     words: [8, 12],
     theme: "ink",
     clipart: false,
+    games: true,
+  },
+  {
+    id: "adult",
+    label: "Người lớn / sinh viên",
+    years: "15+",
+    guidance:
+      "Người học tự đọc được và học có hệ thống: gọi đúng tên ngữ pháp (chủ ngữ, vị ngữ, lượng từ, bổ ngữ…) và từ loại; giải thích rõ cách dùng, từ mở rộng, từ trái nghĩa; câu ví dụ dài hơn, có pinyin và nghĩa; luyện dịch Việt–Trung và đặt câu. Trò chơi trẻ con không phù hợp; nếu có hoạt động thì là thi đua theo đội.",
+    avoid: ["whats-missing", "guess-picture", "memory"],
+    words: [10, 15],
+    theme: "classic",
+    clipart: false,
+    games: false,
   },
 ];
 

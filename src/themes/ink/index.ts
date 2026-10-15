@@ -23,7 +23,7 @@ const mountains = svgUrl(`
 export const ink: Theme = {
   id: "ink",
   label: "Thuỷ mặc",
-  ages: ["upper-primary", "secondary"],
+  ages: ["upper-primary", "secondary", "adult"],
   css: css.replace("var(--decor-seal)", seal).replace("var(--decor-mountains)", mountains),
 };
 

@@ -216,13 +216,18 @@ export function buildAiPrompt(registry: TemplateRegistry, request: LessonRequest
   const focus = request.kind === "word-focus";
   const source = request.source.trim();
 
+  const form = request.kind === "form" ? request.form : null;
   const lesson = [
     `- Chủ đề: ${request.topic.trim() || "[GHI CHỦ ĐỀ Ở ĐÂY]"}`,
     `- Học sinh: ${age.label}. ${age.guidance}`,
-    `- Dạng bài: ${kind.label}. ${kind.description}`,
+    form
+      ? `- Dạng bài: theo khung bài "${form.name}" giáo viên dùng cho mọi bài. Làm đúng từng bước theo thứ tự, đúng số slide và loại slide của mỗi bước; tiêu đề slide giữ như tên bước, nội dung lấy từ bài học này.`
+      : `- Dạng bài: ${kind.label}. ${kind.description}`,
     insert
       ? `- Các slide này được chèn vào giữa một bài đang có: tổng cộng ${planSlideCount(plan)} slide, không có trang bìa hay trang tổng kết.`
-      : `- Thời lượng: ${duration.label}, tổng cộng ${planSlideCount(plan)} slide.`,
+      : form
+        ? `- Tổng cộng ${planSlideCount(plan)} slide.`
+        : `- Thời lượng: ${duration.label}, tổng cộng ${planSlideCount(plan)} slide.`,
     ...(source
       ? [
           `- Giáo trình: ${source}. Giáo viên đính kèm các trang của bài này. Lấy đúng từ mới, mẫu câu và bài khoá/hội thoại trong tài liệu; không thêm từ ngoài bài (trừ từ lớp đã học). Slide luyện tập và trò chơi dùng lại đúng nội dung đó. Bám theo thứ tự các phần trong giáo trình khi hợp với trình tự slide bên dưới.`,
@@ -248,7 +253,8 @@ export function buildAiPrompt(registry: TemplateRegistry, request: LessonRequest
   const sequence = plan
     .map((s, i) => {
       const types = s.types.map((t) => `"${t}"`).join(", ");
-      return `${i + 1}. ${s.role} — ${s.count} slide, ${s.types.length > 1 ? `chọn trong: ${types}` : types}`;
+      const note = s.note ? ` (ghi chú của giáo viên cho bước này, chép vào "notes" của slide: ${s.note})` : "";
+      return `${i + 1}. ${s.role} — ${s.count} slide, ${s.types.length > 1 ? `chọn trong: ${types}` : types}${note}`;
     })
     .join("\n");
 

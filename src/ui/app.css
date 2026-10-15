@@ -1375,3 +1375,21 @@ input.library-search {
   background: #23402c;
   color: #c9f0d3;
 }
+.form-save {
+  display: grid;
+  gap: 6px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.form-save p {
+  margin: 0;
+  font-size: 13px;
+}
+.ai-kind {
+  display: flex;
+  gap: 6px;
+}
+.ai-kind select {
+  flex: 1;
+}

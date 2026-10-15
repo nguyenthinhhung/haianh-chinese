@@ -23,7 +23,7 @@ const dots = svgUrl(`
 export const classic: Theme = {
   id: "classic",
   label: "Cổ điển",
-  ages: ["upper-primary", "secondary"],
+  ages: ["upper-primary", "secondary", "adult"],
   css: css.replace("var(--decor-corner)", corner).replace("var(--decor-dots)", dots),
 };
 

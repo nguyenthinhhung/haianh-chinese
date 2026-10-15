@@ -65,6 +65,32 @@ describe("blueprints", () => {
   });
 });
 
+describe("lesson length and adults", () => {
+  it("a double lesson has more slides than a long one but still one cover and one summary", () => {
+    const long = resolvePlan(request({ kind: "textbook", age: "secondary", duration: "long" }));
+    const double = resolvePlan(request({ kind: "textbook", age: "secondary", duration: "double" }));
+    expect(planSlideCount(double)).toBeGreaterThan(planSlideCount(long));
+    expect(double.filter((s) => s.types.includes("cover")).map((s) => s.count)).toEqual([1]);
+    expect(double.filter((s) => s.types.includes("summary")).map((s) => s.count)).toEqual([1]);
+  });
+
+  it("adults get no game unless the teacher asks for one", () => {
+    const steps = planOutline(request({ kind: "textbook", age: "adult" }));
+    const game = steps.find((s) => s.types.includes("box-pick"))!;
+    expect(game.count).toBe(0);
+    expect(game.types).not.toContain("whats-missing");
+    const picked = planOutline(request({ kind: "textbook", age: "adult", activities: ["lucky-wheel", "qa-list"] }));
+    expect(picked.find((s) => s.types.includes("lucky-wheel"))!.count).toBeGreaterThan(0);
+  });
+
+  it("the textbook kind keeps the book's order of parts", () => {
+    const roles = resolvePlan(request({ kind: "textbook", age: "adult" })).map((s) => s.role);
+    const order = ["热身", "课文", "生词", "注释", "练习", "运用"].map((part) => roles.findIndex((r) => r.includes(part)));
+    expect(order.every((i) => i >= 0)).toBe(true);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+  });
+});
+
 describe("ages", () => {
   it("leave out slide types too hard for the age", () => {
     const plan = resolvePlan(request({ age: "preschool", kind: "vocabulary" }));
@@ -168,7 +194,7 @@ describe("normalizeRequest", () => {
 
   it("falls back to defaults for anything unusable", () => {
     expect(normalizeRequest(null)).toEqual(DEFAULT_REQUEST);
-    expect(normalizeRequest({ age: "adult", kind: "x", duration: 5, activities: "quiz", topic: 3 })).toEqual(DEFAULT_REQUEST);
+    expect(normalizeRequest({ age: "elderly", kind: "x", duration: 5, activities: "quiz", topic: 3 })).toEqual(DEFAULT_REQUEST);
   });
 
   it("swaps a kind the age cannot use and drops activities the plan does not offer", () => {

@@ -31,7 +31,7 @@ const leaves = svgUrl(`
 export const tea: Theme = {
   id: "tea",
   label: "Trà",
-  ages: ["upper-primary", "secondary"],
+  ages: ["upper-primary", "secondary", "adult"],
   css: css.replace("var(--decor-teapot)", teapot).replace("var(--decor-leaves)", leaves),
 };
 
