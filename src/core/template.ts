@@ -106,6 +106,8 @@ export interface SlideTemplate<C = unknown> {
   /** CSS for this template, scoped under `.ls-slide[data-slide-type="<type>"]`. */
   css: string;
   editor: EditorFieldSpec;
+  /** Content keys the app fills in itself (e.g. fetched stroke data); they have no form field. */
+  managedKeys?: string[];
   interaction?: InteractionModule;
 }
 

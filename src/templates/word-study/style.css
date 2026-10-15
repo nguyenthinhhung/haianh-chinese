@@ -1,0 +1,145 @@
+.ls-slide[data-slide-type="word-study"] .ls-body {
+  padding: calc(48 * var(--u)) calc(80 * var(--u));
+}
+.ls-slide[data-slide-type="word-study"] .ls-ws-heading {
+  margin-bottom: 0;
+}
+.ls-slide[data-slide-type="word-study"] .ls-ws {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(48 * var(--u));
+  min-height: 0;
+}
+.ls-slide[data-slide-type="word-study"] .ls-ws-top {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(56 * var(--u));
+}
+.ls-slide[data-slide-type="word-study"] .ls-ws-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: calc(300 * var(--u));
+  padding: calc(20 * var(--u)) calc(36 * var(--u));
+  border: calc(4 * var(--u)) solid var(--ls-accent-2);
+  border-radius: calc(var(--ls-radius) * var(--u));
+  background: var(--ls-surface);
+  text-align: center;
+}
+.ls-slide[data-slide-type="word-study"] .ls-ws-pinyin {
+  font-size: calc(48 * var(--u));
+}
+.ls-slide[data-slide-type="word-study"] .ls-ws-hanzi {
+  font-size: calc(110 * var(--u));
+  font-weight: 700;
+  line-height: 1.15;
+}
+.ls-slide[data-slide-type="word-study"] .ls-ws-pos {
+  font-size: calc(32 * var(--u));
+  color: var(--ls-muted);
+}
+.ls-slide[data-slide-type="word-study"] .ls-ws-meaning {
+  font-size: calc(38 * var(--u));
+  color: var(--ls-accent);
+  font-weight: 700;
+}
+.ls-slide[data-slide-type="word-study"] .ls-ws-card .ls-play {
+  position: absolute;
+  right: calc(-36 * var(--u));
+  bottom: calc(-24 * var(--u));
+}
+/* The 田字格 box the character is written in. */
+.ls-slide[data-slide-type="word-study"] .ls-ws-box {
+  position: relative;
+  flex: none;
+  width: calc(360 * var(--u));
+  height: calc(360 * var(--u));
+  background: #fff;
+}
+.ls-slide[data-slide-type="word-study"] .ls-ws-box svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.ls-slide[data-slide-type="word-study"] .ls-ws-frame {
+  fill: none;
+  stroke: #c0392b;
+  stroke-width: 10;
+}
+.ls-slide[data-slide-type="word-study"] .ls-ws-guide {
+  fill: none;
+  stroke: #e3a39b;
+  stroke-width: 5;
+  stroke-dasharray: 28 22;
+}
+.ls-slide[data-slide-type="word-study"] .ls-ws-ghost path {
+  fill: #e6e6e6;
+}
+.ls-slide[data-slide-type="word-study"] .ls-ws-stroke {
+  fill: #1f2933;
+  opacity: 0;
+}
+/* Written one stroke after another once the step is shown; R hides them again. */
+.ls-slide[data-slide-type="word-study"] .ls-ws-strokes.ls-revealed .ls-ws-stroke {
+  animation: ls-ws-write 0.35s ease forwards;
+  animation-delay: calc(var(--i) * 0.55s);
+}
+@keyframes ls-ws-write {
+  from {
+    opacity: 0;
+    fill: #d64545;
+  }
+  60% {
+    opacity: 1;
+    fill: #d64545;
+  }
+  to {
+    opacity: 1;
+    fill: #1f2933;
+  }
+}
+/* In the editor the character is shown whole. */
+.ls-slide[data-slide-type="word-study"]:not(.ls-presenting > *) .ls-ws-stroke {
+  opacity: 1;
+}
+.ls-slide[data-slide-type="word-study"] .ls-ws-plain {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: calc(260 * var(--u));
+  line-height: 1;
+}
+.ls-slide[data-slide-type="word-study"] .ls-ws-example {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(48 * var(--u));
+}
+.ls-slide[data-slide-type="word-study"] .ls-ws-example-text {
+  display: flex;
+  flex-direction: column;
+  gap: calc(4 * var(--u));
+}
+.ls-slide[data-slide-type="word-study"] .ls-ws-example-pinyin {
+  font-size: calc(32 * var(--u));
+}
+.ls-slide[data-slide-type="word-study"] .ls-ws-example-hanzi {
+  font-size: calc(56 * var(--u));
+  font-weight: 700;
+}
+.ls-slide[data-slide-type="word-study"] .ls-ws-example-meaning {
+  font-size: calc(32 * var(--u));
+  color: var(--ls-muted);
+}
+.ls-slide[data-slide-type="word-study"] .ls-ws-media {
+  width: calc(300 * var(--u));
+  height: calc(220 * var(--u));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

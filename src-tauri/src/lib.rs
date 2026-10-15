@@ -52,6 +52,7 @@ pub fn run() {
             web::import_image_url,
             web::import_image_bytes,
             web::speak_chinese,
+            web::hanzi_strokes,
             transfer::read_assets_data,
             transfer::save_export,
             transfer::pick_lesson_file,

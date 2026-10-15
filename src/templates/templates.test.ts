@@ -47,7 +47,7 @@ describe.each(env.templates.list().map((t) => [t.type, t] as const))("template %
   });
 
   it("has an editor field for every top-level content key", () => {
-    const editorKeys = template.editor.map((f) => f.key);
+    const editorKeys = [...template.editor.map((f) => f.key), ...(template.managedKeys ?? [])];
     for (const key of Object.keys(template.defaults() as object)) expect(editorKeys).toContain(key);
   });
 

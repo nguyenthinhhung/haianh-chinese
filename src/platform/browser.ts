@@ -156,6 +156,13 @@ export function createBrowserPersistence(): Persistence {
     async speakChinese() {
       throw new PersistenceError("network", "Tạo giọng đọc chỉ có trong ứng dụng desktop.");
     },
+    // The browser build is for UI work, so it asks the same source directly.
+    async hanziStrokes(character) {
+      const res = await fetch(`https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0.1/${encodeURIComponent(character)}.json`).catch(() => null);
+      const data = res?.ok ? ((await res.json()) as { strokes?: unknown }) : null;
+      if (!Array.isArray(data?.strokes)) throw new PersistenceError("network", "Không có dữ liệu nét viết cho chữ này.");
+      return data.strokes.filter((d): d is string => typeof d === "string" && /^[0-9 MLQCZ.-]{1,4000}$/.test(d));
+    },
     async readAssetsData(_dir, files) {
       const out: Record<string, string> = {};
       for (const file of files) {

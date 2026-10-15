@@ -385,9 +385,58 @@ pub async fn speak_chinese(state: State<'_, AppState>, dir: String, text: String
     assets::store_audio(&lesson, "mp3", "audio/mpeg", &bytes)
 }
 
+/// Stroke outlines from Make Me a Hanzi, as published by hanzi-writer-data.
+const STROKES_URL: &str = "https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0.1/";
+const MAX_STROKE_BYTES: u64 = 256 * 1024;
+const MAX_STROKES: usize = 64;
+
+#[derive(Deserialize)]
+struct StrokeData {
+    strokes: Vec<String>,
+}
+
+fn is_han(c: char) -> bool {
+    matches!(c, '\u{3400}'..='\u{4DBF}' | '\u{4E00}'..='\u{9FFF}' | '\u{F900}'..='\u{FAFF}' | '\u{20000}'..='\u{2FFFF}')
+}
+
+/// An SVG path made only of the commands and numbers stroke data uses, so it
+/// can go into a slide without escaping surprises.
+fn is_stroke_path(d: &str) -> bool {
+    !d.is_empty() && d.len() <= 4000 && d.chars().all(|c| c.is_ascii_digit() || " MLQCZ.-".contains(c))
+}
+
+/// The strokes of one Chinese character, in writing order, as SVG paths on a
+/// 1024-unit square. The slide keeps them, so presenting needs no network.
+#[tauri::command]
+pub async fn hanzi_strokes(character: String) -> AppResult<Vec<String>> {
+    let mut chars = character.chars();
+    let (Some(c), None) = (chars.next(), chars.next()) else {
+        return Err(AppError::new("invalid-path", "Cần đúng một chữ Hán."));
+    };
+    if !is_han(c) {
+        return Err(AppError::new("invalid-path", "Cần đúng một chữ Hán."));
+    }
+    let url = Url::parse(&format!("{STROKES_URL}{c}.json")).map_err(offline)?;
+    let bytes = fetch(url.as_str(), MAX_STROKE_BYTES, Duration::from_secs(15)).await?;
+    let missing = || AppError::new("network", "Không có dữ liệu nét viết cho chữ này.");
+    let data: StrokeData = serde_json::from_slice(&bytes).map_err(|_| missing())?;
+    if data.strokes.is_empty() || data.strokes.len() > MAX_STROKES || !data.strokes.iter().all(|d| is_stroke_path(d)) {
+        return Err(missing());
+    }
+    Ok(data.strokes)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn stroke_data_is_only_path_commands_and_numbers() {
+        assert!(is_stroke_path("M 465 754 Q 507 739 548 721 L 571 706 Z"));
+        assert!(!is_stroke_path("M 0 0\"/><script>"));
+        assert!(!is_stroke_path(""));
+        assert!(is_han('现') && is_han('𠀀') && !is_han('a') && !is_han('。'));
+    }
 
     fn public(url: &str) -> bool {
         is_public_url(&Url::parse(url).unwrap())

@@ -18,6 +18,7 @@ import { LessonStyles, SlideView } from "./SlideView";
 import { useAudioFill } from "./useAudioFill";
 import { prefersClipart, useImageFill } from "./useImageFill";
 import { useLessonSession } from "./useLessonSession";
+import { useStrokeFill } from "./useStrokeFill";
 
 interface Props {
   lesson: OpenLesson;
@@ -39,6 +40,7 @@ export function LessonEditor({ lesson, onClose }: Props) {
   const [checking, setChecking] = useState(false);
   const fill = useImageFill(session);
   const voice = useAudioFill(session);
+  useStrokeFill(session);
   const clipart = prefersClipart(doc, services.themes);
   const toReview = useMemo(() => picturesToReview(doc, services.templates), [doc, services.templates]);
   const toReviewSlides = useMemo(() => new Set(toReview.map((p) => p.slideId)), [toReview]);

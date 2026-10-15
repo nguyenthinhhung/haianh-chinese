@@ -114,6 +114,8 @@ export interface Persistence {
   importImageUrl(dir: string, urls: string[]): Promise<ImportedAsset>;
   /** Stores pasted or dropped image bytes in `assets/`. */
   importImageBytes(dir: string, bytes: Uint8Array): Promise<ImportedAsset>;
+  /** Stroke outlines of one Chinese character, in writing order, as SVG paths on a 1024-unit square. */
+  hanziStrokes(character: string): Promise<string[]>;
   /** Creates an MP3 of Chinese text read aloud and stores it in `assets/`. */
   speakChinese(dir: string, text: string): Promise<ImportedAsset>;
   /** The lesson's asset files as data URLs keyed by `assets/…` path; unreadable files are left out. */

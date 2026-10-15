@@ -81,6 +81,7 @@ export function createTauriPersistence(): Persistence {
     copySiblingAssets: (dir, files) => call<string[]>("copy_sibling_assets", { dir, files }),
     writeAsset: (dir, file, bytes) =>
       call("write_asset", bytes, { "x-lesson-dir": encodeURIComponent(dir), "x-asset-file": encodeURIComponent(file) }),
+    hanziStrokes: (character) => call<string[]>("hanzi_strokes", { character }),
     assetUrl: (dir, file) => {
       const sep = dir.includes("\\") ? "\\" : "/";
       return convertFileSrc(`${dir}${sep}${file.split("/").join(sep)}`);
