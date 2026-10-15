@@ -1,0 +1,116 @@
+.ls-slide[data-slide-type="speaking"] .ls-heading {
+  margin-bottom: calc(12 * var(--u));
+}
+.ls-slide[data-slide-type="speaking"] .ls-sk-task {
+  margin: 0 0 calc(20 * var(--u));
+  font-size: calc(32 * var(--u));
+  text-align: center;
+  color: var(--ls-muted);
+}
+.ls-slide[data-slide-type="speaking"] .ls-sk {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: calc(40 * var(--u));
+  min-height: 0;
+}
+.ls-slide[data-slide-type="speaking"] .ls-sk--structures {
+  grid-template-columns: 1fr calc(520 * var(--u));
+}
+.ls-slide[data-slide-type="speaking"] .ls-sk-main {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  gap: calc(28 * var(--u));
+  min-height: 0;
+}
+.ls-slide[data-slide-type="speaking"] .ls-sk-cues {
+  display: flex;
+  justify-content: center;
+  gap: calc(36 * var(--u));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ls-slide[data-slide-type="speaking"] .ls-sk-cue {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: calc(240 * var(--u));
+  text-align: center;
+}
+.ls-slide[data-slide-type="speaking"] .ls-sk-cue-media {
+  width: 100%;
+  height: calc(170 * var(--u));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: calc(8 * var(--u));
+}
+.ls-slide[data-slide-type="speaking"] .ls-sk-cue-pinyin {
+  font-size: calc(28 * var(--u));
+}
+.ls-slide[data-slide-type="speaking"] .ls-sk-cue-text {
+  font-size: calc(48 * var(--u));
+  font-weight: 700;
+}
+.ls-slide[data-slide-type="speaking"] .ls-sk-talk {
+  display: flex;
+  justify-content: space-between;
+  gap: calc(40 * var(--u));
+}
+.ls-slide[data-slide-type="speaking"] .ls-sk-bubble {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-width: 48%;
+  padding: calc(20 * var(--u)) calc(36 * var(--u));
+  border: calc(4 * var(--u)) solid var(--ls-accent-2);
+  border-radius: calc(48 * var(--u));
+  background: var(--ls-surface);
+}
+.ls-slide[data-slide-type="speaking"] .ls-sk-bubble--a {
+  align-self: flex-end;
+  border-color: var(--ls-accent);
+}
+/* The tail of the bubble points at the speaker below it. */
+.ls-slide[data-slide-type="speaking"] .ls-sk-bubble::after {
+  content: "";
+  position: absolute;
+  bottom: calc(-26 * var(--u));
+  left: calc(60 * var(--u));
+  border: calc(14 * var(--u)) solid transparent;
+  border-top-color: var(--ls-accent-2);
+}
+.ls-slide[data-slide-type="speaking"] .ls-sk-bubble--a::after {
+  left: auto;
+  right: calc(60 * var(--u));
+  border-top-color: var(--ls-accent);
+}
+.ls-slide[data-slide-type="speaking"] .ls-sk-bubble-pinyin {
+  font-size: calc(28 * var(--u));
+}
+.ls-slide[data-slide-type="speaking"] .ls-sk-bubble-text {
+  font-size: calc(46 * var(--u));
+  font-weight: 700;
+}
+.ls-slide[data-slide-type="speaking"] .ls-sk-structures {
+  padding: calc(20 * var(--u)) calc(28 * var(--u));
+  border-radius: calc(var(--ls-radius) * var(--u));
+  background: var(--ls-surface);
+  border: calc(2 * var(--u)) dashed var(--ls-accent);
+}
+.ls-slide[data-slide-type="speaking"] .ls-sk-rule {
+  margin: 0 0 calc(8 * var(--u));
+  font-size: calc(28 * var(--u));
+  font-weight: 700;
+  color: var(--ls-accent);
+}
+.ls-slide[data-slide-type="speaking"] .ls-sk-structures ol {
+  display: flex;
+  flex-direction: column;
+  gap: calc(10 * var(--u));
+  margin: 0;
+  padding-left: calc(44 * var(--u));
+  font-size: calc(34 * var(--u));
+}

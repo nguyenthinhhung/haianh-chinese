@@ -131,6 +131,22 @@ describe("listening", () => {
   });
 });
 
+describe("textbook-style slides", () => {
+  it("a dialogue laid out as in the book hides its pinyin, then shows the translation", () => {
+    const content = { ...(env.templates.require("dialogue").defaults() as object), layout: "book", subtitle: "Bài khoá 1" };
+    present([{ type: "dialogue", content }, { type: "cover" }]);
+    const off = () => current().querySelector(".ls-dlg-pinyin-off")!.classList.contains("ls-revealed");
+    const translated = () => current().querySelector(".ls-dlg-book-meaning")!.classList.contains("ls-revealed");
+    expect(current().querySelectorAll(".ls-dlg-book-line")).toHaveLength(3);
+    press("ArrowRight");
+    expect([off(), translated()]).toEqual([true, false]);
+    press("ArrowRight");
+    expect([off(), translated()]).toEqual([true, true]);
+    press("ArrowRight");
+    expect(current().dataset.slideType).toBe("cover");
+  });
+});
+
 describe("HSK 3–4 slides", () => {
   it("a passage shows its pinyin, then its translation, each in place of the one before", () => {
     present([{ type: "passage" }, { type: "cover" }]);

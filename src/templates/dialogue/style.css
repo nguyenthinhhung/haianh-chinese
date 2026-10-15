@@ -123,3 +123,128 @@
   width: calc(64 * var(--u));
   height: calc(64 * var(--u));
 }
+
+/* Book layout: as the textbook prints a text. */
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-book {
+  --hanzi: 46;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-book[data-count="5"],
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-book[data-count="6"] {
+  --hanzi: 38;
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-book[data-count="7"],
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-book[data-count="8"] {
+  --hanzi: 32;
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-book-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: calc(8 * var(--u)) calc(24 * var(--u));
+  margin-bottom: calc(24 * var(--u));
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-book-title {
+  margin: 0;
+  font-size: calc(52 * var(--u));
+  font-weight: 800;
+  color: var(--ls-accent);
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-book-subtitle {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: calc(30 * var(--u));
+  color: var(--ls-muted);
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-book-head .ls-play {
+  width: calc(56 * var(--u));
+  height: calc(56 * var(--u));
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-book-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr calc(560 * var(--u));
+  gap: calc(48 * var(--u));
+  min-height: 0;
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-book-lines {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(10 * var(--u));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-book-line {
+  display: flex;
+  align-items: flex-end;
+  gap: calc(12 * var(--u));
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-book-who {
+  font-size: calc(var(--hanzi) * var(--u));
+  font-weight: 800;
+  color: var(--ls-accent-2);
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-book-text {
+  display: flex;
+  flex-direction: column;
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-book-pinyin {
+  font-size: calc(var(--hanzi) * 0.55 * var(--u));
+  font-weight: 600;
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-book-hanzi {
+  font-size: calc(var(--hanzi) * var(--u));
+  line-height: 1.25;
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-book-line .ls-play {
+  width: calc(44 * var(--u));
+  height: calc(44 * var(--u));
+  align-self: center;
+}
+/* First step: the pinyin goes, so the class reads the characters alone. */
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-book:has(.ls-dlg-pinyin-off.ls-revealed) .ls-dlg-book-pinyin {
+  visibility: hidden;
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-pinyin-off {
+  display: none;
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-book-side {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(24 * var(--u));
+  min-height: 0;
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-book-media {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 0;
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-book-photo {
+  border-radius: calc(16 * var(--u));
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-book-meaning {
+  padding: calc(16 * var(--u)) calc(24 * var(--u));
+  border-radius: calc(16 * var(--u));
+  background: var(--ls-surface);
+  border: calc(2 * var(--u)) solid var(--ls-surface-border);
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-book-meaning-title {
+  margin: 0 0 calc(6 * var(--u));
+  font-size: calc(26 * var(--u));
+  font-style: italic;
+  color: var(--ls-accent);
+}
+.ls-slide[data-slide-type="dialogue"] .ls-dlg-book-meaning-line {
+  margin: 0;
+  font-size: calc(26 * var(--u));
+}

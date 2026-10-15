@@ -1,0 +1,78 @@
+.ls-slide[data-slide-type="pronunciation"] .ls-pr-rule {
+  margin: 0 0 calc(20 * var(--u));
+  padding: calc(12 * var(--u)) calc(24 * var(--u));
+  border-left: calc(8 * var(--u)) solid var(--ls-accent);
+  background: var(--ls-surface);
+  font-size: calc(32 * var(--u));
+}
+.ls-slide[data-slide-type="pronunciation"] .ls-pr {
+  --text: 52;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(22 * var(--u));
+  min-height: 0;
+  margin: 0;
+  padding: 0 0 0 calc(64 * var(--u));
+}
+.ls-slide[data-slide-type="pronunciation"] .ls-pr[data-count="5"],
+.ls-slide[data-slide-type="pronunciation"] .ls-pr[data-count="6"] {
+  --text: 42;
+  gap: calc(12 * var(--u));
+}
+.ls-slide[data-slide-type="pronunciation"] .ls-pr[data-count="7"],
+.ls-slide[data-slide-type="pronunciation"] .ls-pr[data-count="8"] {
+  --text: 36;
+  gap: calc(8 * var(--u));
+}
+.ls-slide[data-slide-type="pronunciation"] .ls-pr-item {
+  display: flex;
+  align-items: center;
+  gap: calc(32 * var(--u));
+  font-size: calc(var(--text) * var(--u));
+}
+.ls-slide[data-slide-type="pronunciation"] .ls-pr-item::marker {
+  color: var(--ls-muted);
+}
+.ls-slide[data-slide-type="pronunciation"] .ls-pr-sound {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(12 * var(--u));
+  min-width: 34%;
+}
+.ls-slide[data-slide-type="pronunciation"] .ls-pr-syllable {
+  position: relative;
+}
+/* The stressed syllable carries a red dot under it, as the textbook marks it. */
+.ls-slide[data-slide-type="pronunciation"] .ls-pr-stress::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -0.35em;
+  width: 0.28em;
+  height: 0.28em;
+  border-radius: 50%;
+  background: #d64545;
+  transform: translateX(-50%);
+}
+.ls-slide[data-slide-type="pronunciation"] .ls-pr-arrow {
+  font-weight: 800;
+}
+.ls-slide[data-slide-type="pronunciation"] .ls-pr-arrow--up {
+  color: var(--ls-good);
+}
+.ls-slide[data-slide-type="pronunciation"] .ls-pr-arrow--down {
+  color: #d64545;
+}
+.ls-slide[data-slide-type="pronunciation"] .ls-pr-hanzi {
+  font-weight: 700;
+}
+.ls-slide[data-slide-type="pronunciation"] .ls-pr-meaning {
+  font-size: 0.6em;
+  color: var(--ls-muted);
+}
+.ls-slide[data-slide-type="pronunciation"] .ls-pr-item .ls-play {
+  width: calc(56 * var(--u));
+  height: calc(56 * var(--u));
+}

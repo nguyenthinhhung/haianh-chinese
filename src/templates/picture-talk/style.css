@@ -1,0 +1,72 @@
+.ls-slide[data-slide-type="picture-talk"] .ls-pt {
+  --cols: 2;
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  gap: calc(28 * var(--u)) calc(48 * var(--u));
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ls-slide[data-slide-type="picture-talk"] .ls-pt[data-count="1"] {
+  --cols: 1;
+  padding: 0 18%;
+}
+.ls-slide[data-slide-type="picture-talk"] .ls-pt[data-count="3"] {
+  --cols: 3;
+}
+.ls-slide[data-slide-type="picture-talk"] .ls-pt-item {
+  display: flex;
+  align-items: center;
+  gap: calc(24 * var(--u));
+  min-height: 0;
+}
+.ls-slide[data-slide-type="picture-talk"] .ls-pt[data-count="1"] .ls-pt-item,
+.ls-slide[data-slide-type="picture-talk"] .ls-pt[data-count="3"] .ls-pt-item {
+  flex-direction: column;
+}
+.ls-slide[data-slide-type="picture-talk"] .ls-pt-media {
+  flex: 0 0 45%;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+.ls-slide[data-slide-type="picture-talk"] .ls-pt-image {
+  border-radius: calc(16 * var(--u));
+}
+.ls-slide[data-slide-type="picture-talk"] .ls-pt-empty {
+  padding: calc(40 * var(--u));
+  border: calc(3 * var(--u)) dashed var(--ls-muted);
+  border-radius: calc(16 * var(--u));
+  color: var(--ls-muted);
+  font-size: calc(28 * var(--u));
+}
+.ls-slide[data-slide-type="picture-talk"] .ls-pt-bubble {
+  display: flex;
+  flex-direction: column;
+  gap: calc(6 * var(--u));
+  padding: calc(16 * var(--u)) calc(24 * var(--u));
+  border: calc(3 * var(--u)) solid var(--ls-accent-2);
+  border-radius: calc(28 * var(--u));
+  background: var(--ls-surface);
+}
+.ls-slide[data-slide-type="picture-talk"] .ls-pt-pinyin {
+  font-size: calc(26 * var(--u));
+}
+.ls-slide[data-slide-type="picture-talk"] .ls-pt-text {
+  font-size: calc(42 * var(--u));
+  font-weight: 700;
+  line-height: 1.35;
+}
+.ls-slide[data-slide-type="picture-talk"] .ls-pt-answer {
+  align-self: flex-start;
+  padding: calc(4 * var(--u)) calc(18 * var(--u));
+  border-radius: calc(12 * var(--u));
+  background: var(--ls-good);
+  color: #fff;
+  font-size: calc(36 * var(--u));
+  font-weight: 700;
+}

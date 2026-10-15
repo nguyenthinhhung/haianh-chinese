@@ -111,6 +111,14 @@
   fill: currentColor;
 }
 
+/* A gap to fill in an exercise sentence (helpers.gapText). */
+.ls-slide .ls-gap {
+  display: inline-block;
+  width: 4em;
+  margin: 0 0.15em;
+  border-bottom: 0.08em solid var(--ls-muted);
+}
+
 /* Steps hidden until the teacher presses Next. Outside Present (in the
    editor or a plain page) everything stays visible, marked as hidden. */
 .ls-slide .ls-hide {

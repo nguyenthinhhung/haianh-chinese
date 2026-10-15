@@ -16,6 +16,18 @@
 .ls-slide[data-slide-type="flashcard"] .ls-fc-grid[data-count="4"] { --cols: 2; --hanzi: 130; padding: 0 14%; }
 .ls-slide[data-slide-type="flashcard"] .ls-fc-grid[data-count="5"],
 .ls-slide[data-slide-type="flashcard"] .ls-fc-grid[data-count="6"] { --cols: 3; --hanzi: 120; }
+.ls-slide[data-slide-type="flashcard"] .ls-fc-grid[data-count="7"],
+.ls-slide[data-slide-type="flashcard"] .ls-fc-grid[data-count="8"] { --cols: 4; --hanzi: 100; }
+/* Face-down cards: a coloured back with just the number, as in a review game. */
+.ls-slide[data-slide-type="flashcard"] .ls-fc-card--blank .ls-fc-front {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--ls-accent) 28%, var(--ls-surface));
+}
+.ls-slide[data-slide-type="flashcard"] .ls-fc-card--blank .ls-fc-num {
+  position: static;
+  font-size: calc(var(--hanzi) * 0.7 * var(--u));
+  color: #fff;
+}
 
 .ls-slide[data-slide-type="flashcard"] .ls-fc-card {
   position: relative;

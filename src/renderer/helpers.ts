@@ -100,3 +100,19 @@ export function audioButton(ctx: RenderContext, assetId: string | undefined, dom
     `<audio id="${esc(domId)}" preload="none" src="${esc(url)}"></audio>`
   );
 }
+
+const LATIN_RE = /\p{Script=Latin}/u;
+const HAN_RE = /\p{Script=Han}/u;
+
+/**
+ * Text with gaps to fill: each run of underscores ("____") becomes an empty
+ * line to write on. Tagged Chinese or Vietnamese like `autoText`.
+ */
+export function gapText(text: string, tag = "span", cls = ""): string {
+  const lang = HAN_RE.test(text) && !LATIN_RE.test(text.replace(/^[AB][：:]/, "")) ? "zh-CN" : "vi";
+  const body = text
+    .split(/_{2,}|＿{2,}/)
+    .map(esc)
+    .join(`<span class="ls-gap"></span>`);
+  return `<${tag}${cls ? ` class="${esc(cls)}"` : ""} lang="${lang}">${body}</${tag}>`;
+}

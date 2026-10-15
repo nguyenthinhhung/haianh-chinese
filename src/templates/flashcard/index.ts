@@ -17,8 +17,9 @@ const card = z.object({
 
 const schema = z.object({
   heading: z.string().max(60).default(""),
-  front: z.enum(["image", "hanzi"]).default("image"),
-  cards: z.array(card).min(1, "Cần ít nhất 1 thẻ").max(6, "Tối đa 6 thẻ"),
+  /** "blank": cards lie face down showing only their number, as for reviewing last lesson's words. */
+  front: z.enum(["image", "hanzi", "blank"]).default("image"),
+  cards: z.array(card).min(1, "Cần ít nhất 1 thẻ").max(8, "Tối đa 8 thẻ"),
 });
 
 export type FlashcardContent = z.output<typeof schema>;
@@ -34,7 +35,7 @@ export const flashcard: SlideTemplate<FlashcardContent> = {
   order: 40,
   schema,
   aiSchemaHint:
-    '1–6 thẻ lật; bấm Tiếp lật lần lượt, hoặc giáo viên bấm vào thẻ bất kỳ để lật. {"heading"?: tiêu đề tiếng Việt, "front": "image" (mặt trước là ảnh, lật ra chữ) hoặc "hanzi" (mặt trước là chữ Hán, lật ra ảnh), "cards": [{"hanzi", "pinyin": có dấu thanh, "meaning": nghĩa tiếng Việt, "pos"?: từ loại ngắn bằng tiếng Việt (động từ, danh từ…), chỉ cho học sinh từ 9 tuổi}]}',
+    '1–8 thẻ lật; bấm Tiếp lật lần lượt, hoặc giáo viên bấm vào thẻ bất kỳ để lật. {"heading"?: tiêu đề tiếng Việt, "front": "image" (mặt trước là ảnh, lật ra chữ), "hanzi" (mặt trước là chữ Hán, lật ra ảnh) hoặc "blank" (thẻ úp chỉ có số, lật ra chữ Hán và pinyin; để ôn từ bài trước), "cards": [{"hanzi", "pinyin": có dấu thanh, "meaning": nghĩa tiếng Việt, "pos"?: từ loại ngắn bằng tiếng Việt (động từ, danh từ…), chỉ cho học sinh từ 9 tuổi}]}',
   defaults: () => ({
     heading: "Đoán xem",
     front: "hanzi",
@@ -57,16 +58,21 @@ export const flashcard: SlideTemplate<FlashcardContent> = {
         const img = image(ctx, k.image, "ls-fc-image");
         // A card set to show its picture first but without one falls back to the characters.
         const pictureFirst = c.front === "image" && img;
-        const front = pictureFirst ? img : zh(k.hanzi, "span", "ls-fc-hanzi");
+        const blank = c.front === "blank";
+        const front = blank ? "" : pictureFirst ? img : zh(k.hanzi, "span", "ls-fc-hanzi");
         const back =
-          (pictureFirst ? zh(k.hanzi, "span", "ls-fc-hanzi ls-fc-hanzi--back") : img ? `<span class="ls-fc-media">${img}</span>` : "") +
+          (pictureFirst || blank
+            ? zh(k.hanzi, "span", "ls-fc-hanzi ls-fc-hanzi--back")
+            : img
+              ? `<span class="ls-fc-media">${img}</span>`
+              : "") +
           (k.pinyin ? pinyin(k.pinyin, "span", "ls-fc-pinyin") : "") +
           (k.pos ? vi(k.pos, "span", "ls-pos") : "") +
           (k.meaning ? vi(k.meaning, "span", "ls-fc-meaning") : "");
         // The number lets the teacher flip a card by typing it.
-        const number = c.cards.length > 1 ? `<span class="ls-fc-num">${i + 1}</span>` : "";
+        const number = c.cards.length > 1 || blank ? `<span class="ls-fc-num">${i + 1}</span>` : "";
         return (
-          `<li class="ls-fc-card">` +
+          `<li class="ls-fc-card${blank ? " ls-fc-card--blank" : ""}">` +
           `<div class="ls-fc-inner">` +
           `<div class="ls-fc-face ls-fc-front">${number}${front}</div>` +
           `<div class="ls-fc-face ls-fc-back">${back}</div>` +
@@ -92,6 +98,7 @@ export const flashcard: SlideTemplate<FlashcardContent> = {
       options: [
         { value: "image", label: "Ảnh (lật ra chữ Hán, pinyin, nghĩa)" },
         { value: "hanzi", label: "Chữ Hán (lật ra ảnh, pinyin, nghĩa)" },
+        { value: "blank", label: "Úp, chỉ có số (lật ra chữ Hán, pinyin) — ôn từ bài trước" },
       ],
     },
     {
@@ -100,7 +107,7 @@ export const flashcard: SlideTemplate<FlashcardContent> = {
       label: "Thẻ",
       itemLabel: "thẻ",
       min: 1,
-      max: 6,
+      max: 8,
       newItem: newCard,
       fields: [
         { kind: "text", key: "hanzi", label: "Chữ Hán", lang: "zh" },
