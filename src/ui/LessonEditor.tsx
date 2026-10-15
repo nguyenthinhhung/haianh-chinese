@@ -264,6 +264,7 @@ export function LessonEditor({ lesson, onClose }: Props) {
         selectedId={slide?.id}
         onSelect={setSelectedId}
         toReview={toReviewSlides}
+        shortcuts={!presenting}
         onRemoved={(index) => setNotice({ text: `Đã xoá slide ${index + 1}. Bấm Ctrl+Z để lấy lại.` })}
       />
 

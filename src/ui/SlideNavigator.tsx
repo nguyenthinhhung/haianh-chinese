@@ -1,8 +1,9 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { addSlide, duplicateSlide, moveSlide, removeSlide } from "../core/document";
 import type { TemplateCategory } from "../core/template";
 import type { RenderEnv } from "../renderer/render";
 import { useServices } from "./services";
+import { SHORTCUTS } from "./shortcuts";
 import { SlideView } from "./SlideView";
 import type { LessonSession } from "./useLessonSession";
 
@@ -21,6 +22,12 @@ interface Props {
   toReview?: ReadonlySet<string>;
   /** Called after a slide is deleted, with its position, so the editor can say how to undo. */
   onRemoved?(index: number): void;
+  /** False while presenting, so slide shortcuts don't edit the lesson behind the show. */
+  shortcuts?: boolean;
+}
+
+function isTyping(target: EventTarget | null): boolean {
+  return target instanceof HTMLElement && (/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) || target.isContentEditable);
 }
 
 const DRAG_THRESHOLD_PX = 5;
@@ -105,9 +112,11 @@ function useThumbDrag(session: LessonSession, onSelect: (id: string) => void) {
   return { listRef, gap: drag?.gap ?? null, draggingFrom: drag?.from ?? null, handlers };
 }
 
-export function SlideNavigator({ session, env, selectedId, onSelect, toReview, onRemoved }: Props) {
+export function SlideNavigator({ session, env, selectedId, onSelect, toReview, onRemoved, shortcuts = true }: Props) {
   const { templates } = useServices();
   const [adding, setAdding] = useState(false);
+  /** Right-click menu: the slide it acts on and where it opened. */
+  const [menu, setMenu] = useState<{ slideId: string; x: number; y: number } | null>(null);
   const { doc } = session;
   const selectedIndex = doc.slides.findIndex((s) => s.id === selectedId);
   const { listRef, gap, draggingFrom, handlers } = useThumbDrag(session, onSelect);
@@ -135,22 +144,90 @@ export function SlideNavigator({ session, env, selectedId, onSelect, toReview, o
   /** Delete (or Backspace) removes the selected slide while the slide list has focus. */
   function onKeyDown(e: React.KeyboardEvent) {
     if (e.key !== "Delete" && e.key !== "Backspace") return;
-    const target = e.target as HTMLElement;
-    if (/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) || target.isContentEditable) return;
+    if (isTyping(e.target)) return;
     e.preventDefault();
     remove();
   }
 
-  function duplicate() {
-    if (!selectedId) return;
+  function duplicate(slideId = selectedId) {
+    if (!slideId) return;
     let newId = "";
     session.update((d) => {
-      const r = duplicateSlide(d, selectedId);
+      const r = duplicateSlide(d, slideId);
       newId = r.slideId;
       return r.doc;
     });
     onSelect(newId);
   }
+
+  function move(slideId: string, to: number) {
+    session.update((d) => moveSlide(d, slideId, to));
+  }
+
+  // Ctrl+D / ⌘D duplicates the selected slide, as in PowerPoint and Google Slides;
+  // inside a text field the key is left alone.
+  const duplicateRef = useRef(duplicate);
+  duplicateRef.current = duplicate;
+  useEffect(() => {
+    if (!shortcuts) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || e.key.toLowerCase() !== "d" || isTyping(e.target)) return;
+      e.preventDefault();
+      duplicateRef.current();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [shortcuts]);
+
+  useEffect(() => {
+    if (!menu) return;
+    const close = () => setMenu(null);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    window.addEventListener("pointerdown", close);
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("blur", close);
+    window.addEventListener("resize", close);
+    listRef.current?.addEventListener("scroll", close);
+    const list = listRef.current;
+    return () => {
+      window.removeEventListener("pointerdown", close);
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("blur", close);
+      window.removeEventListener("resize", close);
+      list?.removeEventListener("scroll", close);
+    };
+  }, [menu, listRef]);
+
+  function openMenu(e: React.MouseEvent, slideId: string) {
+    e.preventDefault();
+    setAdding(false);
+    onSelect(slideId);
+    setMenu({ slideId, x: e.clientX, y: e.clientY });
+  }
+
+  /** A menu item: runs on click, and the pointerdown that would close the menu first is stopped. */
+  function item(label: string, run: () => void, opts: { hint?: string; disabled?: boolean; danger?: boolean } = {}) {
+    return (
+      <button
+        type="button"
+        role="menuitem"
+        className={opts.danger ? "danger" : undefined}
+        disabled={opts.disabled}
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={() => {
+          setMenu(null);
+          run();
+        }}
+      >
+        <span>{label}</span>
+        {opts.hint && <kbd>{opts.hint}</kbd>}
+      </button>
+    );
+  }
+
+  const menuIndex = menu ? doc.slides.findIndex((s) => s.id === menu.slideId) : -1;
 
   return (
     <nav className="navigator" aria-label="Danh sách slide" onKeyDown={onKeyDown}>
@@ -168,8 +245,9 @@ export function SlideNavigator({ session, env, selectedId, onSelect, toReview, o
               type="button"
               className={`thumb${slide.id === selectedId ? " selected" : ""}`}
               onClick={() => onSelect(slide.id)}
+              onContextMenu={(e) => openMenu(e, slide.id)}
               aria-current={slide.id === selectedId}
-              title="Kéo để đổi vị trí"
+              title="Kéo để đổi vị trí · chuột phải để nhân bản, xoá…"
               {...handlers(slide.id, i)}
             >
               <span className="thumb-number">{i + 1}</span>
@@ -180,12 +258,25 @@ export function SlideNavigator({ session, env, selectedId, onSelect, toReview, o
               )}
               <SlideView doc={doc} slide={slide} env={env} />
             </button>
-            <button type="button" className="thumb-delete" title={`Xoá slide ${i + 1} (phím Delete)`} aria-label={`Xoá slide ${i + 1}`} onClick={() => remove(slide.id)}>
-              ✕
-            </button>
           </li>
         ))}
       </ol>
+      {menu && menuIndex >= 0 && (
+        <div
+          className="context-menu"
+          role="menu"
+          aria-label={`Slide ${menuIndex + 1}`}
+          style={{ left: menu.x, top: Math.min(menu.y, window.innerHeight - 220) }}
+        >
+          {item("Thêm slide mới…", () => setAdding(true))}
+          {item("Nhân bản slide", () => duplicate(menu.slideId), { hint: SHORTCUTS.duplicate })}
+          <hr />
+          {item("Lên trên", () => move(menu.slideId, menuIndex - 1), { disabled: menuIndex <= 0 })}
+          {item("Xuống dưới", () => move(menu.slideId, menuIndex + 1), { disabled: menuIndex >= doc.slides.length - 1 })}
+          <hr />
+          {item("Xoá slide", () => remove(menu.slideId), { hint: "Delete", danger: true })}
+        </div>
+      )}
       <div className="navigator-actions">
         <div className="add-menu">
           <button type="button" className="primary" onClick={() => setAdding((v) => !v)} aria-expanded={adding}>
@@ -212,27 +303,19 @@ export function SlideNavigator({ session, env, selectedId, onSelect, toReview, o
           )}
         </div>
         <div className="icon-row">
-          <button
-            type="button"
-            title="Lên"
-            disabled={selectedIndex <= 0}
-            onClick={() => session.update((d) => moveSlide(d, selectedId!, selectedIndex - 1))}
-          >
+          <button type="button" title="Lên" disabled={selectedIndex <= 0} onClick={() => move(selectedId!, selectedIndex - 1)}>
             ↑
           </button>
           <button
             type="button"
             title="Xuống"
             disabled={selectedIndex < 0 || selectedIndex >= doc.slides.length - 1}
-            onClick={() => session.update((d) => moveSlide(d, selectedId!, selectedIndex + 1))}
+            onClick={() => move(selectedId!, selectedIndex + 1)}
           >
             ↓
           </button>
-          <button type="button" title="Nhân bản" disabled={selectedIndex < 0} onClick={duplicate}>
+          <button type="button" title={`Nhân bản (${SHORTCUTS.duplicate})`} disabled={selectedIndex < 0} onClick={() => duplicate()}>
             ⧉
-          </button>
-          <button type="button" className="danger" title="Xoá slide đang chọn (phím Delete)" disabled={selectedIndex < 0} onClick={() => remove()}>
-            Xoá
           </button>
         </div>
       </div>
