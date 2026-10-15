@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { audioJobs } from "../core/autoAudio";
 import { imageJobs, picturesToReview } from "../core/autoImages";
-import { appendSlides, setSlideNotes, setTitle } from "../core/document";
+import { insertSlides, setSlideNotes, setTitle } from "../core/document";
 import type { RenderEnv } from "../renderer/render";
 import type { OpenLesson } from "./lessonFiles";
 import { AiImportDialog } from "./AiImportDialog";
@@ -183,7 +183,7 @@ export function LessonEditor({ lesson, onClose }: Props) {
         >
           Điền ảnh & giọng đọc
         </button>
-        <button type="button" className="ghost" onClick={() => setAiImport(true)} title="Thêm slide do AI soạn vào cuối bài">
+        <button type="button" className="ghost" onClick={() => setAiImport(true)} title="Thêm slide do AI soạn, chèn ngay sau slide đang chọn">
           Thêm slide bằng AI…
         </button>
         <button
@@ -222,14 +222,16 @@ export function LessonEditor({ lesson, onClose }: Props) {
       {aiImport && (
         <AiImportDialog
           mode="append"
+          insertAfter={slide ? slideIndex + 1 : undefined}
           onClose={() => setAiImport(false)}
           onImport={async (_title, slides, _themeId, images) => {
-            session.update((d) => appendSlides(d, slides));
+            const after = slide?.id;
+            session.update((d) => insertSlides(d, slides, after));
             setSelectedId(slides[0]?.id);
             const searching = fill.enqueue(imageJobs(slides, services.templates, images));
             voice.enqueue(audioJobs(slides, services.templates));
             setNotice({
-              text: `Đã thêm ${slides.length} slide vào cuối bài (Ctrl+Z để bỏ).${searching ? " Ảnh đang được tự tìm." : ""}`,
+              text: `Đã thêm ${slides.length} slide ${after ? `sau slide ${slideIndex + 1}` : "vào cuối bài"} (Ctrl+Z để bỏ).${searching ? " Ảnh đang được tự tìm." : ""}`,
             });
           }}
         />

@@ -7,7 +7,7 @@ import type { TemplateRegistry } from "./templateRegistry";
  * kind of lesson; the AI only writes the language content into them.
  */
 
-export type LessonKind = "vocabulary" | "dialogue" | "grammar" | "review" | "mixed";
+export type LessonKind = "vocabulary" | "dialogue" | "grammar" | "review" | "mixed" | "word-focus";
 export type Duration = "short" | "medium" | "long";
 
 /** What the teacher fills in before copying the prompt. */
@@ -82,6 +82,8 @@ interface BlueprintStep {
   count: [number, number, number];
   /** Practice or game step: narrowed to the activities the teacher picked. */
   activity?: boolean;
+  /** Opens or closes a whole lesson (cover, summary); left out when slides are inserted into one. */
+  frame?: boolean;
 }
 
 interface Blueprint {
@@ -93,11 +95,11 @@ interface Blueprint {
 }
 
 const TEACH_WORDS = ["vocabulary", "picture-card", "flashcard"];
-const PRACTICE = ["quiz", "qa-list", "matching", "fill-blank", "sentence-order", "tone-pick", "sort-groups"];
+const PRACTICE = ["quiz", "qa-list", "listening", "matching", "fill-blank", "sentence-order", "tone-pick", "sort-groups"];
 const GAMES = ["whats-missing", "guess-picture", "box-pick", "lucky-wheel", "memory"];
 
-const COVER: BlueprintStep = { role: "Mở đầu: tên bài", types: ["cover"], count: [1, 1, 1] };
-const SUMMARY: BlueprintStep = { role: "Tổng kết: ý cần nhớ và từ vựng chính", types: ["summary"], count: [1, 1, 1] };
+const COVER: BlueprintStep = { role: "Mở đầu: tên bài", types: ["cover"], count: [1, 1, 1], frame: true };
+const SUMMARY: BlueprintStep = { role: "Tổng kết: ý cần nhớ và từ vựng chính", types: ["summary"], count: [1, 1, 1], frame: true };
 
 export const BLUEPRINTS: Blueprint[] = [
   {
@@ -122,7 +124,7 @@ export const BLUEPRINTS: Blueprint[] = [
       { role: "Từ và cụm từ trọng tâm của hội thoại", types: ["vocabulary", "flashcard"], count: [1, 1, 2] },
       { role: "Hội thoại mẫu theo tình huống", types: ["dialogue"], count: [1, 2, 3] },
       { role: "Giải thích mẫu câu chính trong hội thoại", types: ["grammar"], count: [0, 1, 1] },
-      { role: "Luyện tập", types: ["qa-list", "sentence-order", "fill-blank", "quiz", "matching"], count: [1, 2, 2], activity: true },
+      { role: "Luyện tập", types: ["qa-list", "listening", "sentence-order", "fill-blank", "quiz", "matching"], count: [1, 2, 2], activity: true },
       { role: "Trò chơi cả lớp", types: GAMES, count: [0, 1, 2], activity: true },
       SUMMARY,
     ],
@@ -165,6 +167,19 @@ export const BLUEPRINTS: Blueprint[] = [
       SUMMARY,
     ],
   },
+  {
+    id: "word-focus",
+    label: "Dạy kỹ từ — chèn vào giữa bài theo giáo trình",
+    description:
+      "Đào sâu vài từ (hoặc một mẫu câu) giáo viên chọn, để chèn ngay sau phần đó trong bài theo giáo trình: giải thích kỹ từng từ, ngữ pháp đi kèm, luyện tập, rồi chủ đề nói để học sinh dùng từ nói về bản thân. Không có trang bìa hay tổng kết.",
+    steps: [
+      { role: "Giải thích kỹ từng từ: một từ một slide, có từ loại, cách dùng và câu ví dụ", types: ["picture-card"], count: [1, 2, 3] },
+      { role: "Ngữ pháp hoặc cách dùng đi kèm các từ này", types: ["grammar"], count: [0, 1, 1] },
+      { role: "Luyện tập với các từ này", types: ["fill-blank", "sentence-order", "quiz", "matching"], count: [1, 1, 2], activity: true },
+      { role: "Chủ đề nói: câu hỏi để học sinh dùng các từ này nói về bản thân", types: ["qa-list"], count: [1, 1, 1] },
+      { role: "Trò chơi ngắn", types: GAMES, count: [0, 0, 1], activity: true },
+    ],
+  },
 ];
 
 export interface PlanStep {
@@ -191,9 +206,9 @@ function blueprint(kind: LessonKind): Blueprint {
 }
 
 /** Steps of a blueprint with the types unsuitable for `age` removed; steps left empty drop out. */
-function ageSteps(kind: LessonKind, age: AgeBand): (BlueprintStep & { required: boolean })[] {
+function ageSteps(kind: LessonKind, age: AgeBand, insert = false): (BlueprintStep & { required: boolean })[] {
   const avoid = new Set(ageProfile(age).avoid);
-  return blueprint(kind).steps.map((s) => ({
+  return blueprint(kind).steps.filter((s) => !(insert && s.frame)).map((s) => ({
     ...s,
     types: s.types.filter((t) => !avoid.has(t)),
     required: s.count.every((c) => c > 0),
@@ -252,13 +267,13 @@ export function normalizeRequest(raw: unknown): LessonRequest {
  * picked hands its slides to the next activity step that has some. Activity
  * and optional steps can go down to 0; the steps a lesson relies on keep 1.
  */
-export function planOutline(request: LessonRequest): OutlineStep[] {
+export function planOutline(request: LessonRequest, insert = false): OutlineStep[] {
   const index = DURATION_INDEX[request.duration] ?? 1;
   const picked = new Set(request.activities);
   const steps: OutlineStep[] = [];
   let carried = 0;
   const pending: OutlineStep[] = [];
-  for (const s of ageSteps(request.kind, request.age)) {
+  for (const s of ageSteps(request.kind, request.age, insert)) {
     let types = s.types;
     let count = s.count[index];
     if (s.activity && picked.size) {
@@ -289,9 +304,12 @@ export function planOutline(request: LessonRequest): OutlineStep[] {
   return steps;
 }
 
-/** The slide sequence for a request: the outline without the steps set to 0. */
-export function resolvePlan(request: LessonRequest): PlanStep[] {
-  return planOutline(request)
+/**
+ * The slide sequence for a request: the outline without the steps set to 0.
+ * `insert`: the slides go into an existing lesson, so no cover or summary.
+ */
+export function resolvePlan(request: LessonRequest, insert = false): PlanStep[] {
+  return planOutline(request, insert)
     .filter((s) => s.count > 0)
     .map(({ role, types, count }) => ({ role, types, count }));
 }
@@ -327,7 +345,7 @@ function collectStrings(value: unknown, out: string[]): string[] {
  * too hard for the age, and a lesson far longer or shorter than planned. They
  * never block the import.
  */
-export function checkAgainstRequest(slides: Slide[], request: LessonRequest, registry: TemplateRegistry): string[] {
+export function checkAgainstRequest(slides: Slide[], request: LessonRequest, registry: TemplateRegistry, insert = false): string[] {
   const warnings: string[] = [];
   const text = slides.flatMap((s) => collectStrings(s.content, [])).join("\n");
   const missing = parseWordList(request.words).filter((w) => HAN.test(w) && !text.includes(w));
@@ -343,7 +361,7 @@ export function checkAgainstRequest(slides: Slide[], request: LessonRequest, reg
     }
   });
 
-  const planned = planSlideCount(resolvePlan(request));
+  const planned = planSlideCount(resolvePlan(request, insert));
   if (Math.abs(slides.length - planned) > 2) {
     warnings.push(`Bài có ${slides.length} slide, dự kiến khoảng ${planned} slide.`);
   }

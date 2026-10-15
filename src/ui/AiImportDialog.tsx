@@ -25,6 +25,8 @@ import { useServices } from "./services";
 interface Props {
   /** "new" creates a lesson; "append" adds the slides to the open one. */
   mode: "new" | "append";
+  /** In "append" mode: the slide (1-based) the new slides go after; none puts them at the end. */
+  insertAfter?: number;
   /**
    * `themeId` suits the age the lesson was asked for; only a new lesson uses
    * it. `images` drives the picture search that follows the import.
@@ -185,9 +187,9 @@ function Presets({ request, onApply }: { request: LessonRequest; onApply(preset:
   );
 }
 
-function Outline({ request, onChange }: { request: LessonRequest; onChange(patch: Partial<LessonRequest>): void }) {
+function Outline({ request, insert, onChange }: { request: LessonRequest; insert: boolean; onChange(patch: Partial<LessonRequest>): void }) {
   const { templates } = useServices();
-  const steps = useMemo(() => planOutline(request), [request]);
+  const steps = useMemo(() => planOutline(request, insert), [request, insert]);
   const total = steps.reduce((n, s) => n + s.count, 0);
   const set = (role: string, count: number) => onChange({ outline: { ...request.outline, [role]: count } });
   const changed = steps.some((s) => s.count !== s.suggested);
@@ -311,7 +313,7 @@ function KnownFromLessons({ onAdd }: { onAdd(words: string[]): number }) {
   );
 }
 
-function RequestForm({ request, onChange }: { request: LessonRequest; onChange(patch: Partial<LessonRequest>): void }) {
+function RequestForm({ request, insert, onChange }: { request: LessonRequest; insert: boolean; onChange(patch: Partial<LessonRequest>): void }) {
   const { templates } = useServices();
   const activities = activityChoices(request.kind, request.age);
   const review = request.kind === "review";
@@ -352,7 +354,10 @@ function RequestForm({ request, onChange }: { request: LessonRequest; onChange(p
       <label className="ai-form-wide">
         Dạng bài
         <select value={request.kind} onChange={(e) => onChange({ kind: e.target.value as LessonRequest["kind"] })}>
-          {lessonKindsFor(request.age).map((b) => (
+          {/* Teaching chosen words in depth only makes sense inside an existing lesson. */}
+          {lessonKindsFor(request.age)
+            .filter((b) => insert || b.id !== "word-focus")
+            .map((b) => (
             <option key={b.id} value={b.id}>
               {b.label}
             </option>
@@ -361,7 +366,7 @@ function RequestForm({ request, onChange }: { request: LessonRequest; onChange(p
       </label>
       <label className="ai-form-wide">
         <span>
-          {review ? "Từ đã học cần ôn" : "Từ vựng cần dạy"} <span className="muted">(nếu có)</span>
+          {review ? "Từ đã học cần ôn" : request.kind === "word-focus" ? "Từ cần dạy kỹ" : "Từ vựng cần dạy"} <span className="muted">(nếu có)</span>
         </span>
         <textarea
           rows={2}
@@ -381,7 +386,7 @@ function RequestForm({ request, onChange }: { request: LessonRequest; onChange(p
           placeholder="Ví dụ: HSK 1, Bài 7 — rồi đính kèm các trang của bài khi gửi cho AI"
         />
       </label>
-      <Outline request={request} onChange={onChange} />
+      <Outline request={request} insert={insert} onChange={onChange} />
       <details className="ai-advanced ai-form-wide" open={advancedInUse || undefined}>
         <summary>Tuỳ chỉnh nâng cao</summary>
         <div className="ai-form">
@@ -461,9 +466,12 @@ function RequestForm({ request, onChange }: { request: LessonRequest; onChange(p
   );
 }
 
-export function AiImportDialog({ mode, onImport, onClose }: Props) {
+export function AiImportDialog({ mode, insertAfter, onImport, onClose }: Props) {
   const { templates } = useServices();
-  const [request, setRequest] = useState(loadRequest);
+  const [request, setRequest] = useState(() => {
+    const r = loadRequest();
+    return mode === "new" && r.kind === "word-focus" ? changeRequest(r, { kind: "vocabulary" }) : r;
+  });
   const [text, setText] = useState("");
   const [title, setTitle] = useState("");
   const [busy, setBusy] = useState(false);
@@ -473,9 +481,9 @@ export function AiImportDialog({ mode, onImport, onClose }: Props) {
   const warnings = useMemo(
     () =>
       result?.ok
-        ? [...checkAgainstRequest(result.slides, request, templates), ...pinyinWarnings(result.slides, templates)]
+        ? [...checkAgainstRequest(result.slides, request, templates, mode === "append"), ...pinyinWarnings(result.slides, templates)]
         : [],
-    [result, request, templates],
+    [result, request, templates, mode],
   );
 
   useEffect(() => {
@@ -527,7 +535,7 @@ export function AiImportDialog({ mode, onImport, onClose }: Props) {
         <ol className="ai-steps">
           <li>
             <span>Chọn nội dung bài học. Ứng dụng soạn sẵn lời nhắn cho AI theo lựa chọn của bạn.</span>
-            <RequestForm request={request} onChange={(patch) => setRequest((r) => changeRequest(r, patch))} />
+            <RequestForm request={request} insert={mode === "append"} onChange={(patch) => setRequest((r) => changeRequest(r, patch))} />
           </li>
           <li>
             <span>Sao chép lời nhắn, dán vào ChatGPT, Gemini, Claude hoặc công cụ AI bạn dùng.</span>
@@ -535,7 +543,7 @@ export function AiImportDialog({ mode, onImport, onClose }: Props) {
               primary
               label="Sao chép lời nhắn cho AI"
               disabled={!request.topic.trim()}
-              text={() => buildAiPrompt(templates, request)}
+              text={() => buildAiPrompt(templates, request, mode === "append")}
             />
             {!request.topic.trim() && <span className="muted">Hãy ghi chủ đề bài học trước.</span>}
             {request.topic.trim() && request.source.trim() && (
@@ -609,7 +617,7 @@ export function AiImportDialog({ mode, onImport, onClose }: Props) {
             Huỷ
           </button>
           <button type="button" className="primary" disabled={!result?.ok || busy} onClick={() => void submit()}>
-            {mode === "new" ? "Tạo bài mới" : "Thêm vào cuối bài"}
+            {mode === "new" ? "Tạo bài mới" : insertAfter ? `Chèn sau slide ${insertAfter}` : "Thêm vào cuối bài"}
           </button>
         </div>
       </div>

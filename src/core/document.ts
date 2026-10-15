@@ -53,11 +53,16 @@ export function addSlide(
   return { doc: next, slideId: slide.id };
 }
 
-/** Adds slides (e.g. imported from an AI reply) after the last one, as one step. */
-export function appendSlides(doc: LessonDocument, slides: Slide[]): LessonDocument {
+/**
+ * Adds slides (e.g. imported from an AI reply) as one step: after
+ * `afterSlideId`, so a teacher can slot them into the middle of a lesson, or
+ * at the end.
+ */
+export function insertSlides(doc: LessonDocument, slides: Slide[], afterSlideId?: string): LessonDocument {
   if (!slides.length) return doc;
   return produce(doc, (d) => {
-    d.slides.push(...structuredClone(slides));
+    const at = afterSlideId ? slideIndex(d, afterSlideId) + 1 : d.slides.length;
+    d.slides.splice(at, 0, ...structuredClone(slides));
   });
 }
 

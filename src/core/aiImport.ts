@@ -199,9 +199,13 @@ export function parseAiLesson(text: string, registry: TemplateRegistry): AiImpor
   return { ok: true, title, slides, imageQueries };
 }
 
-/** The prompt the teacher pastes into an AI chat: the lesson they asked for, in the order the blueprint sets. */
-export function buildAiPrompt(registry: TemplateRegistry, request: LessonRequest): string {
-  const plan = resolvePlan(request);
+/**
+ * The prompt the teacher pastes into an AI chat: the lesson they asked for, in
+ * the order the blueprint sets. `insert`: the slides go into the middle of an
+ * existing lesson.
+ */
+export function buildAiPrompt(registry: TemplateRegistry, request: LessonRequest, insert = false): string {
+  const plan = resolvePlan(request, insert);
   const age = ageProfile(request.age);
   const kind = BLUEPRINTS.find((b) => b.id === request.kind) ?? BLUEPRINTS[0]!;
   const duration = DURATIONS.find((d) => d.id === request.duration) ?? DURATIONS[1]!;
@@ -209,20 +213,25 @@ export function buildAiPrompt(registry: TemplateRegistry, request: LessonRequest
   const known = parseWordList(request.known);
   const exclude = parseWordList(request.exclude);
   const review = request.kind === "review";
+  const focus = request.kind === "word-focus";
   const source = request.source.trim();
 
   const lesson = [
     `- Chủ đề: ${request.topic.trim() || "[GHI CHỦ ĐỀ Ở ĐÂY]"}`,
     `- Học sinh: ${age.label}. ${age.guidance}`,
     `- Dạng bài: ${kind.label}. ${kind.description}`,
-    `- Thời lượng: ${duration.label}, tổng cộng ${planSlideCount(plan)} slide.`,
+    insert
+      ? `- Các slide này được chèn vào giữa một bài đang có: tổng cộng ${planSlideCount(plan)} slide, không có trang bìa hay trang tổng kết.`
+      : `- Thời lượng: ${duration.label}, tổng cộng ${planSlideCount(plan)} slide.`,
     ...(source
       ? [
           `- Giáo trình: ${source}. Giáo viên đính kèm các trang của bài này. Lấy đúng từ mới, mẫu câu và bài khoá/hội thoại trong tài liệu; không thêm từ ngoài bài (trừ từ lớp đã học). Slide luyện tập và trò chơi dùng lại đúng nội dung đó. Bám theo thứ tự các phần trong giáo trình khi hợp với trình tự slide bên dưới.`,
         ]
       : []),
     words.length
-      ? review
+      ? focus
+        ? `- Từ cần dạy kỹ (chỉ những từ này, không thêm từ mới): ${words.join(", ")}`
+        : review
         ? `- Từ đã học cần ôn (chỉ dùng những từ này, không thêm từ mới): ${words.join(", ")}`
         : `- Từ vựng bắt buộc (phải dạy đủ, có thể thêm vài từ cùng chủ đề): ${words.join(", ")}`
       : source

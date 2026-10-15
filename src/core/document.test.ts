@@ -4,7 +4,7 @@ import { testEnv } from "../test/env";
 import {
   addAsset,
   addSlide,
-  appendSlides,
+  insertSlides,
   duplicateSlide,
   moveSlide,
   removeSlide,
@@ -86,10 +86,19 @@ describe("document commands", () => {
   it("appends imported slides at the end and keeps the document valid", () => {
     const doc = base();
     const extra = addSlide(doc, templates, "quiz").doc.slides.at(-1)!;
-    const next = appendSlides(doc, [{ ...extra, id: "s_appended01" }]);
+    const next = insertSlides(doc, [{ ...extra, id: "s_appended01" }]);
     expect(next.slides.map((s) => s.id).at(-1)).toBe("s_appended01");
     expect(next.slides).toHaveLength(doc.slides.length + 1);
     expect(validateLesson(next, templates).ok).toBe(true);
-    expect(appendSlides(doc, [])).toBe(doc);
+    expect(insertSlides(doc, [])).toBe(doc);
+  });
+
+  it("inserts imported slides right after a chosen slide, in their order", () => {
+    const doc = base();
+    const extra = addSlide(doc, templates, "quiz").doc.slides.at(-1)!;
+    const after = doc.slides[1]!.id;
+    const next = insertSlides(doc, [{ ...extra, id: "s_inserted01" }, { ...extra, id: "s_inserted02" }], after);
+    expect(next.slides.map((s) => s.id).slice(1, 4)).toEqual([after, "s_inserted01", "s_inserted02"]);
+    expect(next.slides).toHaveLength(doc.slides.length + 2);
   });
 });

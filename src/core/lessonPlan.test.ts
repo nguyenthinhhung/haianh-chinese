@@ -35,7 +35,8 @@ describe("blueprints", () => {
 
   it("start with a cover, end with a summary and grow with the lesson length", () => {
     for (const a of AGE_PROFILES) {
-      for (const b of lessonKindsFor(a.id)) {
+      // Word focus is only ever inserted into a lesson.
+      for (const b of lessonKindsFor(a.id).filter((k) => k.id !== "word-focus")) {
         const counts = DURATIONS.map((d) => {
           const plan = resolvePlan(request({ age: a.id, kind: b.id, duration: d.id }));
           expect(plan[0]!.types).toEqual(["cover"]);
@@ -45,6 +46,22 @@ describe("blueprints", () => {
         expect(counts[0]).toBeLessThan(counts[2]!);
       }
     }
+  });
+
+  it("leave out the cover and summary when slides are inserted into a lesson", () => {
+    for (const b of BLUEPRINTS) {
+      const types = resolvePlan(request({ kind: b.id }), true).flatMap((s) => s.types);
+      expect(types).not.toContain("cover");
+      expect(types).not.toContain("summary");
+      expect(types.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("teach chosen words in depth: explained one by one, then practised and talked about", () => {
+    const plan = resolvePlan(request({ kind: "word-focus", age: "secondary" }), true);
+    expect(plan[0]!.types).toEqual(["picture-card"]);
+    expect(plan.flatMap((s) => s.types)).toContain("grammar");
+    expect(plan.flatMap((s) => s.types)).toContain("qa-list");
   });
 });
 
