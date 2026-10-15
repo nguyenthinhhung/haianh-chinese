@@ -12,7 +12,7 @@ phải chạm vào HTML.
 **Người dùng duy nhất của ứng dụng là giáo viên.** Học sinh chỉ xem màn hình chiếu
 và trả lời bằng lời; giáo viên là người điều khiển mọi thứ trên màn hình.
 
-> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 16).
+> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 17).
 
 ---
 
@@ -282,10 +282,11 @@ thể bổ sung dần mà không ảnh hưởng các loại đã có.
 | Template | Nội dung |
 | --- | --- |
 | `cover` | Tiêu đề, phụ đề, ảnh/hình trang trí. Dùng cả làm trang mở đầu phần. |
+| `book-page` | Một ảnh lớn chiếm cả slide, thường là ảnh chụp trang giáo trình (dán Ctrl+V), kèm chú thích và file nghe của trang. Để bài bám đúng sườn giáo trình mà không phải gõ lại. |
 | `vocabulary` | 1–8 từ: chữ Hán, pinyin, nghĩa, từ loại (tuỳ chọn), ảnh, audio; bật/tắt ẩn nghĩa. |
 | `picture-card` | Một từ chiếm cả slide: ảnh lớn, chữ Hán lớn, pinyin, bấm để nghe. Tuỳ chọn cho học sinh lớn: từ loại, cách dùng (cách kết hợp) và tối đa 2 câu ví dụ, hiện trong khung bên cạnh, sau chữ một bước khi đoán hình trước. |
 | `flashcard` | Thẻ lật: mặt trước ảnh (lật ra chữ Hán) hoặc chữ Hán (lật ra ảnh), mặt sau kèm pinyin và nghĩa. Tiếp lật thẻ kế tiếp còn úp; giáo viên cũng bấm chuột hoặc gõ số để lật thẻ bất kỳ, bấm lại thì úp xuống; Lùi úp lại theo thứ tự đã lật. |
-| `dialogue` | Các lượt thoại theo vai, có ảnh nhân vật. |
+| `dialogue` | Các lượt thoại theo vai, có ảnh nhân vật. Tuỳ chọn nơi diễn ra (在饭馆, như giáo trình ghi từng cảnh) và một file nghe cho cả bài (bài nghe của giáo trình). |
 | `grammar` | Cấu trúc, giải thích, câu ví dụ có tô màu thành phần. |
 | `summary` | Điểm cần nhớ, từ vựng chính. |
 
@@ -297,6 +298,7 @@ Giáo viên đặt câu hỏi, học sinh trả lời bằng lời, giáo viên 
 | Template | Giáo viên dùng thế nào | Các bước khi bấm Tiếp |
 | --- | --- | --- |
 | `qa-list` | Hỏi đáp về bài khoá/hội thoại: 1–6 câu hỏi (chữ Hán hoặc tiếng Việt), đáp án ẩn bên cạnh. | Mỗi lần Tiếp hiện đáp án một câu. |
+| `listening` | Bài nghe: file của giáo trình (hoặc giọng đọc tạo từ lời), 0–4 câu hỏi, lời bài nghe có pinyin và nghĩa. | Mỗi lần Tiếp hiện đáp án một câu, cuối cùng hiện lời bài nghe. |
 | `quiz` | Hỏi cả lớp; đề là chữ, ảnh hoặc audio ("nghe và chọn hình"); 2–4 lựa chọn đánh số/chữ cái để trẻ gọi tên; có biến thể Đúng/Sai. | Hiện câu hỏi → hiện đáp án đúng (sáng lên + âm thanh). |
 | `matching` | Hai cột chữ Hán ↔ nghĩa, hoặc ↔ hình khi `rightAs: "image"` (ảnh tự tìm theo nghĩa); trẻ nói cặp nào đi với nhau. | Mỗi lần Tiếp nối thêm một cặp. |
 | `fill-blank` | Câu có chỗ trống, kèm ô gợi ý từ. | Mỗi lần Tiếp điền một chỗ trống. |
@@ -474,6 +476,16 @@ Không gọi AI API trong MVP.
 ### C. Preview, Present và Export
 - Editor hiển thị slide bằng chính hàm render, thêm lớp chỉnh sửa.
 - Present: toàn màn hình; ←/→, PageUp/PageDown, Space, Esc; hỗ trợ bút trình chiếu.
+- Chế độ người trình chiếu (như PowerPoint): khi có màn hình thứ hai, app mở một
+  cửa sổ `audience-<id>` toàn màn hình trên màn hình đó, chạy runtime thật (âm
+  thanh, trò chơi, chọn ngẫu nhiên chỉ xảy ra một lần, ở màn chiếu). Cửa sổ chính
+  thành màn hình người trình chiếu: gửi phím và cú bấm sang, nhận lại trạng thái
+  (`onState`: slide, bước, màn đen) và bản sao HTML của slide hiện tại để hiển thị
+  tĩnh. Mỗi lần chiếu có cửa sổ và cặp tên sự kiện riêng, nên cửa sổ cũ đang đóng
+  không chen vào lần chiếu mới. Một màn hình: chiếu như cũ kèm thanh điều khiển
+  nổi; Alt+F5 bật chế độ người trình chiếu ngay trên màn hình đó (runtime chạy
+  trong khung slide). `B`/`W` (màn đen/trắng) nằm trong runtime nên file export
+  cũng có.
 - Export: render + runtime của các template được dùng + asset nhúng → một file
   `.html`. Asset không còn dùng bị bỏ trước. Mỗi file ảnh/âm thanh chỉ nhúng
   **một lần**, trong khối JSON `#lesson-assets` (đường dẫn `assets/…` → `data:` URL);
@@ -744,6 +756,17 @@ Chưa làm:
 ---
 
 ## 12. Lịch sử thay đổi
+
+### Rev 17
+
+| Thay đổi | Lý do |
+| --- | --- |
+| Chế độ người trình chiếu: màn chiếu riêng trên màn hình thứ hai; slide tiếp theo, ghi chú, đồng hồ, xem tất cả slide; thanh điều khiển khi chỉ có một màn hình | Giáo viên quen Presenter View của PowerPoint: xem ghi chú và slide sau mà lớp không thấy. |
+| Màn đen/trắng (`B`/`W`) trong runtime | Cho cả lớp rời mắt khỏi màn chiếu để nghe cô; chạy cả trong file export. |
+| Menu chuột phải trên danh sách slide (nhân bản, lên/xuống, xoá) và Ctrl+D; bỏ nút ✕ và nút Xoá | Giống Google Slides; bớt nút dễ bấm nhầm. |
+| Có màn hình thứ hai thì cửa sổ người trình chiếu chỉ phóng to, không toàn màn hình | Như PowerPoint: vẫn thấy taskbar, thu nhỏ để mở ứng dụng khác mà máy chiếu vẫn giữ slide. |
+| "Thêm slide bằng AI" chèn sau slide đang chọn, không có bìa/tổng kết; dạng bài mới "Dạy kỹ từ" (giải thích từng từ → ngữ pháp → luyện tập → chủ đề nói) | Giáo viên dựng sườn theo giáo trình rồi lồng phần dạy từ của mình vào giữa. |
+| Slide `listening` (Nghe) và `book-page` (Trang sách); `dialogue` có nơi diễn ra và file nghe cả bài | Lồng file nghe của giáo trình và đưa nguyên trang sách lên slide. |
 
 ### Rev 16
 

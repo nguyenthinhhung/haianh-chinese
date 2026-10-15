@@ -19,9 +19,9 @@ Bài học nằm trong thư mục **Tài liệu → Chinese Lesson Studio**, m�
 - **+ Bài mới**: đặt tên, chọn "Bài mẫu: Hoa quả" để xem ví dụ hoặc "Bài trống",
   và chọn theme (lần sau ứng dụng nhớ theme đã chọn).
 - Cột trái là danh sách slide: **+ Thêm slide** mở bảng các loại slide, mỗi loại
-  có một dòng mô tả; kéo thả để đổi thứ tự, các nút bên dưới để lên/xuống, nhân
-  bản, xoá. Xoá nhanh: rê chuột lên slide và bấm **✕** ở góc, hoặc chọn slide rồi
-  bấm phím **Delete**. Lỡ xoá thì **Ctrl+Z**.
+  có một dòng mô tả; kéo thả để đổi thứ tự. **Chuột phải** vào một slide để
+  nhân bản, lên/xuống hoặc xoá. Phím tắt: **Ctrl+D** nhân bản slide đang chọn,
+  **Delete** xoá slide đang chọn. Lỡ xoá thì **Ctrl+Z**.
 - **Kiểm tra bài** (thanh trên cùng) trước khi dạy: liệt kê theo từng slide các
   lỗi, chữ quá dài so với khung, pinyin không khớp chữ, ô ảnh còn trống, ảnh tự
   chọn chưa duyệt. Bấm vào một dòng để mở slide đó.
@@ -68,9 +68,22 @@ Hán. Pinyin tự điền nên được xem lại với từ đọc nhẹ hoặc
 
 | Nhóm | Loại |
 | --- | --- |
-| Dạy | Trang bìa, Từ vựng, Thẻ hình (có thể thêm từ loại, cách dùng, câu ví dụ cho học sinh lớn), Thẻ lật, Hội thoại, Ngữ pháp, Tổng kết |
-| Hỏi đáp | Hỏi đáp (câu hỏi bài khoá, đáp án hiện dần), Trắc nghiệm (cả Đúng/Sai), Ghép cặp, Điền chỗ trống, Sắp xếp câu, Chọn thanh điệu, Phân nhóm |
+| Dạy | Trang bìa, Trang sách / Ảnh lớn, Từ vựng, Thẻ hình (có thể thêm từ loại, cách dùng, câu ví dụ cho học sinh lớn), Thẻ lật, Hội thoại, Ngữ pháp, Tổng kết |
+| Hỏi đáp | Hỏi đáp (câu hỏi bài khoá, đáp án hiện dần), Nghe, Trắc nghiệm (cả Đúng/Sai), Ghép cặp, Điền chỗ trống, Sắp xếp câu, Chọn thanh điệu, Phân nhóm |
 | Trò chơi | Cái gì biến mất?, Đoán hình, Hộp bí mật, Vòng quay may mắn, Lật cặp |
+
+### Soạn theo giáo trình
+
+1. Dựng sườn bài theo đúng các phần của giáo trình. Phần nào muốn giữ nguyên như
+   sách thì dùng slide **Trang sách / Ảnh lớn**: chụp màn hình trang sách (Win+Shift+S),
+   bấm vào ô Ảnh rồi **Ctrl+V**; có thể gắn file nghe của trang đó.
+2. **File nghe của giáo trình** (mp3): gắn vào slide **Nghe** (kèm câu hỏi, lời bài
+   nghe hiện ở bước cuối), vào ô **File nghe cả bài** của slide Hội thoại, hoặc
+   slide Trang sách. Chưa có file thì **Tạo giọng đọc** từ lời bài nghe.
+3. Lồng phần dạy từ của mình vào giữa: chọn slide đứng trước chỗ muốn chèn, bấm
+   **Thêm slide bằng AI…**, chọn dạng bài **Dạy kỹ từ** và ghi các từ cần dạy. AI
+   soạn giải thích từng từ, ngữ pháp đi kèm, luyện tập và chủ đề nói; các slide
+   được chèn ngay sau slide đang chọn, không có trang bìa hay tổng kết.
 
 Một vài cách nhập đặc biệt:
 - **Điền chỗ trống**: đặt từ cần điền trong ngoặc vuông: `我[是]学生。`
@@ -82,6 +95,22 @@ Một vài cách nhập đặc biệt:
 **▶ Trình chiếu** (hoặc **Shift+F5**) chiếu từ slide đang chọn; **F5** chiếu từ đầu.
 Mọi slide đều chạy được chỉ bằng nút Tiếp/Lùi của bút trình chiếu.
 
+**Chế độ người trình chiếu** (giống Presenter View của PowerPoint): màn hình của
+cô có slide đang chiếu, slide tiếp theo, ghi chú (A− / A+ đổi cỡ chữ), đồng hồ
+đếm thời gian dạy, và các nút: Lùi/Tiếp, **Tất cả slide**, **Màn đen/trắng**,
+**Hiện đáp án**, **Làm lại**, **Bảng điểm**, **Đồng hồ**, **Gọi số**.
+- Có nối máy chiếu/TV ở chế độ **Mở rộng** (Windows: **Win+P → Extend / Mở
+  rộng**): bấm Trình chiếu là slide tự lên máy chiếu, laptop hiện chế độ người
+  trình chiếu. Bấm vào slide trên laptop như bấm trên màn chiếu (lật thẻ, chọn ô).
+  Cửa sổ trên laptop không chiếm toàn màn hình nên vẫn thấy thanh taskbar: thu
+  nhỏ hoặc chuyển sang ứng dụng khác thì máy chiếu vẫn giữ slide. Muốn bấm Tiếp
+  bằng bút trình chiếu thì bấm lại vào cửa sổ trình chiếu trước.
+- Chỉ có một màn hình (hoặc máy chiếu ở chế độ **Duplicate / Nhân đôi**): rê
+  chuột để hiện thanh điều khiển ở góc dưới bên trái (Lùi, Tiếp, Tất cả slide,
+  Màn đen, Phím tắt, **Người trình chiếu**, Kết thúc). **Alt+F5** hoặc nút
+  **Người trình chiếu** mở chế độ người trình chiếu ngay trên màn hình này để
+  tập trước; lúc này học sinh cũng thấy, nên đừng dùng khi đang chiếu cho lớp.
+
 | Phím | Tác dụng |
 | --- | --- |
 | → , Space, Enter, PageDown | Tiếp (hiện bước tiếp theo, hết bước thì sang slide sau) |
@@ -92,6 +121,8 @@ Mọi slide đều chạy được chỉ bằng nút Tiếp/Lùi của bút trì
 | S | Hiện / ẩn bảng điểm |
 | T | Đồng hồ đếm ngược: chạy / dừng (Shift+T: tắt). Bấm vào đồng hồ để đổi thời gian |
 | N | Gọi một số thứ tự học sinh ngẫu nhiên (Shift+N: tắt) |
+| B / W | Màn hình đen / trắng để cả lớp nhìn cô; bấm phím bất kỳ để quay lại slide |
+| G | Xem tất cả slide, bấm vào một slide để chuyển đến |
 | H | Bảng phím tắt |
 | Esc | Thoát trình chiếu |
 
@@ -112,7 +143,8 @@ lật ra hình.
 
 ## 6. Tạo bài bằng AI
 
-1. **Tạo bài bằng AI…** ở thư viện, hoặc **Thêm slide bằng AI…** trong một bài.
+1. **Tạo bài bằng AI…** ở thư viện, hoặc **Thêm slide bằng AI…** trong một bài (các
+   slide mới được chèn ngay sau slide đang chọn).
 2. Chọn nội dung bài: chủ đề, lứa tuổi học sinh, thời lượng, dạng bài (Từ vựng,
    Hội thoại, Mẫu câu, Ôn tập, Tổng hợp), và nếu muốn thì ghi các từ cần dạy.
    - **Dàn ý**: bấm − / + để đổi số slide của từng phần; về 0 là bỏ phần đó (ví
