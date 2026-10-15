@@ -144,8 +144,9 @@
 
   /* Presents the slides of a `.ls-deck` element one at a time.
    * options: start (slide index), onChange(index), onExit() (Esc),
-   * toggleFullscreen(). Returns a controller; destroy() removes every
-   * listener and restores the deck.
+   * toggleFullscreen(), onState({ index, step, steps, blank }) after every
+   * move, step or blank-screen change (for a presenter view). Returns a
+   * controller; destroy() removes every listener and restores the deck.
    *
    * An interaction factory is called as factory(slideEl, ctx) with
    * ctx = { tools, feedback(kind) }. Besides { steps, show(n) } it may return
@@ -202,6 +203,30 @@
     var digits = "";
     var digitsTimer = null;
 
+    /* Black or white screen (B / W, as in PowerPoint) so the class looks at
+     * the teacher. Any key or click brings the slide back without moving on. */
+    var blankBox = document.createElement("div");
+    blankBox.className = "ls-blank";
+    blankBox.hidden = true;
+    deck.appendChild(blankBox);
+    var blankMode = null;
+
+    function setBlank(mode) {
+      blankMode = mode === "black" || mode === "white" ? mode : null;
+      blankBox.hidden = !blankMode;
+      if (blankMode) blankBox.setAttribute("data-mode", blankMode);
+      notify();
+    }
+
+    function notify() {
+      if (!options.onState || index < 0) return;
+      try {
+        options.onState({ index: index, step: step, steps: controllers[index].steps, blank: blankMode });
+      } catch (e) {
+        if (window.console) console.error(e);
+      }
+    }
+
     function flushDigits() {
       if (digitsTimer) clearTimeout(digitsTimer);
       digitsTimer = null;
@@ -231,6 +256,7 @@
     function setStep(n) {
       step = n;
       controllers[index].show(n);
+      notify();
     }
 
     function call(c, hook) {
@@ -263,6 +289,7 @@
       if (controllers[i].usesScores && tools) tools.showScores();
       progress.style.width = ((i + 1) / slides.length) * 100 + "%";
       if (options.onChange) options.onChange(i);
+      notify();
     }
 
     function next() {
@@ -291,6 +318,11 @@
 
     function onKey(e) {
       if (e.ctrlKey || e.metaKey || e.altKey || isTyping(e.target)) return;
+      if (blankMode && !/^(Shift|Control|Alt|Meta)$/.test(e.key)) {
+        setBlank(null);
+        e.preventDefault();
+        return;
+      }
       var c = controllers[index];
       var digit = /^(Digit|Numpad)(\d)$/.exec(e.code || "");
       if (digit && c.pick && !e.shiftKey) {
@@ -336,6 +368,16 @@
         case "R":
           reset();
           break;
+        case "b":
+        case "B":
+        case ".":
+          setBlank("black");
+          break;
+        case "w":
+        case "W":
+        case ",":
+          setBlank("white");
+          break;
         case "f":
         case "F":
           (options.toggleFullscreen || defaultFullscreen)();
@@ -351,6 +393,10 @@
     }
 
     function onClick(e) {
+      if (blankMode) {
+        setBlank(null);
+        return;
+      }
       var target = e.target;
       var play = target && target.closest ? target.closest("[data-ls-play]") : null;
       if (play) {
@@ -377,6 +423,7 @@
       go: go,
       revealAll: revealAll,
       reset: reset,
+      blank: setBlank,
       tools: tools,
       destroy: function () {
         document.removeEventListener("keydown", onKey);
@@ -385,7 +432,7 @@
         stopMedia(slides[index]);
         call(controllers[index], "leave");
         if (tools) tools.destroy();
-        [progress, digitsBox].forEach(function (node) {
+        [progress, digitsBox, blankBox].forEach(function (node) {
           if (node.parentNode) node.parentNode.removeChild(node);
         });
         deck.classList.remove("ls-presenting");

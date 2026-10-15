@@ -1075,3 +1075,283 @@ input.library-search {
   padding-left: 20px;
   font-size: 13px;
 }
+
+/* ---- Presenting ---- */
+.present-root {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: #000;
+}
+/* The presenter view (PowerPoint style): current slide, controls under it,
+   next slide and notes beside it. Dark, so it doesn't glare in a dim room. */
+.present-root.presenter {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 32%);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "top top"
+    "current side"
+    "controls side";
+  gap: 12px;
+  padding: 12px 16px 16px;
+  background: #1c1d21;
+  color: #e8e8ea;
+}
+.present-root.presenter button {
+  border-color: #3a3c43;
+  background: #2a2c32;
+  color: #e8e8ea;
+}
+.present-root.presenter button:hover:not(:disabled) {
+  background: #363941;
+}
+.present-root.presenter button.primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+.present-root.presenter .muted {
+  color: #9a9ca3;
+}
+.present-stage {
+  grid-area: current;
+  position: relative;
+  min-height: 0;
+  /* Sizes the slide, and layout containment keeps the deck's fixed layers
+     (tools, progress, blank screen) inside this pane. */
+  container-type: size;
+  contain: size layout style;
+}
+.present-root.presenter .ls-deck.ls-presenting {
+  position: absolute;
+  inset: 0;
+  z-index: auto;
+  background: transparent;
+}
+.present-root.presenter .ls-deck.ls-presenting > .ls-slide {
+  width: min(100cqw, calc(100cqh * 16 / 9));
+  border-radius: 6px;
+}
+/* A copy of a slide: what the projector shows now, or the next slide. No
+   runtime runs in it, and replaying effects on every update would flicker. */
+.ls-deck.ls-mirror,
+.ls-deck.ls-mirror * {
+  transition: none !important;
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+}
+.ls-deck.ls-presenting.ls-mirror {
+  position: absolute;
+  inset: 0;
+  z-index: auto;
+  background: transparent;
+  container-type: size;
+}
+.ls-deck.ls-presenting.ls-mirror > .ls-slide {
+  width: min(100cqw, calc(100cqh * 16 / 9));
+  visibility: visible;
+}
+.present-mirror {
+  cursor: pointer;
+}
+.present-waiting {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  color: #9a9ca3;
+}
+.present-blank-badge {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #000;
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 0 0 1px #555;
+}
+.presenter-top {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.presenter-timer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.presenter-timer > span,
+.presenter-clock {
+  font-size: 22px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.presenter-paused {
+  opacity: 0.5;
+}
+.presenter-timer button {
+  width: 32px;
+  padding: 4px 0;
+}
+.presenter-position {
+  font-size: 16px;
+}
+.present-root.presenter .presenter-end {
+  border-color: #7a2a33;
+  background: #4a1d23;
+}
+.presenter-controls {
+  grid-area: controls;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.presenter-nav {
+  min-width: 110px;
+  padding: 10px 16px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.present-root.presenter button.presenter-on {
+  border-color: #fff;
+  background: #000;
+}
+.presenter-sep {
+  width: 1px;
+  height: 24px;
+  margin: 0 4px;
+  background: #3a3c43;
+}
+.presenter-side {
+  grid-area: side;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+}
+.presenter-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  color: #9a9ca3;
+}
+.presenter-label button {
+  padding: 2px 8px;
+}
+.presenter-next-slide {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.presenter-next-end {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 9;
+  border: 1px dashed #3a3c43;
+  border-radius: 6px;
+  color: #9a9ca3;
+}
+.presenter-notes {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.presenter-notes-text {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 14px;
+  border-radius: 6px;
+  background: #24262b;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+/* Single-screen slide show toolbar, as in PowerPoint: faint until the mouse moves. */
+.show-toolbar {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 1001;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 10px;
+  background: rgb(0 0 0 / 0.55);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.show-toolbar.awake,
+.show-toolbar:hover,
+.show-toolbar:focus-within {
+  opacity: 1;
+}
+.show-toolbar button {
+  min-width: 36px;
+  border: 0;
+  background: transparent;
+  color: #fff;
+}
+.show-toolbar button:hover:not(:disabled) {
+  background: rgb(255 255 255 / 0.18);
+}
+
+/* Every slide at once, to jump anywhere in the lesson. */
+.slide-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 1002;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 24px 24px;
+  background: rgb(20 21 24 / 0.97);
+  color: #e8e8ea;
+}
+.slide-grid-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  font-size: 16px;
+}
+.slide-grid-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+.slide-grid-list button {
+  display: block;
+  width: 100%;
+  padding: 4px;
+  border: 3px solid transparent;
+  background: transparent;
+  color: inherit;
+  text-align: center;
+}
+.slide-grid-list button.current {
+  border-color: var(--accent);
+}
+.slide-grid-list button:hover {
+  border-color: #6b6e77;
+}
+.slide-grid-list .ls-slide {
+  border-radius: 4px;
+  pointer-events: none;
+}
+.audience {
+  height: 100vh;
+  background: #000;
+}

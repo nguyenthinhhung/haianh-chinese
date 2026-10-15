@@ -88,6 +88,8 @@ export function createTauriPersistence(): Persistence {
     setWindowTitle: (title) => getCurrentWindow().setTitle(title),
     setFullscreen: (on) => getCurrentWindow().setFullscreen(on),
     isFullscreen: () => getCurrentWindow().isFullscreen(),
+    setMaximized: (on) => (on ? getCurrentWindow().maximize() : getCurrentWindow().unmaximize()),
+    isMaximized: () => getCurrentWindow().isMaximized(),
     onCloseRequested(handler) {
       closeHandlers.add(handler);
       return () => void closeHandlers.delete(handler);

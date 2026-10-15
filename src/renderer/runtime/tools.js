@@ -196,6 +196,7 @@
       ["S", "Hiện / ẩn bảng điểm"],
       ["T", "Đồng hồ: chạy / dừng (Shift+T: tắt)"],
       ["N", "Gọi số ngẫu nhiên (Shift+N: tắt)"],
+      ["B / W", "Màn hình đen / trắng (phím bất kỳ để quay lại)"],
       ["F", "Toàn màn hình"],
       ["H", "Bảng phím tắt này"],
     ];

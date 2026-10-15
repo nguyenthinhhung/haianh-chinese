@@ -26,9 +26,18 @@ export function SlideView({ doc, slide, env }: Props) {
       return `<section class="ls-slide"></section>`;
     }
   }, [doc, slide, env]);
+  return <StaticDeck doc={doc} env={env} html={html} />;
+}
+
+/**
+ * Slide markup inside a deck carrying the lesson's theme and settings, with no
+ * runtime. `presenting` styles it as on screen at that moment (hidden steps
+ * hidden) rather than as in the editor.
+ */
+export function StaticDeck({ doc, env, html, presenting }: { doc: LessonDocument; env: RenderEnv; html: string; presenting?: boolean }) {
   return (
     <div
-      className="ls-deck"
+      className={presenting ? "ls-deck ls-presenting ls-mirror" : "ls-deck"}
       data-theme={env.themes.resolve(doc.theme.id).id}
       data-hanzi-font={doc.settings.hanziFont}
       data-pinyin={doc.settings.pinyin ? "on" : "off"}

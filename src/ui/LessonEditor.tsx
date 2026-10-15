@@ -30,7 +30,7 @@ export function LessonEditor({ lesson, onClose }: Props) {
   const { doc } = session;
   const [selectedId, setSelectedId] = useState<string | undefined>(doc.slides[0]?.id);
   const [closeBlocked, setCloseBlocked] = useState(false);
-  const [presentFrom, setPresentFrom] = useState<number | null>(null);
+  const [presenting, setPresenting] = useState<{ from: number; presenterView: boolean } | null>(null);
   const [notice, setNotice] = useState<{ text: string; error?: boolean } | null>(
     lesson.notice ? { text: lesson.notice } : null,
   );
@@ -69,17 +69,18 @@ export function LessonEditor({ lesson, onClose }: Props) {
     [services, lesson.dir],
   );
 
-  // F5 presents from the start, Shift+F5 from the selected slide, as in PowerPoint.
+  // As in PowerPoint: F5 presents from the start, Shift+F5 from the selected
+  // slide, Alt+F5 from the selected slide with the presenter view.
   useEffect(() => {
-    if (presentFrom !== null) return;
+    if (presenting) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "F5" || e.ctrlKey || e.metaKey || e.altKey || !doc.slides.length) return;
+      if (e.key !== "F5" || e.ctrlKey || e.metaKey || !doc.slides.length) return;
       e.preventDefault();
-      setPresentFrom(e.shiftKey ? slideIndex : 0);
+      setPresenting({ from: e.shiftKey || e.altKey ? slideIndex : 0, presenterView: e.altKey });
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [presentFrom, slideIndex, doc.slides.length]);
+  }, [presenting, slideIndex, doc.slides.length]);
 
   async function exportFile() {
     setExporting(true);
@@ -198,8 +199,8 @@ export function LessonEditor({ lesson, onClose }: Props) {
           type="button"
           className="present-button"
           disabled={!doc.slides.length}
-          title="Trình chiếu từ slide đang chọn (Shift+F5). F5: từ đầu. Esc để thoát."
-          onClick={() => setPresentFrom(slideIndex)}
+          title="Trình chiếu từ slide đang chọn (Shift+F5). F5: từ đầu. Alt+F5: kèm chế độ người trình chiếu. Esc để thoát."
+          onClick={() => setPresenting({ from: slideIndex, presenterView: false })}
         >
           ▶ Trình chiếu
         </button>
@@ -286,13 +287,15 @@ export function LessonEditor({ lesson, onClose }: Props) {
 
       <PropertiesPanel session={session} slide={slide} />
 
-      {presentFrom !== null && (
+      {presenting && (
         <PresentMode
           doc={doc}
           env={env}
-          start={presentFrom}
+          dir={lesson.dir}
+          start={presenting.from}
+          presenterView={presenting.presenterView}
           onExit={(i) => {
-            setPresentFrom(null);
+            setPresenting(null);
             setSelectedId(doc.slides[i]?.id);
           }}
         />

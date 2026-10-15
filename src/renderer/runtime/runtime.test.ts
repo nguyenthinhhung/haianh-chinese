@@ -4,7 +4,7 @@ import type { LessonDocument } from "../../core/schema";
 import { createFromSample } from "../../samples";
 import { testEnv } from "../../test/env";
 import { lessonRuntime, renderDeck } from "../render";
-import type { PresentController } from "./load";
+import type { MountOptions, PresentController, PresentState } from "./load";
 
 const env = testEnv();
 
@@ -33,7 +33,7 @@ afterEach(() => {
 });
 
 /** Renders a lesson with the given slides and presents it, as Present does. */
-function present(slides: { type: string; content?: unknown }[], start = 0): Controller {
+function present(slides: { type: string; content?: unknown }[], start = 0, options: MountOptions = {}): Controller {
   const doc: LessonDocument = {
     ...createFromSample("blank", "Test", "0.0.0"),
     slides: slides.map((s, i) => ({
@@ -46,7 +46,7 @@ function present(slides: { type: string; content?: unknown }[], start = 0): Cont
   host = document.createElement("div");
   document.body.appendChild(host);
   host.innerHTML = renderDeck(doc, env);
-  controller = window.LessonStudio!.mount(host.querySelector(".ls-deck")!, { start }) as Controller;
+  controller = window.LessonStudio!.mount(host.querySelector(".ls-deck")!, { ...options, start }) as Controller;
   return controller;
 }
 
@@ -85,6 +85,37 @@ describe("steps", () => {
     press("a");
     expect(revealed()).toBe(8);
     press("r");
+    expect(revealed()).toBe(0);
+  });
+
+  it("reports every move and step to a presenter view", () => {
+    const states: PresentState[] = [];
+    present([{ type: "matching" }, { type: "cover" }], 0, { onState: (s) => states.push(s) });
+    press("ArrowRight");
+    press("End");
+    expect(states[0]).toEqual({ index: 0, step: 0, steps: 4, blank: null });
+    expect(states).toContainEqual({ index: 0, step: 1, steps: 4, blank: null });
+    expect(states.at(-1)).toEqual({ index: 1, step: 0, steps: 0, blank: null });
+  });
+});
+
+describe("blank screen", () => {
+  it("B blacks the screen; the next key only brings the slide back", () => {
+    const vocab = env.templates.require("vocabulary").defaults() as { hideMeaning: boolean };
+    const states: PresentState[] = [];
+    present([{ type: "vocabulary", content: { ...vocab, hideMeaning: true } }], 0, { onState: (s) => states.push(s) });
+    const blank = () => host.querySelector<HTMLElement>(".ls-blank")!;
+    press("b");
+    expect(blank().hidden).toBe(false);
+    expect(blank().dataset.mode).toBe("black");
+    expect(states.at(-1)!.blank).toBe("black");
+    press("ArrowRight");
+    expect(blank().hidden).toBe(true);
+    expect(revealed()).toBe(0);
+    press("w");
+    expect(blank().dataset.mode).toBe("white");
+    blank().click();
+    expect(blank().hidden).toBe(true);
     expect(revealed()).toBe(0);
   });
 });

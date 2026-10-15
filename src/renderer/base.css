@@ -201,6 +201,18 @@ html.ls-present body {
   transition: width 0.25s ease;
   z-index: 10;
 }
+.ls-deck.ls-presenting > .ls-blank {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: #000;
+}
+.ls-deck.ls-presenting > .ls-blank[data-mode="white"] {
+  background: #fff;
+}
+.ls-deck.ls-presenting > .ls-blank[hidden] {
+  display: none;
+}
 @media print {
   .ls-deck.ls-presenting {
     position: static;

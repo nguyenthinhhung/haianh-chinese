@@ -200,6 +200,9 @@ export function createBrowserPersistence(): Persistence {
       if (!on && document.fullscreenElement) await document.exitFullscreen().catch(() => {});
     },
     isFullscreen: async () => !!document.fullscreenElement,
+    // A tab has no window to maximise.
+    setMaximized: async () => {},
+    isMaximized: async () => false,
     // A tab cannot wait for an async save before closing; the draft covers it.
     onCloseRequested: () => () => {},
   };

@@ -133,6 +133,9 @@ export interface Persistence {
   setWindowTitle(title: string): Promise<void>;
   setFullscreen(on: boolean): Promise<void>;
   isFullscreen(): Promise<boolean>;
+  /** Maximised, not full screen: the taskbar and the window's own buttons stay. */
+  setMaximized(on: boolean): Promise<void>;
+  isMaximized(): Promise<boolean>;
   /**
    * Runs `handler` when the user closes the window; it resolves false to keep
    * the window open. Returns a function that removes the handler.

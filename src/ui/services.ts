@@ -2,11 +2,13 @@ import { createContext, useContext } from "react";
 import type { TemplateRegistry } from "../core/templateRegistry";
 import type { ThemeRegistry } from "../core/themeRegistry";
 import type { Persistence } from "../platform/persistence";
+import type { Screens } from "../platform/screens";
 
 export interface Services {
   templates: TemplateRegistry;
   themes: ThemeRegistry;
   persistence: Persistence;
+  screens: Screens;
   appVersion: string;
 }
 

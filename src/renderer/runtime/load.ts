@@ -18,12 +18,26 @@ export interface PresentController {
   next(): void;
   prev(): void;
   go(index: number): void;
+  /** Blacks or whites out the screen; null brings the slide back. */
+  blank(mode: BlankMode | null): void;
   destroy(): void;
+}
+
+export type BlankMode = "black" | "white";
+
+/** Where a presentation stands, reported after every move. */
+export interface PresentState {
+  index: number;
+  /** Steps of the current slide done so far, out of `steps`; games may run past their steps. */
+  step: number;
+  steps: number;
+  blank: BlankMode | null;
 }
 
 export interface MountOptions {
   start?: number;
   onChange?(index: number): void;
+  onState?(state: PresentState): void;
   onExit?(): void;
   toggleFullscreen?(): void;
 }
