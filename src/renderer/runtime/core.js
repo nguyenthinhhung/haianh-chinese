@@ -284,6 +284,7 @@
         slides[k].setAttribute("aria-hidden", current ? "false" : "true");
       }
       index = i;
+      if (tools && tools.onSlide) tools.onSlide(i);
       setStep(0);
       call(controllers[i], "enter");
       if (controllers[i].usesScores && tools) tools.showScores();

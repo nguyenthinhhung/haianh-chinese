@@ -65,6 +65,8 @@ interface Props {
   onOwnWindow?(): void;
   /** The slides are in their own window on this screen (teaching online). */
   online?: boolean;
+  /** The slides run in another window, where the pen has to be used. */
+  remote?: boolean;
 }
 
 /**
@@ -72,7 +74,7 @@ interface Props {
  * timer, next slide, notes and every control. Its grid cells sit around the
  * current slide, which the caller places in the `current` area.
  */
-export function PresenterView({ doc, env, state, driver, onShowAll, onEnd, onHide, onOwnWindow, online }: Props) {
+export function PresenterView({ doc, env, state, driver, onShowAll, onEnd, onHide, onOwnWindow, online, remote }: Props) {
   const watch = useStopwatch();
   const [notesSize, setNotesSize] = useState(readNotesSize);
   const slide = doc.slides[state.index];
@@ -174,6 +176,13 @@ export function PresenterView({ doc, env, state, driver, onShowAll, onEnd, onHid
           □ Màn trắng
         </button>
         <span className="presenter-sep" />
+        {tool(
+          "✎ Bút",
+          "p",
+          remote
+            ? "Bút viết lên slide (P). Rê chuột sang cửa sổ trình chiếu để viết; E xoá nét."
+            : "Bút viết lên slide (P); E xoá nét",
+        )}
         {tool("Hiện đáp án", "a", "Hiện hết đáp án của slide (A)")}
         {tool("Làm lại", "r", "Làm lại slide từ đầu (R)")}
         <span className="presenter-sep" />
@@ -299,6 +308,9 @@ export function ShowToolbar({
       </button>
       <button type="button" onMouseDown={noFocus} onClick={() => driver.blank(blank ? null : "black")} title="Màn đen (B)" aria-label="Màn đen">
         ■
+      </button>
+      <button type="button" onMouseDown={noFocus} onClick={() => driver.key("p")} title="Bút viết lên slide (P); E xoá nét" aria-label="Bút">
+        ✎
       </button>
       <button type="button" onMouseDown={noFocus} onClick={() => driver.key("h")} title="Phím tắt (H)" aria-label="Phím tắt">
         ?

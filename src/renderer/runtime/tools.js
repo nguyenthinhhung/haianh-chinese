@@ -184,6 +184,109 @@
       }, 70);
     }
 
+    /* ---- Pen: write on the slide, as with PowerPoint's pen. The ink belongs
+     * to the slide on screen and is wiped when the slide changes. ---- */
+    var INK_COLORS = ["#e11d48", "#2563eb", "#16a34a", "#111827"];
+    var ink = el("canvas", "ls-ink");
+    layer.insertBefore(ink, layer.firstChild);
+    var inkCtx = ink.getContext ? ink.getContext("2d") : null;
+    var penOn = false;
+    var penColor = INK_COLORS[0];
+    var stroke = null;
+
+    var penBar = el("div", "ls-pen");
+    penBar.hidden = true;
+    var swatches = INK_COLORS.map(function (color) {
+      var b = el("button", "ls-pen-color");
+      b.type = "button";
+      b.style.background = color;
+      b.setAttribute("aria-label", "Màu bút");
+      b.addEventListener("click", function (e) {
+        e.stopPropagation();
+        penColor = color;
+        markColor();
+      });
+      penBar.appendChild(b);
+      return b;
+    });
+    var eraseButton = el("button", "ls-pen-action", "Xoá nét (E)");
+    eraseButton.type = "button";
+    eraseButton.addEventListener("click", function (e) {
+      e.stopPropagation();
+      clearInk();
+    });
+    var offButton = el("button", "ls-pen-action", "Tắt bút (P)");
+    offButton.type = "button";
+    offButton.addEventListener("click", function (e) {
+      e.stopPropagation();
+      setPen(false);
+    });
+    penBar.appendChild(eraseButton);
+    penBar.appendChild(offButton);
+    layer.appendChild(penBar);
+
+    function markColor() {
+      swatches.forEach(function (b, i) {
+        b.classList.toggle("ls-pen-color-on", INK_COLORS[i] === penColor);
+      });
+    }
+    markColor();
+
+    function sizeInk() {
+      var r = layer.getBoundingClientRect();
+      var dpr = window.devicePixelRatio || 1;
+      ink.width = Math.max(1, Math.round(r.width * dpr));
+      ink.height = Math.max(1, Math.round(r.height * dpr));
+      if (inkCtx) inkCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    function clearInk() {
+      if (!inkCtx) return;
+      inkCtx.save();
+      inkCtx.setTransform(1, 0, 0, 1, 0, 0);
+      inkCtx.clearRect(0, 0, ink.width, ink.height);
+      inkCtx.restore();
+    }
+    function setPen(on) {
+      penOn = on;
+      penBar.hidden = !on;
+      ink.classList.toggle("ls-ink-on", on);
+      if (on && ink.width <= 1) sizeInk();
+    }
+    function inkPoint(e) {
+      var r = ink.getBoundingClientRect();
+      return { x: e.clientX - r.left, y: e.clientY - r.top };
+    }
+    ink.addEventListener("pointerdown", function (e) {
+      if (!penOn || !inkCtx) return;
+      e.preventDefault();
+      if (ink.setPointerCapture) ink.setPointerCapture(e.pointerId);
+      stroke = inkPoint(e);
+      inkCtx.strokeStyle = penColor;
+      inkCtx.lineWidth = Math.max(3, ink.getBoundingClientRect().width / 400);
+      inkCtx.lineCap = "round";
+      inkCtx.lineJoin = "round";
+    });
+    ink.addEventListener("pointermove", function (e) {
+      if (!stroke || !inkCtx) return;
+      var p = inkPoint(e);
+      inkCtx.beginPath();
+      inkCtx.moveTo(stroke.x, stroke.y);
+      inkCtx.lineTo(p.x, p.y);
+      inkCtx.stroke();
+      stroke = p;
+    });
+    function endStroke() {
+      stroke = null;
+    }
+    ink.addEventListener("pointerup", endStroke);
+    ink.addEventListener("pointercancel", endStroke);
+    ink.addEventListener("click", function (e) {
+      e.stopPropagation();
+    });
+    // A new size means a new canvas; the slide's ink does not survive it.
+    window.addEventListener("resize", sizeInk);
+    sizeInk();
+
     /* ---- Shortcut help ---- */
     var help = el("div", "ls-help");
     help.hidden = true;
@@ -197,6 +300,7 @@
       ["T", "Đồng hồ: chạy / dừng (Shift+T: tắt)"],
       ["N", "Gọi số ngẫu nhiên (Shift+N: tắt)"],
       ["B / W", "Màn hình đen / trắng (phím bất kỳ để quay lại)"],
+      ["P", "Bút viết lên slide (E: xoá nét)"],
       ["F", "Toàn màn hình"],
       ["H", "Bảng phím tắt này"],
     ];
@@ -238,6 +342,18 @@
         current = (current + 1) % scores.length;
         drawBoard();
       },
+      /* Turns the pen on or off; with no argument, toggles it. */
+      pen: function (on) {
+        setPen(on === undefined ? !penOn : !!on);
+      },
+      penOn: function () {
+        return penOn;
+      },
+      clearInk: clearInk,
+      /* The slide changed: its ink goes with it. */
+      onSlide: function () {
+        clearInk();
+      },
       showScores: function () {
         board.hidden = false;
         drawBoard();
@@ -273,12 +389,24 @@
             if (e.shiftKey) picker.hidden = true;
             else roll();
             return true;
+          case "p":
+          case "P":
+            setPen(!penOn);
+            return true;
+          case "e":
+          case "E":
+            clearInk();
+            return true;
           case "h":
           case "H":
           case "?":
             help.hidden = !help.hidden;
             return true;
           case "Escape":
+            if (penOn) {
+              setPen(false);
+              return true;
+            }
             if (!help.hidden || !picker.hidden) {
               help.hidden = true;
               picker.hidden = true;
@@ -290,6 +418,7 @@
       },
       destroy: function () {
         stopTimer();
+        window.removeEventListener("resize", sizeInk);
         if (rolling) clearInterval(rolling);
         if (layer.parentNode) layer.parentNode.removeChild(layer);
       },

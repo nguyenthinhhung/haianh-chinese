@@ -196,6 +196,21 @@ describe("classroom tools", () => {
     expect(host.querySelector<HTMLElement>(".ls-picker")!.hidden).toBe(true);
   });
 
+  it("P turns the pen on; Esc turns it off without ending the show", () => {
+    const exits: number[] = [];
+    present([{ type: "cover" }], 0, { onExit: () => exits.push(1) });
+    const pen = () => host.querySelector<HTMLElement>(".ls-pen")!;
+    const ink = () => host.querySelector<HTMLCanvasElement>(".ls-ink")!;
+    press("p");
+    expect(pen().hidden).toBe(false);
+    expect(ink().classList.contains("ls-ink-on")).toBe(true);
+    press("Escape");
+    expect(pen().hidden).toBe(true);
+    expect(exits).toEqual([]);
+    press("Escape");
+    expect(exits).toEqual([1]);
+  });
+
   it("H shows the shortcut list", () => {
     present([{ type: "cover" }]);
     press("h");

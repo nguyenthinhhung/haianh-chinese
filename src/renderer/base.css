@@ -238,6 +238,48 @@ html.ls-present body {
 .ls-deck.ls-presenting .ls-tools > * {
   pointer-events: auto;
 }
+/* Ink from the pen: over the slide, under the other tools; it takes the
+   mouse only while the pen is on. */
+.ls-deck.ls-presenting .ls-tools > .ls-ink {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  touch-action: none;
+}
+.ls-deck.ls-presenting .ls-tools > .ls-ink.ls-ink-on {
+  pointer-events: auto;
+  cursor: crosshair;
+}
+.ls-deck.ls-presenting .ls-pen {
+  position: absolute;
+  top: 1.2vmin;
+  left: 1.2vmin;
+  display: flex;
+  align-items: center;
+  gap: 0.8vmin;
+  padding: 0.6vmin 1vmin;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.6);
+  font-size: 2vmin;
+}
+.ls-deck.ls-presenting .ls-pen-color {
+  width: 3.4vmin;
+  height: 3.4vmin;
+  border: 0.4vmin solid transparent;
+  border-radius: 50%;
+}
+.ls-deck.ls-presenting .ls-pen-color-on {
+  border-color: #fff;
+}
+.ls-deck.ls-presenting .ls-pen-action {
+  padding: 0.4vmin 1.2vmin;
+  border: 0;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.2);
+  color: #fff;
+}
 .ls-deck.ls-presenting .ls-tools [hidden] {
   display: none !important;
 }

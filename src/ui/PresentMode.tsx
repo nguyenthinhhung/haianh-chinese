@@ -242,6 +242,7 @@ export function PresentMode({ doc, env, dir, start, presenterView = false, onExi
           onHide={mode === "local" ? () => setLocalView("show") : undefined}
           onOwnWindow={mode === "local" ? () => void moveToOwnWindow() : undefined}
           online={online}
+          remote={mode === "remote"}
         />
       )}
       {mode === "remote" && (
