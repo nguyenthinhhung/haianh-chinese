@@ -1369,3 +1369,9 @@ input.library-search {
   height: 100vh;
   background: #000;
 }
+.presenter-online {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #23402c;
+  color: #c9f0d3;
+}

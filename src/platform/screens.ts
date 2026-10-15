@@ -11,8 +11,11 @@ import { isTauri } from "./index";
 export interface Screens {
   /** True when another display (a projector in Extend mode) is connected. */
   hasSecondScreen(): Promise<boolean>;
-  /** Opens a new audience page full screen on the other display. */
-  openAudience(): Promise<Channel>;
+  /**
+   * Opens a new audience page full screen on the other display, or with
+   * `windowed` as an ordinary window on this one, for a video call to share.
+   */
+  openAudience(options?: { windowed?: boolean }): Promise<Channel>;
   /** The presenter's end of the channel, for the audience page itself. */
   presenter(): Channel;
 }
@@ -76,20 +79,19 @@ function tauriScreens(): Screens {
     async hasSecondScreen() {
       return (await otherMonitor()) !== null;
     },
-    async openAudience() {
-      const monitor = await otherMonitor();
+    async openAudience({ windowed = false } = {}) {
+      const monitor = windowed ? null : await otherMonitor();
       const label = newId();
       const at = monitor?.position.toLogical(monitor.scaleFactor);
       const audience = new WebviewWindow(label, {
         url: `index.html?view=${AUDIENCE_VIEW}`,
         title: "Trình chiếu",
-        x: at?.x ?? 0,
-        y: at?.y ?? 0,
+        ...(at ? { x: at.x, y: at.y } : { center: true }),
         width: 1280,
         height: 720,
         visible: false,
         focus: false,
-        decorations: false,
+        decorations: windowed,
         backgroundColor: "#000000",
       });
       await new Promise<void>((resolve, reject) => {
@@ -100,7 +102,7 @@ function tauriScreens(): Screens {
         // Placed in physical pixels too: logical positions are ambiguous when
         // the two displays use different scaling.
         if (monitor) await audience.setPosition(new PhysicalPosition(monitor.position.x, monitor.position.y));
-        await audience.setFullscreen(true);
+        if (!windowed) await audience.setFullscreen(true);
         await audience.show();
         // The teacher keeps typing on the laptop; the clicker's keys go there too.
         await getCurrentWindow().setFocus();

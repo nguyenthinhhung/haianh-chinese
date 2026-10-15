@@ -61,6 +61,10 @@ interface Props {
   onEnd(): void;
   /** Only on a single screen: back to the slide show alone. */
   onHide?(): void;
+  /** Only on a single screen: move the slides to a window of their own, for a video call. */
+  onOwnWindow?(): void;
+  /** The slides are in their own window on this screen (teaching online). */
+  online?: boolean;
 }
 
 /**
@@ -68,7 +72,7 @@ interface Props {
  * timer, next slide, notes and every control. Its grid cells sit around the
  * current slide, which the caller places in the `current` area.
  */
-export function PresenterView({ doc, env, state, driver, onShowAll, onEnd, onHide }: Props) {
+export function PresenterView({ doc, env, state, driver, onShowAll, onEnd, onHide, onOwnWindow, online }: Props) {
   const watch = useStopwatch();
   const [notesSize, setNotesSize] = useState(readNotesSize);
   const slide = doc.slides[state.index];
@@ -124,6 +128,12 @@ export function PresenterView({ doc, env, state, driver, onShowAll, onEnd, onHid
           )}
         </span>
         <span className="toolbar-spacer" />
+        {online && <span className="presenter-online">Trong Zoom/Meet, chia sẻ cửa sổ “Trình chiếu”</span>}
+        {onOwnWindow && (
+          <button type="button" onMouseDown={noFocus} onClick={onOwnWindow} title="Dạy online: slide sang một cửa sổ riêng để chia sẻ trong Zoom/Meet, màn này giữ ghi chú và điều khiển">
+            Cửa sổ chiếu riêng
+          </button>
+        )}
         {onHide && (
           <button type="button" onMouseDown={noFocus} onClick={onHide} title="Chỉ hiện slide trên màn hình">
             Ẩn chế độ người trình chiếu
@@ -246,7 +256,21 @@ export function SlideGrid({ doc, env, current, onPick, onClose }: { doc: LessonD
  * PowerPoint's slide-show toolbar for a single screen: faint in the corner,
  * shown while the mouse moves.
  */
-export function ShowToolbar({ driver, blank, onShowAll, onPresenterView, onEnd }: { driver: PresentDriver; blank: BlankMode | null; onShowAll(): void; onPresenterView(): void; onEnd(): void }) {
+export function ShowToolbar({
+  driver,
+  blank,
+  onShowAll,
+  onPresenterView,
+  onOwnWindow,
+  onEnd,
+}: {
+  driver: PresentDriver;
+  blank: BlankMode | null;
+  onShowAll(): void;
+  onPresenterView(): void;
+  onOwnWindow(): void;
+  onEnd(): void;
+}) {
   const [awake, setAwake] = useState(false);
   useEffect(() => {
     let t: ReturnType<typeof setTimeout> | undefined;
@@ -281,6 +305,9 @@ export function ShowToolbar({ driver, blank, onShowAll, onPresenterView, onEnd }
       </button>
       <button type="button" onMouseDown={noFocus} onClick={onPresenterView} title="Chế độ người trình chiếu: ghi chú, slide tiếp theo, đồng hồ (Alt+F5)">
         Người trình chiếu
+      </button>
+      <button type="button" onMouseDown={noFocus} onClick={onOwnWindow} title="Dạy online: slide sang một cửa sổ riêng để chia sẻ trong Zoom/Meet, màn này giữ ghi chú và điều khiển">
+        Dạy online
       </button>
       <button type="button" onMouseDown={noFocus} onClick={onEnd} title="Kết thúc (Esc)">
         Kết thúc

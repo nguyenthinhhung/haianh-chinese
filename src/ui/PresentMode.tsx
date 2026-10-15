@@ -36,6 +36,8 @@ export function PresentMode({ doc, env, dir, start, presenterView = false, onExi
   const [state, setState] = useState<PresentState>({ index: start, step: 0, steps: 0, blank: null });
   const [mirror, setMirror] = useState("");
   const [grid, setGrid] = useState(false);
+  /** The slides are in a window of their own on this screen, for sharing in a video call. */
+  const [online, setOnline] = useState(false);
   const host = useRef<HTMLDivElement>(null);
   const controller = useRef<PresentController | null>(null);
   const channel = useRef<Channel | null>(null);
@@ -45,6 +47,10 @@ export function PresentMode({ doc, env, dir, start, presenterView = false, onExi
   stateRef.current = state;
   const onExitRef = useRef(onExit);
   onExitRef.current = onExit;
+  /** Where the show (re)starts: the first slide, or where it was when moving to its own window. */
+  const startRef = useRef(start);
+  /** How this window was before the show, so it can be put back. */
+  const windowBefore = useRef({ fullscreen: false, maximizedByShow: false });
 
   const end = () => onExitRef.current(stateRef.current.index);
 
@@ -55,12 +61,10 @@ export function PresentMode({ doc, env, dir, start, presenterView = false, onExi
   // still sees the slides.
   useEffect(() => {
     let cancelled = false;
-    let wasFullscreen = false;
-    let maximized = false;
     // A form field left focused in the editor would swallow the arrow keys.
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     void (async () => {
-      wasFullscreen = await persistence.isFullscreen();
+      windowBefore.current.fullscreen = await persistence.isFullscreen();
       const second = await screens.hasSecondScreen().catch(() => false);
       if (cancelled) return;
       if (second) {
@@ -81,21 +85,44 @@ export function PresentMode({ doc, env, dir, start, presenterView = false, onExi
       }
       if (cancelled) return;
       if (!channel.current) await persistence.setFullscreen(true);
-      else if (!wasFullscreen && !(await persistence.isMaximized())) {
-        maximized = true;
-        await persistence.setMaximized(true);
-      }
+      else if (!windowBefore.current.fullscreen) await maximize();
     })();
     return () => {
       cancelled = true;
       channel.current?.send({ type: "end" } satisfies ToAudience);
       channel.current?.close();
       channel.current = null;
-      if (!wasFullscreen) void persistence.setFullscreen(false);
-      if (maximized) void persistence.setMaximized(false);
+      if (!windowBefore.current.fullscreen) void persistence.setFullscreen(false);
+      if (windowBefore.current.maximizedByShow) void persistence.setMaximized(false);
     };
     // One presentation per mount; edits cannot happen meanwhile.
   }, []);
+
+  async function maximize() {
+    if (await persistence.isMaximized()) return;
+    windowBefore.current.maximizedByShow = true;
+    await persistence.setMaximized(true);
+  }
+
+  /**
+   * Teaching online with one screen: the slides move to a window of their own
+   * for the video call to share, and this window becomes the presenter view.
+   */
+  async function moveToOwnWindow() {
+    if (mode !== "local") return;
+    startRef.current = stateRef.current.index;
+    setMode("starting");
+    try {
+      channel.current = await screens.openAudience({ windowed: true });
+      setOnline(true);
+      setMode("remote");
+      await persistence.setFullscreen(false);
+      await maximize();
+    } catch (e) {
+      console.error("Could not open the slide-show window", e);
+      setMode("local");
+    }
+  }
 
   // Single screen: the runtime runs here.
   useEffect(() => {
@@ -110,7 +137,7 @@ export function PresentMode({ doc, env, dir, start, presenterView = false, onExi
       controller.current =
         (deck &&
           window.LessonStudio?.mount(deck, {
-            start,
+            start: startRef.current,
             onState: setState,
             onExit: end,
             toggleFullscreen: () => void persistence.isFullscreen().then((on) => persistence.setFullscreen(!on)),
@@ -132,7 +159,7 @@ export function PresentMode({ doc, env, dir, start, presenterView = false, onExi
     if (mode !== "remote" || !link) return;
     const stop = link.listen((raw) => {
       const m = raw as ToPresenter;
-      if (m.type === "ready") link.send({ type: "show", doc, dir, start } satisfies ToAudience);
+      if (m.type === "ready") link.send({ type: "show", doc, dir, start: startRef.current } satisfies ToAudience);
       else if (m.type === "state") {
         setState(m.state);
         setMirror(m.html);
@@ -150,7 +177,7 @@ export function PresentMode({ doc, env, dir, start, presenterView = false, onExi
     };
     window.addEventListener("keydown", onKey);
     // The page may have loaded before this listener; ask again.
-    link.send({ type: "show", doc, dir, start } satisfies ToAudience);
+    link.send({ type: "show", doc, dir, start: startRef.current } satisfies ToAudience);
     return () => {
       stop();
       window.removeEventListener("keydown", onKey);
@@ -213,6 +240,8 @@ export function PresentMode({ doc, env, dir, start, presenterView = false, onExi
           onShowAll={() => setGrid(true)}
           onEnd={end}
           onHide={mode === "local" ? () => setLocalView("show") : undefined}
+          onOwnWindow={mode === "local" ? () => void moveToOwnWindow() : undefined}
+          online={online}
         />
       )}
       {mode === "remote" && (
@@ -228,6 +257,7 @@ export function PresentMode({ doc, env, dir, start, presenterView = false, onExi
           blank={state.blank}
           onShowAll={() => setGrid(true)}
           onPresenterView={() => setLocalView("presenter")}
+          onOwnWindow={() => void moveToOwnWindow()}
           onEnd={end}
         />
       )}
