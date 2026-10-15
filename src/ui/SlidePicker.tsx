@@ -68,7 +68,8 @@ export function SlidePicker({ onPick, onClose }: Props) {
       : templates.list(tab);
 
   const tabs: { id: Tab; label: string; count: number }[] = [
-    ...(recent.length ? [{ id: "recent" as const, label: "Dùng gần đây", count: recent.length }] : []),
+    // Always there, so the teacher knows where her usual slides will gather.
+    { id: "recent" as const, label: "Dùng gần đây", count: recent.length },
     ...CATEGORIES.map((c) => ({ ...c, count: templates.list(c.id).length })),
   ];
 
@@ -115,7 +116,13 @@ export function SlidePicker({ onPick, onClose }: Props) {
                 </button>
               </li>
             ))}
-            {!shown.length && <li className="muted slide-picker-empty">Không có dạng slide nào khớp “{query.trim()}”.</li>}
+            {!shown.length && (
+            <li className="muted slide-picker-empty">
+              {query.trim()
+                ? `Không có dạng slide nào khớp “${query.trim()}”.`
+                : "Chưa có. Các dạng slide cô thêm sẽ hiện ở đây để lần sau chọn nhanh."}
+            </li>
+          )}
           </ul>
         </div>
       </div>
