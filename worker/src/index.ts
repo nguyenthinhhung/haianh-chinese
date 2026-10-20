@@ -190,6 +190,7 @@ async function handle(request: Request, env: AppEnv, ctx: ExecutionContext): Pro
     return html(
       resultsPage(
         {
+          origin: url.origin,
           slug: found.assignment.slug,
           title: found.assignment.title,
           lessonTitle: found.assignment.lesson_title,

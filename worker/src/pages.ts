@@ -240,6 +240,8 @@ function took(total: number): string {
 }
 
 export interface ResultsHeader {
+  /** This server's address, to show the students' link in full. */
+  origin: string;
   slug: string;
   title: string;
   lessonTitle: string;
@@ -275,7 +277,7 @@ export function resultsPage(header: ResultsHeader, attempts: ResultsAttempt[]): 
   const content = `<a class="back" href="/results">← Tất cả bài tập</a>
 <div class="summary"><div><h2>${escapeHtml(header.title)}</h2>${header.lessonTitle ? `<p class="muted">${escapeHtml(header.lessonTitle)}</p>` : ""}</div>
 <div class="stat"><span><strong>${attempts.length}</strong>bài nộp</span><span><strong>${counts.size}</strong>học viên</span><span><strong>${avg === null ? "–" : `${avg}%`}</strong>điểm TB</span><span><strong>${header.inProgress}</strong>đang làm</span></div></div>
-<div class="linkbox"><span class="muted">Link cho học viên:</span><code>/a/${slug}</code><button type="button" class="copy" data-href="/a/${slug}">Chép link</button></div>
+<div class="linkbox"><span class="muted">Link cho học viên:</span><code>${escapeHtml(header.origin)}/a/${slug}</code><button type="button" class="copy" data-href="/a/${slug}">Chép link</button></div>
 ${
   attempts.length
     ? `<div class="table-wrap"><table><thead><tr><th>Học viên</th><th>Điểm</th><th>%</th><th>Thời gian làm</th><th>Nộp lúc</th><th>Lần</th></tr></thead><tbody>${rows}</tbody></table></div>`
