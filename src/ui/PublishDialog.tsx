@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { LessonDocument } from "../core/schema";
-import { PersistenceError } from "../platform/persistence";
 import { publishLesson, type PublishResult } from "./lessonFiles";
+import { CopyLink, ServerFields, useServerSettings } from "./ServerSettings";
 import { useServices } from "./services";
 
 interface Props {
@@ -13,25 +13,10 @@ interface Props {
 /** Publishes the lesson to the teacher's web server; the first time it also asks for the server and password. */
 export function PublishDialog({ dir, doc, onClose }: Props) {
   const services = useServices();
-  const [loaded, setLoaded] = useState(false);
-  const [savedUrl, setSavedUrl] = useState<string | null>(null);
-  const [serverUrl, setServerUrl] = useState("");
-  const [hasPassword, setHasPassword] = useState(false);
-  const [password, setPassword] = useState("");
+  const settings = useServerSettings();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<PublishResult | null>(null);
-  const [copied, setCopied] = useState(false);
-  const passwordRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    void services.persistence.getPublishSettings().then((s) => {
-      setSavedUrl(s.serverUrl);
-      setServerUrl(s.serverUrl ?? "");
-      setHasPassword(s.hasPassword);
-      setLoaded(true);
-    });
-  }, [services]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && !busy && onClose();
@@ -43,34 +28,14 @@ export function PublishDialog({ dir, doc, onClose }: Props) {
     setBusy(true);
     setError(null);
     setResult(null);
-    setCopied(false);
     try {
-      if (!hasPassword && !password) throw new PersistenceError("not-configured", "Nhập mật khẩu đăng bài.");
-      if (password || serverUrl.trim() !== savedUrl) {
-        const saved = await services.persistence.setPublishSettings(serverUrl, password || null);
-        setSavedUrl(saved.serverUrl);
-        setServerUrl(saved.serverUrl ?? "");
-        setHasPassword(saved.hasPassword);
-        setPassword("");
-      }
+      await settings.save();
       setResult(await publishLesson(dir, doc, services));
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
-      if (e instanceof PersistenceError && e.code === "unauthorized") {
-        setHasPassword(false);
-        passwordRef.current?.focus();
-      }
+      settings.handleError(e);
     } finally {
       setBusy(false);
-    }
-  }
-
-  async function copy(url: string) {
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-    } catch {
-      setError("Không sao chép được; hãy bôi đen đường link và sao chép bằng tay.");
     }
   }
 
@@ -96,36 +61,7 @@ export function PublishDialog({ dir, doc, onClose }: Props) {
           Bài được đăng lên máy chủ riêng của bạn để trình chiếu từ bất kỳ máy nào có trình duyệt. Chỉ người có mật khẩu
           mới mở được. Đăng lại thì bản trên web được thay bằng bản mới.
         </p>
-        <div className="field">
-          <label className="field-label" htmlFor="publish-server">
-            Địa chỉ máy chủ
-          </label>
-          <input
-            id="publish-server"
-            type="url"
-            placeholder="https://tên.workers.dev"
-            value={serverUrl}
-            onChange={(e) => setServerUrl(e.target.value)}
-            disabled={!loaded || busy}
-            required
-          />
-        </div>
-        <div className="field">
-          <label className="field-label" htmlFor="publish-password">
-            Mật khẩu đăng bài
-          </label>
-          <input
-            id="publish-password"
-            ref={passwordRef}
-            type="password"
-            autoComplete="off"
-            placeholder={hasPassword ? "Đã lưu; để trống để giữ nguyên" : ""}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={!loaded || busy}
-          />
-          <span className="muted">Tắt bộ gõ tiếng Việt khi nhập. Mật khẩu được cất trong kho mật khẩu của máy.</span>
-        </div>
+        <ServerFields settings={settings} disabled={busy} />
         {error && (
           <p className="field-error" role="alert">
             {error}
@@ -139,19 +75,14 @@ export function PublishDialog({ dir, doc, onClose }: Props) {
             {result.missing.length > 0 && (
               <p className="field-warning">Thiếu {result.missing.length} ảnh/âm thanh không đọc được; bản trên web sẽ thiếu chúng.</p>
             )}
-            <div className="publish-link">
-              <input readOnly value={result.url} aria-label="Đường link bài học" onFocus={(e) => e.target.select()} />
-              <button type="button" className="ghost" onClick={() => void copy(result.url)}>
-                {copied ? "Đã sao chép" : "Sao chép link"}
-              </button>
-            </div>
+            <CopyLink url={result.url} label="Đường link bài học" />
           </div>
         )}
         <div className="form-actions">
           <button type="button" className="ghost" onClick={onClose} disabled={busy}>
             Đóng
           </button>
-          <button type="submit" className="primary" disabled={!loaded || busy || !doc.slides.length}>
+          <button type="submit" className="primary" disabled={!settings.loaded || busy || !doc.slides.length}>
             {busy ? "Đang đăng…" : result ? "Đăng lại" : "Đăng"}
           </button>
         </div>
