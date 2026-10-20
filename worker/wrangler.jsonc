@@ -9,6 +9,9 @@
     "B2_REGION": "us-east-005",
     "B2_BUCKET": "lesson-studio"
   },
+  // The students' page, built from the app's code (npm run build:student at the repo root).
+  "assets": { "directory": "./public", "binding": "ASSETS", "html_handling": "none" },
+  "build": { "command": "npm --prefix .. run build:student" },
   // Assignments and students' attempts (migrations/).
   "d1_databases": [
     {

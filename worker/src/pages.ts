@@ -1,4 +1,4 @@
-/** The teacher's pages on the web: sign-in and the list of published lessons. */
+/** The teacher's pages on the web: sign-in, the published lessons, and the results of exercises. */
 
 export interface LessonEntry {
   id: string;
@@ -78,15 +78,45 @@ function formatTime(iso: string): string {
   return d.toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", hour: "2-digit", minute: "2-digit", day: "numeric", month: "numeric", year: "numeric" });
 }
 
-const LIBRARY_CSS = `
+/** Header, navigation and copy buttons shared by the teacher's pages. */
+const TEACHER_CSS = `
 header{background:linear-gradient(135deg,#c8102e,#9e0c24);color:#fff}
-.bar{display:flex;align-items:center;gap:14px;max-width:1080px;margin:0 auto;padding:20px 24px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:14px;max-width:1080px;margin:0 auto;padding:18px 24px}
 .bar h1{margin:0;font-size:20px}
 .bar p{margin:0;opacity:.85;font-size:13px}
-.bar form{margin-left:auto}
+.nav{display:flex;gap:4px;margin-left:auto;padding:3px;border-radius:12px;background:rgb(0 0 0/.15)}
+.nav a{padding:7px 14px;border-radius:9px;color:#fff;text-decoration:none;font-weight:600;opacity:.85}
+.nav a[aria-current=page]{background:#fff;color:#c8102e;opacity:1}
 .ghost{padding:8px 14px;border:1px solid rgb(255 255 255/.45);border-radius:10px;background:transparent;color:#fff;cursor:pointer}
 .ghost:hover{background:rgb(255 255 255/.12)}
 main{max-width:1080px;margin:0 auto;padding:24px}
+.copy{padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--panel);cursor:pointer;white-space:nowrap}
+.copy:hover{border-color:var(--muted)}
+.empty{padding:56px 24px;border:2px dashed var(--border);border-radius:20px;text-align:center;color:var(--muted)}
+.empty .mark{margin:0 auto 14px;background:var(--accent);color:#fff}
+.empty strong{display:block;margin-bottom:6px;color:var(--text);font-size:17px}
+.muted{color:var(--muted)}
+@media (max-width:620px){.bar{padding:14px 16px}main{padding:16px}.bar p{display:none}.nav{order:3;width:100%;margin-left:0}.nav a{flex:1;text-align:center}}
+`;
+
+const COPY_SCRIPT = `
+document.addEventListener("click",async e=>{const b=e.target.closest(".copy");if(!b)return;const url=location.origin+b.dataset.href;try{await navigator.clipboard.writeText(url);const t=b.textContent;b.textContent="Đã chép";setTimeout(()=>b.textContent=t,1500)}catch{prompt("Sao chép link:",url)}});
+`;
+
+function teacherPage(title: string, active: "lessons" | "results", css: string, content: string, script = ""): string {
+  const link = (href: string, label: string, key: typeof active) => `<a href="${href}"${active === key ? ' aria-current="page"' : ""}>${label}</a>`;
+  return page(
+    `${title} · Chinese Lesson Studio`,
+    TEACHER_CSS + css,
+    `<header><div class="bar"><div class="mark">汉</div><div><h1>${escapeHtml(title)}</h1><p>Chinese Lesson Studio</p></div>
+<nav class="nav" aria-label="Trang">${link("/", "Bài học", "lessons")}${link("/results", "Bảng điểm", "results")}</nav>
+<form method="post" action="/logout"><button class="ghost">Đăng xuất</button></form></div></header>
+<main>${content}</main>`,
+    COPY_SCRIPT + script,
+  );
+}
+
+const LIBRARY_CSS = `
 .tools{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:20px}
 .tools input{flex:1;min-width:200px;max-width:380px;padding:10px 14px;border:1px solid var(--border);border-radius:12px;background:var(--panel)}
 .count{color:var(--muted)}
@@ -100,23 +130,15 @@ main{max-width:1080px;margin:0 auto;padding:24px}
 .body h2{margin:0;font-size:17px;line-height:1.3}
 .body time{color:var(--muted);font-size:13px}
 .actions{display:flex;gap:8px;margin-top:auto;padding-top:12px}
-.play,.copy{white-space:nowrap}
-.play{flex:1;padding:9px 12px;border-radius:10px;background:var(--accent);color:#fff;font-weight:600;text-align:center;text-decoration:none}
+.play{flex:1;padding:9px 12px;border-radius:10px;background:var(--accent);color:#fff;font-weight:600;text-align:center;text-decoration:none;white-space:nowrap}
 .play:hover{background:var(--accent-hover)}
-.copy{padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--panel);cursor:pointer}
-.copy:hover{border-color:var(--muted)}
-.empty{padding:56px 24px;border:2px dashed var(--border);border-radius:20px;text-align:center;color:var(--muted)}
-.empty .mark{margin:0 auto 14px;background:var(--accent);color:#fff}
-.empty strong{display:block;margin-bottom:6px;color:var(--text);font-size:17px}
 .none{display:none;padding:24px;text-align:center;color:var(--muted)}
-@media (max-width:520px){.bar{padding:16px}main{padding:16px}.bar p{display:none}}
 `;
 
 const LIBRARY_SCRIPT = `
 const q=document.getElementById("q"),cards=[...document.querySelectorAll(".lesson")],none=document.querySelector(".none");
 const fold=s=>s.normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").replace(/đ/g,"d").toLowerCase();
 q&&q.addEventListener("input",()=>{const t=fold(q.value.trim());let n=0;for(const c of cards){const ok=!t||fold(c.dataset.search).includes(t);c.hidden=!ok;if(ok)n++}none.style.display=n?"none":"block"});
-document.addEventListener("click",async e=>{const b=e.target.closest(".copy");if(!b)return;try{await navigator.clipboard.writeText(location.origin+b.dataset.href);b.textContent="Đã chép";setTimeout(()=>b.textContent="Chép link",1500)}catch{prompt("Sao chép link:",location.origin+b.dataset.href)}});
 `;
 
 export function libraryPage(entries: LessonEntry[]): string {
@@ -135,12 +157,129 @@ export function libraryPage(entries: LessonEntry[]): string {
     ? `<div class="tools"><input id="q" type="search" placeholder="Tìm bài…" aria-label="Tìm bài"><span class="count">${sorted.length} bài</span></div>
 <ul class="grid">${cards}</ul><p class="none">Không có bài nào khớp.</p>`
     : `<div class="empty"><div class="mark">课</div><strong>Chưa có bài nào trên web</strong>Mở bài trong ứng dụng và bấm “Đăng lên web”.</div>`;
-  return page(
-    "Bài học · Chinese Lesson Studio",
-    LIBRARY_CSS,
-    `<header><div class="bar"><div class="mark">汉</div><div><h1>Bài học của tôi</h1><p>Chinese Lesson Studio</p></div>
-<form method="post" action="/logout"><button class="ghost">Đăng xuất</button></form></div></header>
-<main>${content}</main>`,
-    sorted.length ? LIBRARY_SCRIPT : "",
-  );
+  return teacherPage("Bài học của tôi", "lessons", LIBRARY_CSS, content, sorted.length ? LIBRARY_SCRIPT : "");
+}
+
+// Results --------------------------------------------------------------------
+
+export interface ResultsSummary {
+  id: string;
+  slug: string;
+  title: string;
+  lessonTitle: string;
+  submitted: number;
+  students: number;
+  avgPercent: number | null;
+  lastSubmitted: string | null;
+}
+
+export interface ResultsAttempt {
+  name: string;
+  clientId: string;
+  score: number;
+  max: number;
+  percent: number;
+  startedAt: string;
+  submittedAt: string;
+}
+
+const RESULTS_CSS = `
+.assignments{display:grid;gap:14px;margin:0;padding:0;list-style:none}
+.assignment{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;padding:16px 18px;border:1px solid var(--border);border-radius:16px;background:var(--panel);box-shadow:var(--shadow)}
+.assignment h2{margin:0;font-size:17px}
+.assignment .info{flex:1;min-width:220px}
+.assignment .info p{margin:2px 0 0}
+.stat{display:flex;gap:16px}
+.stat span{display:grid;text-align:center;font-size:12px;color:var(--muted)}
+.stat strong{font-size:20px;color:var(--text)}
+.open{padding:9px 14px;border-radius:10px;background:var(--accent);color:#fff;font-weight:600;text-decoration:none;white-space:nowrap}
+.open:hover{background:var(--accent-hover)}
+.summary{display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px;margin-bottom:18px}
+.summary h2{margin:0}
+.summary p{margin:2px 0 0}
+.summary .stat{margin-left:auto}
+.linkbox{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 18px;padding:12px 14px;border:1px dashed var(--border);border-radius:14px}
+.linkbox code{flex:1;min-width:200px;overflow-wrap:anywhere;font-size:14px}
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:16px;background:var(--panel)}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{padding:10px 14px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+tr:last-child td{border-bottom:0}
+td.name{white-space:normal;font-weight:600}
+.pill{display:inline-block;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:700}
+.pass{background:rgb(47 133 90/.14);color:#2f855a}
+.fail{background:rgb(192 57 43/.12);color:#c0392b}
+.late{background:#fff4d6;color:#8a5a00}
+.back{display:inline-block;margin-bottom:12px;color:var(--accent);text-decoration:none;font-weight:600}
+`;
+
+export function resultsListPage(rows: ResultsSummary[]): string {
+  const items = rows
+    .map(
+      (r) => `<li class="assignment"><div class="info"><h2>${escapeHtml(r.title)}</h2>
+<p class="muted">${r.lessonTitle ? `${escapeHtml(r.lessonTitle)} · ` : ""}${r.lastSubmitted ? `Nộp gần nhất ${escapeHtml(formatTime(r.lastSubmitted))}` : "Chưa có bài nộp"}</p></div>
+<div class="stat"><span><strong>${r.submitted}</strong>bài nộp</span><span><strong>${r.students}</strong>học viên</span><span><strong>${r.avgPercent === null ? "–" : `${r.avgPercent}%`}</strong>điểm TB</span></div>
+<button type="button" class="copy" data-href="/a/${escapeHtml(r.slug)}">Chép link học viên</button><a class="open" href="/results/${escapeHtml(r.id)}">Xem điểm</a></li>`,
+    )
+    .join("");
+  const content = rows.length
+    ? `<ul class="assignments">${items}</ul>`
+    : `<div class="empty"><div class="mark">题</div><strong>Chưa giao bài tập nào</strong>Trong ứng dụng, mở chế độ Bài tập của một bài và bấm “Giao bài”.</div>`;
+  return teacherPage("Bảng điểm", "results", RESULTS_CSS, content);
+}
+
+function seconds(fromIso: string, toIso: string): number {
+  return Math.max(0, (new Date(toIso).getTime() - new Date(fromIso).getTime()) / 1000);
+}
+
+function took(total: number): string {
+  const s = Math.round(total);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  return h ? `${h} giờ ${m} phút` : m ? `${m} phút ${s % 60} giây` : `${s} giây`;
+}
+
+export interface ResultsHeader {
+  slug: string;
+  title: string;
+  lessonTitle: string;
+  /** Minutes; 0 means none. */
+  timeLimit: number;
+  /** Percent; 0 means none. */
+  passPercent: number;
+  inProgress: number;
+}
+
+export function resultsPage(header: ResultsHeader, attempts: ResultsAttempt[]): string {
+  // The nth time this browser handed the exercise in, counted from the first.
+  const nth = new Map<ResultsAttempt, number>();
+  const counts = new Map<string, number>();
+  for (const a of [...attempts].sort((x, y) => x.submittedAt.localeCompare(y.submittedAt))) {
+    const n = (counts.get(a.clientId) ?? 0) + 1;
+    counts.set(a.clientId, n);
+    nth.set(a, n);
+  }
+  const avg = attempts.length ? Math.round(attempts.reduce((n, a) => n + a.percent, 0) / attempts.length) : null;
+  const rows = attempts
+    .map((a) => {
+      const time = seconds(a.startedAt, a.submittedAt);
+      // A minute of grace: the clock on the student's device and the network both lag a little.
+      const late = header.timeLimit > 0 && time > header.timeLimit * 60 + 60;
+      const passed = a.percent >= header.passPercent;
+      const pass = header.passPercent > 0 ? ` <span class="pill ${passed ? "pass" : "fail"}">${passed ? "Đạt" : "Chưa đạt"}</span>` : "";
+      return `<tr><td class="name">${escapeHtml(a.name)}</td><td>${a.score}/${a.max}</td><td>${a.percent}%${pass}</td>
+<td>${took(time)}${late ? ' <span class="pill late">Quá giờ</span>' : ""}</td><td>${escapeHtml(formatTime(a.submittedAt))}</td><td>${nth.get(a)}</td></tr>`;
+    })
+    .join("");
+  const slug = escapeHtml(header.slug);
+  const content = `<a class="back" href="/results">← Tất cả bài tập</a>
+<div class="summary"><div><h2>${escapeHtml(header.title)}</h2>${header.lessonTitle ? `<p class="muted">${escapeHtml(header.lessonTitle)}</p>` : ""}</div>
+<div class="stat"><span><strong>${attempts.length}</strong>bài nộp</span><span><strong>${counts.size}</strong>học viên</span><span><strong>${avg === null ? "–" : `${avg}%`}</strong>điểm TB</span><span><strong>${header.inProgress}</strong>đang làm</span></div></div>
+<div class="linkbox"><span class="muted">Link cho học viên:</span><code>/a/${slug}</code><button type="button" class="copy" data-href="/a/${slug}">Chép link</button></div>
+${
+  attempts.length
+    ? `<div class="table-wrap"><table><thead><tr><th>Học viên</th><th>Điểm</th><th>%</th><th>Thời gian làm</th><th>Nộp lúc</th><th>Lần</th></tr></thead><tbody>${rows}</tbody></table></div>`
+    : `<div class="empty"><strong>Chưa có bài nộp</strong>Gửi link cho học viên; bài nộp sẽ hiện ở đây.</div>`
+}`;
+  return teacherPage("Bảng điểm", "results", RESULTS_CSS, content);
 }
