@@ -1,0 +1,54 @@
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+body {
+  background: #fbf8f2;
+}
+#root,
+#root > .ex-player {
+  min-height: 100vh;
+}
+
+.st-message {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 24px;
+  color: #52606d;
+  font: 17px/1.5 "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  text-align: center;
+}
+.st-message strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #1f2933;
+  font-size: 20px;
+}
+
+.ex-player .st-name {
+  display: grid;
+  gap: 6px;
+  width: min(360px, 100%);
+  margin: 24px auto 0;
+  font-weight: 700;
+}
+.ex-player .st-name input {
+  padding: 12px 14px;
+  border: 2px solid var(--ex-border);
+  border-radius: 14px;
+  background: var(--ex-surface);
+  color: var(--ex-fg);
+  font: inherit;
+  font-weight: 400;
+  font-size: 18px;
+}
+.ex-player .st-name input:focus {
+  border-color: var(--ex-accent);
+  outline: none;
+}
+.ex-player .st-name small {
+  color: var(--ex-muted);
+  font-weight: 400;
+}

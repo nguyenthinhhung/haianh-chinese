@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Answers, AnswerValue, ExerciseGrade, ExerciseReview, StudentExercise } from "../core/exerciseGrade";
 import { SKILL_LABELS, type Skill } from "../core/exerciseSchema";
 import { ListensContext, listensLeft, PartHeader, QuestionCard, type AssetUrl, type Listens } from "./QuestionCard";
@@ -27,6 +27,18 @@ export interface ExercisePlayerProps {
   onRestart?(): void;
   /** Keeps answers in the browser under this key, so a reload loses nothing. */
   storageKey?: string;
+  /** More of the start screen, e.g. the student's name on the web. */
+  startExtra?: ReactNode;
+  /** False keeps "Bắt đầu" off, e.g. until a name is typed. */
+  canStart?: boolean;
+  /**
+   * Runs before the questions show (the web registers the attempt). A
+   * rejection stays on the start screen with its message; `false` stays
+   * there quietly (the page has something else to show).
+   */
+  onStart?(): Promise<boolean | void>;
+  /** An attempt handed in before, e.g. on reopening the page: the player opens on its result. */
+  finished?: { answers: Answers; result: PlayerResult };
 }
 
 type Phase = "intro" | "doing" | "result";
@@ -175,15 +187,17 @@ function AudioBar({
   );
 }
 
-export function ExercisePlayer({ exercise, assetUrl, submit, themeId, hanziFont, onRestart, storageKey }: ExercisePlayerProps) {
+export function ExercisePlayer(props: ExercisePlayerProps) {
+  const { exercise, assetUrl, submit, themeId, hanziFont, onRestart, storageKey, startExtra, canStart = true, onStart, finished } = props;
   const saved = useMemo(() => load(storageKey), [storageKey]);
-  const [phase, setPhase] = useState<Phase>(saved?.startedAt ? "doing" : "intro");
-  const [answers, setAnswers] = useState<Answers>(saved?.answers ?? {});
+  const [phase, setPhase] = useState<Phase>(finished ? "result" : saved?.startedAt ? "doing" : "intro");
+  const [answers, setAnswers] = useState<Answers>(finished?.answers ?? saved?.answers ?? {});
+  const [starting, setStarting] = useState(false);
   const [flags, setFlags] = useState<Set<string>>(new Set(saved?.flags));
   const [startedAt, setStartedAt] = useState<number | null>(saved?.startedAt ?? null);
   const [used, setUsed] = useState<Record<string, number>>(saved?.listens ?? {});
   const [now, setNow] = useState(() => Date.now());
-  const [result, setResult] = useState<PlayerResult | null>(null);
+  const [result, setResult] = useState<PlayerResult | null>(finished?.result ?? null);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<"submit" | "clear" | null>(null);
@@ -247,7 +261,19 @@ export function ExercisePlayer({ exercise, assetUrl, submit, themeId, hanziFont,
     }
   }, [remaining, phase, sending, send]);
 
-  function begin() {
+  async function begin() {
+    if (onStart) {
+      setStarting(true);
+      setError(null);
+      try {
+        if ((await onStart()) === false) return;
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e));
+        return;
+      } finally {
+        setStarting(false);
+      }
+    }
     setPhase("doing");
     if (settings.timerStart === "start") setStartedAt(Date.now());
     setNow(Date.now());
@@ -314,8 +340,14 @@ export function ExercisePlayer({ exercise, assetUrl, submit, themeId, hanziFont,
           {settings.timeLimit > 0 && settings.timerStart === "first-answer" && (
             <p className="ex-note">Đồng hồ bắt đầu chạy từ câu trả lời đầu tiên.</p>
           )}
-          <button type="button" className="ex-primary ex-start" onClick={begin} disabled={!questions.length}>
-            Bắt đầu làm bài
+          {startExtra}
+          {error && (
+            <p className="ex-error" role="alert">
+              {error}
+            </p>
+          )}
+          <button type="button" className="ex-primary ex-start" onClick={() => void begin()} disabled={!questions.length || !canStart || starting}>
+            {starting ? "Đang bắt đầu…" : "Bắt đầu làm bài"}
           </button>
         </main>
       </div>
