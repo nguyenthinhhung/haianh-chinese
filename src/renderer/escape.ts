@@ -26,6 +26,8 @@ export function isSafeUrl(url: string): boolean {
   return (
     isSafeAssetPath(url) ||
     /^data:(image|audio)\/[a-z0-9.+-]+;base64,[A-Za-z0-9+/=]+$/.test(url) ||
-    /^(blob:|https?:\/\/asset\.localhost\/|asset:\/\/)[^\s"'<>]+$/.test(url)
+    /^(blob:|https?:\/\/asset\.localhost\/|asset:\/\/)[^\s"'<>]+$/.test(url) ||
+    // A file on the teacher's web server, for a lesson published there.
+    /^\/f\/[A-Za-z0-9_-][A-Za-z0-9._-]{0,127}$/.test(url)
   );
 }

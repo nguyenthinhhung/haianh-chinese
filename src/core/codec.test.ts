@@ -38,6 +38,14 @@ describe("LessonCodec", () => {
     expect(parseLessonHtml(html, env.templates)).toEqual({ ok: true, doc });
   });
 
+  it("points pictures at the web server's copies in a published page", () => {
+    let doc = createFromSample("fruits", "Hoa quả", "0.0.0");
+    const added = addAsset(doc, { file: "assets/img-0123456789ab.webp", kind: "image", mime: "image/webp", alt: "táo" });
+    doc = setSlideField(added.doc, doc.slides[1]!.id, ["words", 0, "image"], added.assetId);
+    const html = serializeLessonHtml(doc, { ...env, assetUrl: () => "/f/11b879ced09e1bad9c295af3.webp" });
+    expect(html).toContain('src="/f/11b879ced09e1bad9c295af3.webp"');
+  });
+
   it("keeps hostile text inert in both the DOM and the embedded JSON", () => {
     const evil = `</script><script>alert(1)</script><!-- "' &`;
     let doc = createFromSample("fruits", evil, "0.0.0");

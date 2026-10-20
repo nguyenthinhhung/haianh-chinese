@@ -13,9 +13,10 @@ describe("escape", () => {
     expect(JSON.parse(json)).toEqual({ t: "</script><!--" });
   });
 
-  it("allows only asset, data, blob and webview asset URLs", () => {
+  it("allows only asset, data, blob, webview asset and published file URLs", () => {
     for (const ok of [
       "assets/img-abc.webp",
+      "/f/11b879ced09e1bad9c295af3.png",
       "data:image/png;base64,iVBORw0KGgo=",
       "blob:http://localhost:1420/1c9f",
       "http://asset.localhost/C%3A%2Fx%2Fassets%2Fa.png",
@@ -27,6 +28,11 @@ describe("escape", () => {
       "javascript:alert(1)",
       "assets/../../secret",
       "/assets/a.png",
+      "/f/../secret",
+      "/f/a/b.png",
+      "/f/.hidden",
+      "//evil.example/f/a.png",
+      '/f/a.png" onerror="x',
       "file:///C:/a.png",
       "https://example.com/a.png",
       'assets/a.png" onerror="x',
