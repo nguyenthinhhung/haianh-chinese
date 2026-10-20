@@ -6,7 +6,10 @@ type RawLesson = Record<string, unknown>;
 export type Migration = (raw: RawLesson) => RawLesson;
 
 /** Register `vN → vN+1` steps here when the schema changes. */
-export const MIGRATIONS: Record<number, Migration> = {};
+export const MIGRATIONS: Record<number, Migration> = {
+  // v2 adds exercises; a v1 lesson has none.
+  1: (raw) => ({ ...raw, exercises: Array.isArray(raw.exercises) ? raw.exercises : [] }),
+};
 
 export type MigrationResult =
   | { ok: true; raw: RawLesson; fromVersion: number }

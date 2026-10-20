@@ -1,9 +1,11 @@
 import { z } from "zod";
+import { ExerciseSchema } from "./exerciseSchema";
 import { ID_PATTERNS } from "./ids";
 
 z.config(z.locales.vi());
 
-export const SCHEMA_VERSION = 1;
+/** 2: `exercises`. An older app refuses such a file instead of dropping them on save. */
+export const SCHEMA_VERSION = 2;
 
 /**
  * Asset files always live directly in the lesson's `assets/` folder. Anything
@@ -65,6 +67,8 @@ export const LessonSchema = z.object({
     .prefault({ id: "classic" }),
   settings: SettingsSchema.prefault({}),
   slides: z.array(SlideSchema),
+  /** Exercises students do on their own; see exerciseSchema.ts. */
+  exercises: z.array(ExerciseSchema).max(50).default([]),
   assets: z.array(AssetSchema).default([]),
   metadata: z.object({
     createdAt: z.string(),

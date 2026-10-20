@@ -1,5 +1,6 @@
 import { produce, type Draft } from "immer";
 import { blankContent } from "./blank";
+import { exerciseAssetRefs } from "./exercise";
 import { collectAssetRefs, type Path } from "./fields";
 import { newId } from "./ids";
 import { SCHEMA_VERSION, type Asset, type LessonDocument, type LessonSettings, type Slide } from "./schema";
@@ -28,6 +29,7 @@ export function createLesson({ title, themeId = "classic", appVersion, now = new
     theme: { id: themeId },
     settings: { sound: true, animations: true, hanziFont: "sans", pinyin: true },
     slides: [],
+    exercises: [],
     assets: [],
     metadata: { createdAt: ts, updatedAt: ts, appVersion },
   };
@@ -159,13 +161,14 @@ export function addAsset(doc: LessonDocument, asset: Omit<Asset, "id">): { doc: 
 }
 
 /**
- * Drops asset entries no slide refers to any more. Run when a lesson is
- * closed, not while editing: undo may bring a reference back.
+ * Drops asset entries no slide or exercise refers to any more. Run when a
+ * lesson is closed, not while editing: undo may bring a reference back.
  */
 export function removeUnusedAssets(doc: LessonDocument, registry: TemplateRegistry): LessonDocument {
-  const used = new Set(
-    doc.slides.flatMap((s) => collectAssetRefs(s.content, registry.require(s.type).editor).map((r) => r.assetId)),
-  );
+  const used = new Set([
+    ...doc.slides.flatMap((s) => collectAssetRefs(s.content, registry.require(s.type).editor).map((r) => r.assetId)),
+    ...doc.exercises.flatMap((e) => exerciseAssetRefs(e).map((r) => r.assetId)),
+  ]);
   if (doc.assets.every((a) => used.has(a.id))) return doc;
   return produce(doc, (d) => {
     d.assets = d.assets.filter((a) => used.has(a.id));

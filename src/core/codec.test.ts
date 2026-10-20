@@ -3,7 +3,7 @@ import { createFromSample } from "../samples";
 import { testEnv } from "../test/env";
 import { parseLessonHtml, readAssetData, serializeLessonHtml } from "./codec";
 import { addAsset, addSlide, setSlideField } from "./document";
-import type { LessonDocument } from "./schema";
+import { SCHEMA_VERSION, type LessonDocument } from "./schema";
 import { TemplateRegistry } from "./templateRegistry";
 
 const env = testEnv();
@@ -60,7 +60,7 @@ describe("LessonCodec", () => {
   it("writes the contract skeleton with language tags", () => {
     const html = serializeLessonHtml(createFromSample("fruits", "Hoa quả", "0.0.0"), env);
     expect(html).toMatch(/^<!doctype html>/);
-    expect(html).toContain('<meta name="lesson-studio-schema" content="1">');
+    expect(html).toContain(`<meta name="lesson-studio-schema" content="${SCHEMA_VERSION}">`);
     expect(html).toContain('<meta name="generator" content="Chinese Lesson Studio">');
     expect(html).toContain('<title>Hoa quả</title>');
     expect(html).toContain('<main class="ls-deck" data-theme="classic"');

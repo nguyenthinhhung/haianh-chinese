@@ -1,10 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { migrate } from "./migration";
+import { SCHEMA_VERSION } from "./schema";
 
 describe("migrate", () => {
   it("passes a current document through unchanged", () => {
-    const raw = { schemaVersion: 1, title: "x" };
-    expect(migrate(raw)).toEqual({ ok: true, raw, fromVersion: 1 });
+    const raw = { schemaVersion: SCHEMA_VERSION, title: "x" };
+    expect(migrate(raw)).toEqual({ ok: true, raw, fromVersion: SCHEMA_VERSION });
+  });
+
+  it("gives a version 1 lesson an empty list of exercises", () => {
+    expect(migrate({ schemaVersion: 1, title: "x" })).toEqual({
+      ok: true,
+      fromVersion: 1,
+      raw: { schemaVersion: 2, title: "x", exercises: [] },
+    });
   });
 
   it("runs the chain one version at a time", () => {

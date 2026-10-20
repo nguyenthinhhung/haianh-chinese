@@ -1,5 +1,7 @@
 import type { z } from "zod";
-import { collectAssetRefs, describeContentPath, type Path } from "./fields";
+import { describeExercisePath, exerciseAssetRefs } from "./exercise";
+import type { Exercise } from "./exerciseSchema";
+import { collectAssetRefs, describeContentPath, type AssetRefUse, type Path } from "./fields";
 import { LessonSchema, type LessonDocument } from "./schema";
 import type { TemplateRegistry } from "./templateRegistry";
 
@@ -38,6 +40,31 @@ export function validateLesson(raw: unknown, registry: TemplateRegistry): Valida
     issues.push({ path: ["slides"], message: "Trùng ID slide" });
   }
 
+  const checkRef = (ref: AssetRefUse) => {
+    const asset = assetsById.get(ref.assetId);
+    if (!asset) issues.push({ path: ref.path, message: "Tham chiếu tới tài nguyên không tồn tại" });
+    else if (asset.kind !== ref.assetKind) {
+      issues.push({ path: ref.path, message: `Cần ${ref.assetKind === "image" ? "ảnh" : "âm thanh"}` });
+    }
+  };
+
+  if (new Set(doc.exercises.map((e) => e.id)).size !== doc.exercises.length) {
+    issues.push({ path: ["exercises"], message: "Trùng ID đề" });
+  }
+  doc.exercises.forEach((exercise, e) => {
+    // Answers are handed in by ID, so IDs must be unique where they are looked up.
+    const parts = exercise.parts.map((p) => p.id);
+    const questions = exercise.parts.flatMap((p) => p.questions);
+    if (new Set(parts).size !== parts.length) issues.push({ path: ["exercises", e, "parts"], message: "Trùng ID phần" });
+    if (new Set(questions.map((q) => q.id)).size !== questions.length) issues.push({ path: ["exercises", e], message: "Trùng ID câu hỏi" });
+    for (const q of questions) {
+      if ("options" in q && new Set(q.options.map((o) => o.id)).size !== q.options.length) {
+        issues.push({ path: ["exercises", e], message: "Trùng ID lựa chọn" });
+      }
+    }
+    exerciseAssetRefs(exercise, ["exercises", e]).forEach(checkRef);
+  });
+
   const slides = doc.slides.map((slide, i) => {
     const template = registry.get(slide.type);
     if (!template) {
@@ -52,13 +79,7 @@ export function validateLesson(raw: unknown, registry: TemplateRegistry): Valida
       issues.push(...fromZod(content.error, ["slides", i, "content"]));
       return slide;
     }
-    for (const ref of collectAssetRefs(content.data, template.editor, ["slides", i, "content"])) {
-      const asset = assetsById.get(ref.assetId);
-      if (!asset) issues.push({ path: ref.path, message: "Tham chiếu tới tài nguyên không tồn tại" });
-      else if (asset.kind !== ref.assetKind) {
-        issues.push({ path: ref.path, message: `Cần ${ref.assetKind === "image" ? "ảnh" : "âm thanh"}` });
-      }
-    }
+    collectAssetRefs(content.data, template.editor, ["slides", i, "content"]).forEach(checkRef);
     return { ...slide, content: content.data };
   });
 
@@ -79,6 +100,11 @@ export function formatIssue(issue: LessonIssue, raw: unknown, registry: Template
       parts.push(String(sub));
     }
     return `${parts.join(", ")}: ${issue.message}`;
+  }
+  if (root === "exercises" && typeof index === "number") {
+    const exercise = (raw as { exercises?: Exercise[] } | undefined)?.exercises?.[index];
+    const rest = issue.path.slice(2);
+    return `${[`Đề ${index + 1}`, ...describeExercisePath(exercise, rest)].join(", ")}: ${issue.message}`;
   }
   return issue.path.length ? `${issue.path.join(".")}: ${issue.message}` : issue.message;
 }

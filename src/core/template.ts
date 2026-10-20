@@ -31,7 +31,14 @@ export type EditorField = (
       multiline?: boolean;
       placeholder?: string;
     }
-  | { kind: "toggle"; key: string; label: string }
+  | {
+      kind: "toggle";
+      key: string;
+      label: string;
+      /** In a list: turning it on for one item turns it off for the others (the one right answer). */
+      exclusive?: boolean;
+    }
+  | { kind: "number"; key: string; label: string; min: number; max: number }
   | { kind: "select"; key: string; label: string; options: { value: string; label: string }[] }
   | {
       kind: "asset";
