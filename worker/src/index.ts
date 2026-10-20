@@ -190,7 +190,7 @@ export default {
     try {
       return await handle(request, env as AppEnv, ctx);
     } catch (e) {
-      console.error(e);
+      console.error(`${request.method} ${new URL(request.url).pathname}:`, e instanceof Error ? e.message : e);
       return text("Internal error", 500);
     }
   },
