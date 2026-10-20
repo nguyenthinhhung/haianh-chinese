@@ -9,6 +9,15 @@
     "B2_REGION": "us-east-005",
     "B2_BUCKET": "lesson-studio"
   },
+  // Assignments and students' attempts (migrations/).
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "lesson-studio",
+      "database_id": "bbd82f86-166b-4435-b6ac-fd49f4d93435",
+      "migrations_dir": "migrations"
+    }
+  ],
   "observability": { "enabled": true }
   // Secrets (wrangler secret put): B2_KEY_ID, B2_APP_KEY, TEACHER_PASSWORD
 }
