@@ -1,5 +1,14 @@
 import { z } from "zod";
-import { exerciseReview, gradeExercise, studentCopy, type Answers, type AnswerValue, type ExerciseGrade, type StudentExercise } from "../../src/core/exerciseGrade";
+import {
+  applyManualGrades,
+  exerciseReview,
+  gradeExercise,
+  studentCopy,
+  type Answers,
+  type AnswerValue,
+  type ExerciseGrade,
+  type StudentExercise,
+} from "../../src/core/exerciseGrade";
 import { ExerciseSchema, type Exercise } from "../../src/core/exerciseSchema";
 
 /**
@@ -231,6 +240,54 @@ export async function updateAssignment(db: D1Database, id: string, form: FormDat
   return false;
 }
 
+/** One attempt, with the assignment it belongs to. */
+export async function attemptDetail(db: D1Database, id: string, attemptId: string): Promise<{ assignment: AssignmentRow; attempt: AttemptRow } | null> {
+  if (!EXERCISE_ID.test(id) || !ATTEMPT_ID.test(attemptId)) return null;
+  const assignment = await db.prepare("SELECT * FROM assignments WHERE id = ?").bind(id).first<AssignmentRow>();
+  const attempt = assignment && (await db.prepare("SELECT * FROM attempts WHERE id = ? AND assignment_id = ?").bind(attemptId, id).first<AttemptRow>());
+  return assignment && attempt?.submitted_at ? { assignment, attempt } : null;
+}
+
+/**
+ * The teacher's points for written answers (`q_<id>` fields of the form),
+ * applied to the grade kept for the attempt. Nothing else is graded again.
+ */
+export async function gradeByHand(db: D1Database, id: string, attemptId: string, form: FormData): Promise<boolean> {
+  const found = await attemptDetail(db, id, attemptId);
+  if (!found?.attempt.grade) return false;
+  const manual: Record<string, number> = {};
+  for (const [key, value] of form) {
+    if (/^q_[a-z0-9]{4,32}$/.test(key) && typeof value === "string" && value.trim() !== "" && Number.isFinite(Number(value))) manual[key] = Number(value);
+  }
+  const { exercise } = readPayload(found.assignment);
+  const grade = applyManualGrades(JSON.parse(found.attempt.grade) as ExerciseGrade, manual, exercise.settings.passPercent);
+  await db
+    .prepare("UPDATE attempts SET grade = ?, score = ?, max_score = ?, percent = ? WHERE id = ?")
+    .bind(JSON.stringify(grade), grade.score, grade.max, grade.percent, attemptId)
+    .run();
+  return true;
+}
+
+export async function deleteAttempt(db: D1Database, id: string, attemptId: string): Promise<void> {
+  if (!EXERCISE_ID.test(id) || !ATTEMPT_ID.test(attemptId)) return;
+  await db.prepare("DELETE FROM attempts WHERE id = ? AND assignment_id = ?").bind(attemptId, id).run();
+}
+
+/** Everything kept on the server, as one JSON file the teacher can keep. */
+export async function exportAll(db: D1Database): Promise<unknown> {
+  const assignments = await db.prepare("SELECT * FROM assignments ORDER BY created_at").all<AssignmentRow>();
+  const attempts = await db.prepare("SELECT * FROM attempts ORDER BY started_at").all<AttemptRow>();
+  return {
+    exportedAt: new Date().toISOString(),
+    assignments: assignments.results.map((a) => ({ ...a, payload: JSON.parse(a.payload) as unknown })),
+    attempts: attempts.results.map((t) => ({
+      ...t,
+      answers: t.answers ? (JSON.parse(t.answers) as unknown) : null,
+      grade: t.grade ? (JSON.parse(t.grade) as unknown) : null,
+    })),
+  };
+}
+
 export async function deleteAssignment(db: D1Database, id: string): Promise<Response> {
   if (!EXERCISE_ID.test(id)) return json({ error: "bad-id" }, 400);
   await db.batch([db.prepare("DELETE FROM attempts WHERE assignment_id = ?").bind(id), db.prepare("DELETE FROM assignments WHERE id = ?").bind(id)]);
@@ -245,6 +302,8 @@ export interface AssignmentSummary {
   updated_at: string;
   closed: number;
   closes_at: string | null;
+  /** Hand-ins with written answers still to grade. */
+  to_grade: number;
   submitted: number;
   students: number;
   avg_percent: number | null;
@@ -256,6 +315,7 @@ export async function listAssignments(db: D1Database): Promise<AssignmentSummary
     .prepare(
       `SELECT a.id, a.slug, a.title, a.lesson_title, a.updated_at, a.closed, a.closes_at,
               COUNT(t.submitted_at) AS submitted,
+              COUNT(CASE WHEN json_extract(t.grade, '$.pending') > 0 THEN 1 END) AS to_grade,
               COUNT(DISTINCT CASE WHEN t.submitted_at IS NOT NULL THEN t.client_id END) AS students,
               ROUND(AVG(t.percent)) AS avg_percent,
               MAX(t.submitted_at) AS last_submitted

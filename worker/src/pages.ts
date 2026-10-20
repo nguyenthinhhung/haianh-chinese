@@ -92,6 +92,7 @@ header{background:linear-gradient(135deg,#c8102e,#9e0c24);color:#fff}
 main{max-width:1080px;margin:0 auto;padding:24px}
 .copy{padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--panel);cursor:pointer;white-space:nowrap}
 .copy:hover{border-color:var(--muted)}
+a.copy{display:inline-block;color:inherit;text-decoration:none}
 .empty{padding:56px 24px;border:2px dashed var(--border);border-radius:20px;text-align:center;color:var(--muted)}
 .empty .mark{margin:0 auto 14px;background:var(--accent);color:#fff}
 .empty strong{display:block;margin-bottom:6px;color:var(--text);font-size:17px}
@@ -100,7 +101,7 @@ main{max-width:1080px;margin:0 auto;padding:24px}
 `;
 
 const COPY_SCRIPT = `
-document.addEventListener("click",async e=>{const b=e.target.closest(".copy");if(!b)return;const url=location.origin+b.dataset.href;try{await navigator.clipboard.writeText(url);const t=b.textContent;b.textContent="Đã chép";setTimeout(()=>b.textContent=t,1500)}catch{prompt("Sao chép link:",url)}});
+document.addEventListener("click",async e=>{const b=e.target.closest(".copy[data-href]");if(!b)return;const url=location.origin+b.dataset.href;try{await navigator.clipboard.writeText(url);const t=b.textContent;b.textContent="Đã chép";setTimeout(()=>b.textContent=t,1500)}catch{prompt("Sao chép link:",url)}});
 `;
 
 function teacherPage(title: string, active: "lessons" | "results", css: string, content: string, script = ""): string {
@@ -170,6 +171,8 @@ export interface ResultsSummary {
   /** Taking hand-ins: not closed by the teacher, and before the deadline. */
   open: boolean;
   closesAt: string | null;
+  /** Hand-ins with written answers still to grade. */
+  toGrade: number;
   submitted: number;
   students: number;
   avgPercent: number | null;
@@ -177,6 +180,7 @@ export interface ResultsSummary {
 }
 
 export interface ResultsAttempt {
+  id: string;
   name: string;
   clientId: string;
   score: number;
@@ -186,10 +190,26 @@ export interface ResultsAttempt {
   submittedAt: string;
   /** Handed in after the time limit or the deadline. */
   late: boolean;
+  /** Points of written answers still to grade. */
+  pending: number;
+}
+
+/** How one question went across every hand-in. */
+export interface QuestionStat {
+  number: number;
+  kind: string;
+  line: string;
+  correct: number;
+  partial: number;
+  wrong: number;
+  blank: number;
+  pending: number;
+  /** Share of its points earned, 0–100; null before any hand-in. */
+  percent: number | null;
 }
 
 /** An ISO time as the value of a `datetime-local` field, in Vietnam time. */
-function vietnamInputValue(iso: string): string {
+export function vietnamInputValue(iso: string): string {
   return new Date(Date.parse(iso) + 7 * 3600_000).toISOString().slice(0, 16);
 }
 
@@ -207,7 +227,7 @@ const RESULTS_CSS = `
 .stat{display:flex;gap:16px}
 .stat span{display:grid;text-align:center;font-size:12px;color:var(--muted)}
 .stat strong{font-size:20px;color:var(--text)}
-.open{padding:9px 14px;border-radius:10px;background:var(--accent);color:#fff;font-weight:600;text-decoration:none;white-space:nowrap}
+.open{padding:9px 14px;border:0;border-radius:10px;background:var(--accent);color:#fff;font-weight:600;text-decoration:none;white-space:nowrap;cursor:pointer}
 .open:hover{background:var(--accent-hover)}
 .summary{display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px;margin-bottom:18px}
 .summary h2{margin:0}
@@ -228,6 +248,14 @@ td.name{white-space:normal;font-weight:600}
 .back{display:inline-block;margin-bottom:12px;color:var(--accent);text-decoration:none;font-weight:600}
 .controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 18px}
 .controls input{padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--panel)}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 14px}
+.table-wrap+.toolbar{margin:14px 0 0}
+h3{margin:28px 0 10px;font-size:16px}
+td.answer{white-space:normal;min-width:120px}
+td.name a{color:inherit}
+.points{width:64px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;background:var(--panel)}
+.danger-zone{margin-top:28px}
+.copy.danger{border-color:#c0392b;color:#c0392b}
 .assignment .info p:last-child{margin-top:6px}
 `;
 
@@ -236,13 +264,13 @@ export function resultsListPage(rows: ResultsSummary[]): string {
     .map(
       (r) => `<li class="assignment"><div class="info"><h2>${escapeHtml(r.title)}</h2>
 <p class="muted">${r.lessonTitle ? `${escapeHtml(r.lessonTitle)} · ` : ""}${r.lastSubmitted ? `Nộp gần nhất ${escapeHtml(formatTime(r.lastSubmitted))}` : "Chưa có bài nộp"}</p>
-<p>${openState(r.open, r.closesAt)}</p></div>
+<p>${openState(r.open, r.closesAt)}${r.toGrade ? ` <span class="pill late">${r.toGrade} bài chờ chấm</span>` : ""}</p></div>
 <div class="stat"><span><strong>${r.submitted}</strong>bài nộp</span><span><strong>${r.students}</strong>học viên</span><span><strong>${r.avgPercent === null ? "–" : `${r.avgPercent}%`}</strong>điểm TB</span></div>
 <button type="button" class="copy" data-href="/a/${escapeHtml(r.slug)}">Chép link học viên</button><a class="open" href="/results/${escapeHtml(r.id)}">Xem điểm</a></li>`,
     )
     .join("");
   const content = rows.length
-    ? `<ul class="assignments">${items}</ul>`
+    ? `<p class="toolbar"><a class="copy" href="/results/export.json" download>Tải bản sao lưu (toàn bộ đề và bài nộp)</a></p><ul class="assignments">${items}</ul>`
     : `<div class="empty"><div class="mark">题</div><strong>Chưa giao bài tập nào</strong>Trong ứng dụng, mở chế độ Bài tập của một bài và bấm “Giao bài”.</div>`;
   return teacherPage("Bảng điểm", "results", RESULTS_CSS, content);
 }
@@ -276,7 +304,20 @@ export interface ResultsHeader {
   inProgress: number;
 }
 
-export function resultsPage(header: ResultsHeader, attempts: ResultsAttempt[]): string {
+function statsTable(stats: QuestionStat[]): string {
+  if (!stats.some((s) => s.percent !== null)) return "";
+  const rows = stats
+    .map((s) => {
+      const low = s.percent !== null && s.percent < 50;
+      return `<tr><td>${s.number}</td><td class="muted">${escapeHtml(s.kind)}</td><td class="name">${escapeHtml(s.line)}</td><td>${s.correct}</td><td>${s.partial}</td><td>${s.wrong}</td><td>${s.blank}</td>${
+        s.pending ? `<td><span class="pill late">${s.pending} chờ chấm</span></td>` : "<td></td>"
+      }<td>${s.percent === null ? "–" : `<span class="pill ${low ? "fail" : "pass"}">${s.percent}%</span>`}</td></tr>`;
+    })
+    .join("");
+  return `<h3>Thống kê theo câu</h3><div class="table-wrap"><table><thead><tr><th>Câu</th><th>Dạng</th><th>Câu hỏi</th><th>Đúng</th><th>Một phần</th><th>Sai</th><th>Bỏ trống</th><th></th><th>Điểm đạt</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+export function resultsPage(header: ResultsHeader, attempts: ResultsAttempt[], stats: QuestionStat[] = []): string {
   // The nth time this browser handed the exercise in, counted from the first.
   const nth = new Map<ResultsAttempt, number>();
   const counts = new Map<string, number>();
@@ -291,8 +332,9 @@ export function resultsPage(header: ResultsHeader, attempts: ResultsAttempt[]): 
       const time = seconds(a.startedAt, a.submittedAt);
       const late = a.late;
       const passed = a.percent >= header.passPercent;
-      const pass = header.passPercent > 0 ? ` <span class="pill ${passed ? "pass" : "fail"}">${passed ? "Đạt" : "Chưa đạt"}</span>` : "";
-      return `<tr><td class="name">${escapeHtml(a.name)}</td><td>${a.score}/${a.max}</td><td>${a.percent}%${pass}</td>
+      const pass = header.passPercent > 0 && !a.pending ? ` <span class="pill ${passed ? "pass" : "fail"}">${passed ? "Đạt" : "Chưa đạt"}</span>` : "";
+      const pending = a.pending ? ' <span class="pill late">Chờ chấm</span>' : "";
+      return `<tr><td class="name"><a href="/results/${escapeHtml(header.id)}/attempts/${escapeHtml(a.id)}">${escapeHtml(a.name)}</a>${pending}</td><td>${a.score}/${a.max}</td><td>${a.percent}%${pass}</td>
 <td>${took(time)}${late ? ' <span class="pill late">Nộp trễ</span>' : ""}</td><td>${escapeHtml(formatTime(a.submittedAt))}</td><td>${nth.get(a)}</td></tr>`;
     })
     .join("");
@@ -316,8 +358,83 @@ ${header.closesAt ? `<button class="copy" name="action" value="clear-deadline">B
 </form>
 ${
   attempts.length
-    ? `<div class="table-wrap"><table><thead><tr><th>Học viên</th><th>Điểm</th><th>%</th><th>Thời gian làm</th><th>Nộp lúc</th><th>Lần</th></tr></thead><tbody>${rows}</tbody></table></div>`
+    ? `<p class="toolbar"><a class="copy" href="/results/${escapeHtml(header.id)}/csv" download>Tải bảng điểm (CSV)</a> <span class="muted">Bấm tên học viên để xem bài làm.</span></p>
+<div class="table-wrap"><table><thead><tr><th>Học viên</th><th>Điểm</th><th>%</th><th>Thời gian làm</th><th>Nộp lúc</th><th>Lần</th></tr></thead><tbody>${rows}</tbody></table></div>
+${statsTable(stats)}`
     : `<div class="empty"><strong>Chưa có bài nộp</strong>Gửi link cho học viên; bài nộp sẽ hiện ở đây.</div>`
-}`;
+}
+<form class="danger-zone" method="post" action="/results/${escapeHtml(header.id)}/delete" onsubmit="return confirm('Gỡ bài tập này khỏi web? Link sẽ không mở được nữa và mọi bài nộp bị xoá.')">
+<button class="copy danger">Gỡ bài tập khỏi web</button> <span class="muted">Link không mở được nữa; mọi bài nộp bị xoá. Tải bảng điểm trước nếu cần giữ.</span>
+</form>`;
   return teacherPage("Bảng điểm", "results", RESULTS_CSS, content);
+}
+
+/** One question of a hand-in, as the teacher sees it. */
+export interface AttemptQuestion {
+  id: string;
+  number: number;
+  kind: string;
+  line: string;
+  given: string;
+  expected: string;
+  status: "correct" | "partial" | "wrong" | "blank" | "pending";
+  earned: number;
+  points: number;
+  /** Written answers take the teacher's points. */
+  byHand: boolean;
+  /** Taken out of the exercise after this hand-in; its points still count. */
+  removed: boolean;
+}
+
+const STATUS_TEXT: Record<AttemptQuestion["status"], string> = {
+  correct: '<span class="pill pass">Đúng</span>',
+  partial: '<span class="pill late">Một phần</span>',
+  wrong: '<span class="pill fail">Sai</span>',
+  blank: '<span class="muted">Bỏ trống</span>',
+  pending: '<span class="pill late">Chờ chấm</span>',
+};
+
+export function attemptPage(
+  header: {
+    assignmentId: string;
+    attemptId: string;
+    title: string;
+    name: string;
+    score: number;
+    max: number;
+    percent: number;
+    /** Percent; 0 means none. */
+    passPercent: number;
+    startedAt: string;
+    submittedAt: string;
+    late: boolean;
+    pending: number;
+  },
+  questions: AttemptQuestion[],
+): string {
+  const base = `/results/${escapeHtml(header.assignmentId)}/attempts`;
+  const verdict = header.pending ? "tạm tính" : header.passPercent ? (header.percent >= header.passPercent ? "đạt" : "chưa đạt") : "tỉ lệ";
+  const rows = questions
+    .map((q) => {
+      const points = q.byHand
+        ? `<input class="points" type="number" name="${escapeHtml(q.id)}" form="grade" min="0" max="${q.points}" step="1" value="${q.status === "pending" ? "" : q.earned}" placeholder="?"> / ${q.points}`
+        : `${q.earned}/${q.points}`;
+      const line = q.removed ? '<span class="muted">Câu đã bỏ khỏi đề</span>' : escapeHtml(q.line);
+      return `<tr><td>${q.number}</td><td class="muted">${escapeHtml(q.kind)}</td><td class="name">${line}</td><td class="answer">${escapeHtml(q.given) || '<span class="muted">—</span>'}</td><td class="answer">${escapeHtml(q.expected) || '<span class="muted">—</span>'}</td><td>${STATUS_TEXT[q.status]}</td><td>${points}</td></tr>`;
+    })
+    .join("");
+  const byHand = questions.some((q) => q.byHand);
+  const content = `<a class="back" href="/results/${escapeHtml(header.assignmentId)}">← ${escapeHtml(header.title)}</a>
+<div class="summary"><div><h2>${escapeHtml(header.name)}</h2><p class="muted">Nộp lúc ${escapeHtml(formatTime(header.submittedAt))} · làm trong ${took(seconds(header.startedAt, header.submittedAt))}${
+    header.late ? ' · <span class="pill late">Nộp trễ</span>' : ""
+  }</p></div>
+<div class="stat"><span><strong>${header.score}/${header.max}</strong>điểm</span><span><strong>${header.percent}%</strong>${verdict}</span>${header.pending ? `<span><strong>${header.pending}</strong>điểm chờ chấm</span>` : ""}</div></div>
+<div class="table-wrap"><table><thead><tr><th>Câu</th><th>Dạng</th><th>Câu hỏi</th><th>Em trả lời</th><th>Đáp án</th><th></th><th>Điểm</th></tr></thead><tbody>${rows}</tbody></table></div>
+${
+  byHand
+    ? `<form id="grade" class="toolbar" method="post" action="${base}/${escapeHtml(header.attemptId)}/grade"><button class="open">Lưu điểm phần tự luận</button> <span class="muted">Điểm tổng được tính lại; học viên mở lại link sẽ thấy điểm mới.</span></form>`
+    : ""
+}
+<form class="danger-zone" method="post" action="${base}/${escapeHtml(header.attemptId)}/delete" onsubmit="return confirm('Xoá bài nộp này?')"><button class="copy danger">Xoá bài nộp này</button></form>`;
+  return teacherPage("Bài làm", "results", RESULTS_CSS, content);
 }
