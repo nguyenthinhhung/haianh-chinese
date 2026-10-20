@@ -133,14 +133,35 @@ fn server(state: &AppState) -> AppResult<Server> {
     Ok(Server { base, password })
 }
 
+/// Sends the request, retrying twice on a dropped connection or a 5xx answer.
+/// Every publish request is safe to repeat: it checks or replaces the same file.
 async fn send(request: reqwest::RequestBuilder) -> AppResult<reqwest::Response> {
-    let response = request.send().await.map_err(|e| AppError::new("network", format!("Không kết nối được máy chủ: {e}")))?;
-    match response.status().as_u16() {
-        200..=299 => Ok(response),
-        401 => Err(AppError::new("unauthorized", "Máy chủ từ chối mật khẩu. Kiểm tra lại mật khẩu đăng bài.")),
-        413 => Err(AppError::new("too-large", "File quá lớn để đăng lên máy chủ.")),
-        code => Err(AppError::new("network", format!("Máy chủ trả về lỗi {code}."))),
+    const ATTEMPTS: u64 = 3;
+    for attempt in 1..=ATTEMPTS {
+        let retry = attempt < ATTEMPTS;
+        let this = request.try_clone().ok_or_else(|| AppError::new("io", "Yêu cầu không gửi lại được."))?;
+        let response = match this.send().await {
+            Ok(r) => r,
+            Err(_) if retry => {
+                tokio::time::sleep(Duration::from_millis(700 * attempt)).await;
+                continue;
+            }
+            Err(e) => return Err(AppError::new("network", format!("Không kết nối được máy chủ: {e}"))),
+        };
+        let status = response.status().as_u16();
+        match status {
+            200..=299 => return Ok(response),
+            401 => return Err(AppError::new("unauthorized", "Máy chủ từ chối mật khẩu. Kiểm tra lại mật khẩu đăng bài.")),
+            413 => return Err(AppError::new("too-large", "File quá lớn để đăng lên máy chủ.")),
+            500..=599 if retry => tokio::time::sleep(Duration::from_millis(700 * attempt)).await,
+            _ => {
+                let body = response.text().await.unwrap_or_default();
+                let detail: String = body.chars().filter(|c| !c.is_control()).take(160).collect();
+                return Err(AppError::new("network", format!("Máy chủ trả về lỗi {status}: {detail}")));
+            }
+        }
     }
+    unreachable!("the last attempt always returns")
 }
 
 #[tauri::command]
