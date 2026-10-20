@@ -73,7 +73,10 @@ async function serveAsset(request: Request, ctx: ExecutionContext, store: FileSt
   if (cached) return cached;
 
   const upstream = await store.get(`assets/${name}`, range);
-  if (!upstream.ok) return text("Not found", upstream.status === 404 ? 404 : 502);
+  if (!upstream.ok) {
+    if (upstream.status !== 404) console.error(`B2 get assets/${name}: ${upstream.status} ${(await upstream.text()).slice(0, 300)}`);
+    return text("Not found", upstream.status === 404 ? 404 : 502);
+  }
 
   const headers = new Headers({
     "Content-Type": type,

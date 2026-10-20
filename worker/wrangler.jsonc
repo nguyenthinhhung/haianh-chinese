@@ -5,9 +5,9 @@
   "compatibility_date": "2026-10-01",
   "vars": {
     // Backblaze B2, S3-compatible endpoint of the bucket's region.
-    "B2_ENDPOINT": "https://s3.us-west-004.backblazeb2.com",
-    "B2_REGION": "us-west-004",
-    "B2_BUCKET": "CHANGE-ME"
+    "B2_ENDPOINT": "https://s3.us-east-005.backblazeb2.com",
+    "B2_REGION": "us-east-005",
+    "B2_BUCKET": "lesson-studio"
   },
   "observability": { "enabled": true }
   // Secrets (wrangler secret put): B2_KEY_ID, B2_APP_KEY, TEACHER_PASSWORD
