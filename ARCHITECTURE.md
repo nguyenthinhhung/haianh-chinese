@@ -13,6 +13,10 @@ phải chạm vào HTML.
 và trả lời bằng lời; giáo viên là người điều khiển mọi thứ trên màn hình.
 
 > Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 20).
+>
+> Kế hoạch mở rộng lên web (trình chiếu mọi nơi, bài tập cho học viên) nằm ở
+> `PLAN-WEB.md`. Phần đó đổi giả định "người dùng duy nhất là giáo viên" nên chưa
+> gộp vào đây cho tới khi bắt đầu làm.
 
 ---
 
