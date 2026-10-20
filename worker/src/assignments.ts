@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { exerciseReview, gradeExercise, studentCopy, type Answers, type ExerciseGrade, type StudentExercise } from "../../src/core/exerciseGrade";
+import { exerciseReview, gradeExercise, studentCopy, type Answers, type AnswerValue, type ExerciseGrade, type StudentExercise } from "../../src/core/exerciseGrade";
 import { ExerciseSchema, type Exercise } from "../../src/core/exerciseSchema";
 
 /**
@@ -103,7 +103,25 @@ export function cleanName(raw: unknown): string | null {
   return /\p{L}/u.test(name) ? name : null;
 }
 
-/** Answers keep only the shape a question can take; anything else is dropped, never stored. */
+const ITEM_ID = /^[a-z]_[a-z0-9]{4,32}$/;
+
+/** One answer in a shape some question can take, within size limits; undefined drops it. Each question checks its own shape when graded. */
+function cleanValue(value: unknown): AnswerValue | undefined {
+  if (typeof value === "boolean") return value;
+  // Typed answers and writing.
+  if (typeof value === "string") return value.length <= 2000 ? value : undefined;
+  // Words in order.
+  if (Array.isArray(value)) return value.length <= 30 && value.every((t) => typeof t === "string" && t.length <= 60) ? (value as string[]) : undefined;
+  // Item → choice: matching, the word box, sorting.
+  if (value && typeof value === "object") {
+    const entries = Object.entries(value);
+    const ok = entries.length <= 30 && entries.every(([k, v]) => ITEM_ID.test(k) && typeof v === "string" && ITEM_ID.test(v));
+    return ok ? (Object.fromEntries(entries) as Record<string, string>) : undefined;
+  }
+  return undefined;
+}
+
+/** Answers keep only shapes a question can take; anything else is dropped, never stored. */
 export function cleanAnswers(raw: unknown): Answers | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const out: Answers = {};
@@ -111,7 +129,8 @@ export function cleanAnswers(raw: unknown): Answers | null {
   for (const [key, value] of Object.entries(raw)) {
     if (++n > 500) return null;
     if (!/^q_[a-z0-9]{4,32}$/.test(key)) continue;
-    if (typeof value === "boolean" || (typeof value === "string" && /^o_[a-z0-9]{4,32}$/.test(value))) out[key] = value;
+    const clean = cleanValue(value);
+    if (clean !== undefined) out[key] = clean;
   }
   return out;
 }
