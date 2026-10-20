@@ -65,7 +65,11 @@ bài), `teacher` (bảng điểm). Dùng chung `core/` và `renderer/` với app
   hình CORS. Khoá lưu bằng secret của Worker, không đưa vào repo.
 - Giao diện lưu file nhỏ (`put`, `get` có `Range`) bọc B2, để đổi nơi lưu về sau chỉ
   sửa một chỗ.
-- Thêm entry `viewer` vào Vite (chỉ renderer + runtime, không có editor).
+- Trình chiếu không cần entry Vite riêng: `serializeLessonHtml` đã ra một trang tự
+  trình chiếu, chỉ cần cho `assetUrl` trỏ tới `/f/<tên file>`. Worker phục vụ trang
+  đó. Entry Vite riêng chỉ cần cho trang làm bài của học viên (Giai đoạn 3).
+- Khung Worker nằm ở `worker/` (đã có): phục vụ file có `Range`, đăng nhập bằng mật
+  khẩu, API đăng bài và đăng file.
 - Quyết định chỗ đặt mã Worker (thư mục `worker/` trong repo).
 - Kết quả: trang rỗng triển khai được, chạy cùng bộ test hiện có.
 
@@ -308,6 +312,7 @@ Chấm điểm nằm ở một module TypeScript thuần trong `core/`, dùng ch
 | Học viên nộp nhiều lần, hoặc trùng tên | Lưu mọi lần nộp; mỗi trình duyệt có một mã ngẫu nhiên để phân biệt các em trùng tên; đề chọn cho nộp một lần hay nhiều lần |
 | Bài đã đăng không tương thích sau khi đổi schema | Migration theo `schemaVersion` cho cả bài học và đề |
 | Hết hạn mức gói free | Theo dõi dung lượng B2 và số lượt gọi Worker; nén ảnh và audio trước khi tải lên (audio mp3/AAC mono khoảng 64 kbps) |
+| Cache API của Cloudflare không chạy trên tên miền `*.workers.dev` (cần tên miền riêng) | Worker vẫn chạy đúng khi không có cache, chỉ chậm hơn vì mỗi lần nghe đi sang B2; cần đo độ trễ thật từ Việt Nam sau khi triển khai rồi quyết định có mua tên miền không |
 | B2 hết hạn mức hoặc đổi chính sách miễn phí | File lưu sau giao diện `put`/`get` nên chuyển sang R2 hoặc nơi khác chỉ sửa một chỗ |
 | Khác biệt Safari/Chrome (audio, fullscreen) | Thử trên cả hai trước khi coi giai đoạn là xong |
 

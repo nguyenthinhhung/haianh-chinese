@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "lesson-studio",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "vars": {
+    // Backblaze B2, S3-compatible endpoint of the bucket's region.
+    "B2_ENDPOINT": "https://s3.us-west-004.backblazeb2.com",
+    "B2_REGION": "us-west-004",
+    "B2_BUCKET": "CHANGE-ME"
+  },
+  "observability": { "enabled": true }
+  // Secrets (wrangler secret put): B2_KEY_ID, B2_APP_KEY, TEACHER_PASSWORD
+}
