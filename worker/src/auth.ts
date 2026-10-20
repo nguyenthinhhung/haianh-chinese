@@ -35,6 +35,10 @@ export function sessionCookie(value: string): string {
   return `${COOKIE}=${value}; Path=/; Max-Age=${WEEK}; HttpOnly; Secure; SameSite=Strict`;
 }
 
+export function clearSessionCookie(): string {
+  return `${COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict`;
+}
+
 export function readCookie(header: string | null, name = COOKIE): string | undefined {
   for (const part of (header ?? "").split(";")) {
     const [k, ...v] = part.trim().split("=");
