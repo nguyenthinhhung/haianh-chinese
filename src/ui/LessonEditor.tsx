@@ -5,6 +5,7 @@ import { insertSlides, setSlideNotes, setTitle } from "../core/document";
 import type { RenderEnv } from "../renderer/render";
 import type { OpenLesson } from "./lessonFiles";
 import { AiImportDialog } from "./AiImportDialog";
+import { ExerciseEditor } from "./ExerciseEditor";
 import { ImageReviewDialog } from "./ImageReviewDialog";
 import { LessonCheckDialog } from "./LessonCheckDialog";
 import { EXPORT_WARN_BYTES, exportLesson } from "./lessonFiles";
@@ -40,6 +41,7 @@ export function LessonEditor({ lesson, onClose }: Props) {
   const [reviewing, setReviewing] = useState(false);
   const [checking, setChecking] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [mode, setMode] = useState<"slides" | "exercises">("slides");
   const fill = useImageFill(session);
   const voice = useAudioFill(session);
   useStrokeFill(session);
@@ -165,60 +167,65 @@ export function LessonEditor({ lesson, onClose }: Props) {
             </button>
           </span>
         )}
-        {toReview.length > 0 && (
-          <button type="button" className="ghost" onClick={() => setReviewing(true)} title="Xem và đổi các ảnh ứng dụng tự chọn">
-            Duyệt ảnh ({toReview.length})
-          </button>
+        {/* Slide-only actions; the exercise editor has its own. */}
+        {mode === "slides" && (
+          <>
+            {toReview.length > 0 && (
+              <button type="button" className="ghost" onClick={() => setReviewing(true)} title="Xem và đổi các ảnh ứng dụng tự chọn">
+                Duyệt ảnh ({toReview.length})
+              </button>
+            )}
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => setChecking(true)}
+              title="Tìm lỗi, chữ quá dài, pinyin sai, ảnh còn thiếu… trước khi dạy"
+            >
+              Kiểm tra bài
+            </button>
+            <button
+              type="button"
+              className="ghost"
+              onClick={fillEmptySlots}
+              disabled={fill.progress.running || voice.progress.running}
+              title="Tự tìm ảnh và tạo giọng đọc cho các ô còn trống (từ vựng, thẻ hình, thẻ lật, hội thoại…)"
+            >
+              Điền ảnh & giọng đọc
+            </button>
+            <button type="button" className="ghost" onClick={() => setAiImport(true)} title="Thêm slide do AI soạn, chèn ngay sau slide đang chọn">
+              Thêm slide bằng AI…
+            </button>
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => void exportFile()}
+              disabled={exporting || !doc.slides.length}
+              title="Xuất một file HTML để trình chiếu trên máy khác, không cần cài ứng dụng"
+            >
+              {exporting ? "Đang xuất…" : "Xuất file"}
+            </button>
+            {services.persistence.kind === "tauri" && (
+              <button
+                type="button"
+                className="ghost"
+                onClick={() => setPublishing(true)}
+                disabled={!doc.slides.length}
+                title="Đăng bài lên máy chủ web riêng để trình chiếu từ bất kỳ máy nào"
+              >
+                Đăng lên web
+              </button>
+            )}
+            <button
+              type="button"
+              className="present-button"
+              disabled={!doc.slides.length}
+              title="Trình chiếu từ slide đang chọn (Shift+F5). F5: từ đầu. Alt+F5: kèm chế độ người trình chiếu. Esc để thoát."
+              onClick={() => setPresenting({ from: slideIndex, presenterView: false })}
+            >
+              ▶ Trình chiếu
+            </button>
+          </>
         )}
-        <button
-          type="button"
-          className="ghost"
-          onClick={() => setChecking(true)}
-          title="Tìm lỗi, chữ quá dài, pinyin sai, ảnh còn thiếu… trước khi dạy"
-        >
-          Kiểm tra bài
-        </button>
-        <button
-          type="button"
-          className="ghost"
-          onClick={fillEmptySlots}
-          disabled={fill.progress.running || voice.progress.running}
-          title="Tự tìm ảnh và tạo giọng đọc cho các ô còn trống (từ vựng, thẻ hình, thẻ lật, hội thoại…)"
-        >
-          Điền ảnh & giọng đọc
-        </button>
-        <button type="button" className="ghost" onClick={() => setAiImport(true)} title="Thêm slide do AI soạn, chèn ngay sau slide đang chọn">
-          Thêm slide bằng AI…
-        </button>
-        <button
-          type="button"
-          className="ghost"
-          onClick={() => void exportFile()}
-          disabled={exporting || !doc.slides.length}
-          title="Xuất một file HTML để trình chiếu trên máy khác, không cần cài ứng dụng"
-        >
-          {exporting ? "Đang xuất…" : "Xuất file"}
-        </button>
-        {services.persistence.kind === "tauri" && (
-          <button
-            type="button"
-            className="ghost"
-            onClick={() => setPublishing(true)}
-            disabled={!doc.slides.length}
-            title="Đăng bài lên máy chủ web riêng để trình chiếu từ bất kỳ máy nào"
-          >
-            Đăng lên web
-          </button>
-        )}
-        <button
-          type="button"
-          className="present-button"
-          disabled={!doc.slides.length}
-          title="Trình chiếu từ slide đang chọn (Shift+F5). F5: từ đầu. Alt+F5: kèm chế độ người trình chiếu. Esc để thoát."
-          onClick={() => setPresenting({ from: slideIndex, presenterView: false })}
-        >
-          ▶ Trình chiếu
-        </button>
         {closeBlocked && session.status.kind !== "saved" && (
           <button type="button" className="danger" onClick={onClose}>
             Đóng, bỏ thay đổi chưa lưu
@@ -276,35 +283,55 @@ export function LessonEditor({ lesson, onClose }: Props) {
         />
       )}
 
-      <SlideNavigator
-        session={session}
-        env={env}
-        selectedId={slide?.id}
-        onSelect={setSelectedId}
-        toReview={toReviewSlides}
-        shortcuts={!presenting}
-        onRemoved={(index) => setNotice({ text: `Đã xoá slide ${index + 1}. Bấm Ctrl+Z để lấy lại.` })}
-      />
+      <div className="mode-switch" role="tablist" aria-label="Phần đang soạn">
+        <button type="button" role="tab" aria-selected={mode === "slides"} onClick={() => setMode("slides")}>
+          Slide
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === "exercises"}
+          onClick={() => setMode("exercises")}
+          title="Đề bài tập để học viên tự làm và được chấm điểm"
+        >
+          Bài tập{doc.exercises.length ? ` (${doc.exercises.length})` : ""}
+        </button>
+      </div>
+      {mode === "exercises" ? (
+        <ExerciseEditor session={session} env={env} onNotice={(text) => setNotice({ text })} />
+      ) : (
+        <>
+          <SlideNavigator
+            session={session}
+            env={env}
+            selectedId={slide?.id}
+            onSelect={setSelectedId}
+            toReview={toReviewSlides}
+            shortcuts={!presenting}
+            onRemoved={(index) => setNotice({ text: `Đã xoá slide ${index + 1}. Bấm Ctrl+Z để lấy lại.` })}
+          />
 
-      <main className="workspace">
-        <div className="stage-wrap">
-          <div className="stage">{slide && <SlideView doc={doc} slide={slide} env={env} />}</div>
-        </div>
-        {slide && (
-          <div className="notes">
-            <label htmlFor="slide-notes">Ghi chú cho giáo viên (không hiện khi trình chiếu)</label>
-            <textarea
-              id="slide-notes"
-              rows={3}
-              value={slide.notes ?? ""}
-              placeholder="Gợi ý câu hỏi, cách dẫn dắt…"
-              onChange={(e) => session.update((d) => setSlideNotes(d, slide.id, e.target.value), { coalesce: `notes-${slide.id}` })}
-            />
-          </div>
-        )}
-      </main>
+          <main className="workspace">
+            <div className="stage-wrap">
+              <div className="stage">{slide && <SlideView doc={doc} slide={slide} env={env} />}</div>
+            </div>
+            {slide && (
+              <div className="notes">
+                <label htmlFor="slide-notes">Ghi chú cho giáo viên (không hiện khi trình chiếu)</label>
+                <textarea
+                  id="slide-notes"
+                  rows={3}
+                  value={slide.notes ?? ""}
+                  placeholder="Gợi ý câu hỏi, cách dẫn dắt…"
+                  onChange={(e) => session.update((d) => setSlideNotes(d, slide.id, e.target.value), { coalesce: `notes-${slide.id}` })}
+                />
+              </div>
+            )}
+          </main>
 
-      <PropertiesPanel session={session} slide={slide} />
+          <PropertiesPanel session={session} slide={slide} />
+        </>
+      )}
 
       {presenting && (
         <PresentMode
