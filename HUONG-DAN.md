@@ -15,7 +15,7 @@ Bài học nằm trong thư mục **Tài liệu → Chinese Lesson Studio**, m�
 
 ## 2. Tạo và soạn bài
 
-- **Tạo bài bằng AI…**: cách nhanh nhất, xem mục 6.
+- **Tạo bài bằng AI…**: cách nhanh nhất, xem mục 8.
 - **+ Bài mới**: đặt tên, chọn "Bài mẫu: Hoa quả" để xem ví dụ hoặc "Bài trống",
   và chọn theme (lần sau ứng dụng nhớ theme đã chọn).
 - Cột trái là danh sách slide: **+ Thêm slide** mở bảng chọn chia nhóm (Dạy, Hỏi
@@ -198,7 +198,56 @@ lật ra hình.
    chế độ trình chiếu, có đủ ảnh, âm thanh, trò chơi và công cụ lớp học. Máy lớp
    học không cần cài ứng dụng, không cần mạng. Bấm **F** để toàn màn hình.
 
-## 6. Tạo bài bằng AI
+## 6. Dạy từ bất kỳ máy nào (Đăng lên web)
+
+1. Trong bài, bấm **Đăng lên web**. Lần đầu, nhập địa chỉ máy chủ của cô (dạng
+   `https://….workers.dev`) và mật khẩu đăng bài. **Tắt bộ gõ tiếng Việt** khi
+   nhập mật khẩu. Mật khẩu được cất trong kho mật khẩu của Windows, lần sau không
+   phải nhập lại.
+2. Bấm **Đăng**. Ảnh và âm thanh chỉ gửi lên lần đầu; đăng lại thì bản trên web được
+   thay bằng bản mới. Bấm **Sao chép link** để lấy đường link của bài.
+3. Trên máy bất kỳ (máy lớp học, máy dạy Zoom), mở địa chỉ máy chủ bằng trình duyệt,
+   đăng nhập bằng mật khẩu, chọn bài và bấm **▶ Trình chiếu**. Phím, bút trình chiếu,
+   trò chơi và công cụ lớp học chạy như file xuất. Chỉ người có mật khẩu mới xem
+   được bài.
+
+## 7. Bài tập cho học viên
+
+Đề bài tập để học viên tự làm và được chấm điểm tự động, như đề thi thử HSK: phần
+nghe, phần đọc, có đồng hồ, xem đáp án sau khi nộp. Đề nằm trong bài học, dùng chung
+ảnh và âm thanh của bài, lưu cùng bài.
+
+1. Trong bài, bấm **Bài tập** ở đầu cột trái, rồi **+ Tạo đề bài tập**.
+2. Cột trái là dàn ý của đề: **Cài đặt đề**, các **phần** (Nghe, Đọc…) và các
+   **câu**. Bấm một mục để sửa ở cột phải. Cột giữa hiện đề đúng như học viên thấy,
+   đáp án đúng tô xanh; bấm vào câu nào trong đó cũng mở câu ấy để sửa.
+3. **+ Câu hỏi** thêm câu vào phần đang chọn:
+   - **Trắc nghiệm**: 2–6 lựa chọn bằng chữ hoặc ảnh. Tích **Đáp án đúng** ở lựa
+     chọn đúng (tích ở lựa chọn khác thì lựa chọn cũ tự bỏ).
+   - **Đúng / Sai**: một câu nhận định. Bỏ tích "Câu này ĐÚNG" nếu đáp án là Sai.
+   - **Chọn từ điền chỗ trống**: gõ `___` (ba dấu gạch dưới) ở chỗ cần điền.
+
+   Câu nghe có thể để trống câu hỏi: học viên nghe file của phần rồi chọn đáp án.
+   Pinyin tự điền theo chữ Hán như ở slide.
+4. **+ Phần** thêm phần mới (ví dụ phần đọc). Mỗi phần có thể có:
+   - **File nghe**: file của giáo trình (**Chọn file…**), hoặc gõ **Lời của file
+     nghe** rồi bấm **🔊 Tạo giọng đọc**;
+   - ảnh, và **đoạn văn** cho cả phần (bài đọc, bảng từ).
+
+   Mỗi câu cũng có thể có âm thanh riêng (tạo giọng đọc từ lời đoạn nghe của câu).
+   **Lời đoạn nghe** và **Giải thích** chỉ hiện cho học viên sau khi nộp.
+5. **Cài đặt đề**: thời gian làm bài, cho làm lại hay chỉ nộp một lần, xáo thứ tự
+   câu và lựa chọn, số lần nghe tối đa mỗi file, sau khi nộp cho xem đáp án hay chỉ
+   xem điểm, có hiện pinyin không, điểm đạt.
+6. Chấm **đỏ** ở dàn ý là chỗ **cần sửa** trước khi giao bài (chưa chọn đáp án,
+   lựa chọn còn trống…); chấm **vàng** là chỗ nên xem lại. Đề chưa xong vẫn lưu bình
+   thường, soạn tiếp hôm khác được.
+7. **▶ Làm thử** để làm đề như học viên: bắt đầu, nghe, chọn đáp án, nộp, xem điểm,
+   đáp án và giải thích. Kết quả làm thử không được lưu.
+
+Giao đề cho học viên qua đường link và xem bảng điểm sẽ có ở bản sau.
+
+## 8. Tạo bài bằng AI
 
 1. **Tạo bài bằng AI…** ở thư viện, hoặc **Thêm slide bằng AI…** trong một bài (các
    slide mới được chèn ngay sau slide đang chọn).
@@ -229,12 +278,12 @@ lật ra hình.
 5. Bấm **Tạo bài mới** / **Thêm vào cuối bài**, rồi xem lại và thêm ảnh. Bài mới
    tự chọn theme hợp lứa tuổi; đổi lại được ở tab **Bài học**.
 
-## 7. Mở bài từ nơi khác
+## 9. Mở bài từ nơi khác
 
 **Mở file…** ở thư viện: chọn file `lesson.html` (kèm thư mục `assets` bên cạnh)
 hoặc file đã xuất. Bài được chép vào thư viện thành một bài mới.
 
-## 8. Thư viện
+## 10. Thư viện
 
 Bài sửa gần nhất đứng đầu. Khi có trên 12 bài, ô **Tìm bài** hiện phía trên danh
 sách: gõ vài chữ của tên bài, có dấu hay không dấu đều được ("hoa qua" tìm ra

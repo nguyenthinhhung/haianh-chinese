@@ -9,14 +9,15 @@ khác (ví dụ máy tính của lớp học).
 Người dùng thao tác bằng giao diện giống công cụ soạn bài giảng và không bao giờ
 phải chạm vào HTML.
 
-**Người dùng duy nhất của ứng dụng là giáo viên.** Học sinh chỉ xem màn hình chiếu
-và trả lời bằng lời; giáo viên là người điều khiển mọi thứ trên màn hình.
+**Người dùng của ứng dụng là giáo viên.** Trên lớp, học sinh chỉ xem màn hình
+chiếu và trả lời bằng lời; giáo viên là người điều khiển mọi thứ trên màn hình.
+Ngoài giờ học, giáo viên soạn **đề bài tập** (mục 4.6) để học viên tự làm và được
+chấm điểm tự động; học viên làm bài trên trang web, không cài ứng dụng.
 
-> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 20).
+> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 21).
 >
-> Kế hoạch mở rộng lên web (trình chiếu mọi nơi, bài tập cho học viên) nằm ở
-> `PLAN-WEB.md`. Phần đó đổi giả định "người dùng duy nhất là giáo viên" nên chưa
-> gộp vào đây cho tới khi bắt đầu làm.
+> Kế hoạch đưa lên web (trình chiếu mọi nơi, học viên làm bài tập) và tiến độ của
+> nó nằm ở `PLAN-WEB.md`; phần đã làm được ghi vào tài liệu này.
 
 ---
 
@@ -37,6 +38,7 @@ và trả lời bằng lời; giáo viên là người điều khiển mọi th�
 | Theme | Nhiều theme dành cho trẻ em; mỗi theme là một module (CSS variables + hình trang trí SVG + âm thanh phản hồi). |
 | Render | Một bộ hàm render dùng chung cho Editor, Present và Export, trên sân khấu 16:9 cố định được co giãn vừa màn hình. |
 | AI import | JSON theo schema; validate trước khi áp dụng; ứng dụng tự gán ID. |
+| Bài tập | Đề bài tập nằm **trong bài học** (`exercises`), dùng chung `assets/`, lưu, undo và backup của bài. Schema của đề chỉ giữ cấu trúc nên đề soạn dở vẫn lưu được; `exerciseIssues` báo chỗ chặn giao bài. Chấm điểm và bản đề cho học viên là hàm thuần, dùng chung cho app và máy chủ web. |
 | Nội dung không đáng tin cậy | Không bao giờ thực thi HTML/JS lấy từ file bên ngoài hay từ AI. |
 | Ảnh và giọng đọc từ web | Tìm ảnh bằng Bing Images ngay trong Editor (SafeSearch nghiêm ngặt), dán (Ctrl+V) hoặc kéo ảnh từ trình duyệt; giọng đọc tiếng Trung bằng Google Dịch. File tải về được lưu vào `assets/`, nên trình chiếu và file export vẫn chạy offline. Chỉ Rust gọi mạng; webview không có quyền mạng. |
 | Export | Một file HTML độc lập: CSS, runtime JS, âm thanh phản hồi và asset được nhúng. Chỉ nhúng runtime của những loại slide bài học thực sự dùng. |
@@ -265,6 +267,7 @@ Tauri: sau khi trang tải lại, listener cũ vẫn được Tauri giữ và ch
 | `theme` | `{ id, overrides? }`. |
 | `settings` | `{ sound: boolean, animations: boolean, hanziFont: "sans" \| "kai", pinyin: boolean }`. `pinyin: false` ẩn pinyin khi soạn và chiếu, trừ slide `tone-pick` (pinyin là đáp án). |
 | `slides[]` | `{ id, type, content, layout?, notes? }` — `content` validate theo schema của `type`. `notes` là ghi chú riêng của giáo viên (gợi ý câu hỏi, cách dẫn dắt), không hiện khi trình chiếu. |
+| `exercises[]` | Đề bài tập cho học viên tự làm (mục 4.6). Thêm ở `schemaVersion` 2; bài phiên bản 1 được bổ sung danh sách rỗng khi mở. |
 | `assets[]` | `{ id, file, kind: "image" \| "audio", mime, alt?, source?, needsReview?, query? }` — `source` là trang web nơi lấy ảnh, để giáo viên tìm lại. `needsReview: true` đánh dấu ảnh ứng dụng tự chọn mà giáo viên chưa duyệt; `query` là từ khoá đã tìm ra ảnh, để nút Đổi bắt đầu từ đó. |
 | `metadata` | `createdAt`, `updatedAt`, `appVersion`. |
 
@@ -417,6 +420,62 @@ có giấy phép rõ ràng (CC0/OFL), không lấy ảnh trên mạng.
   `file:`, `javascript:` hoặc đường dẫn chứa `..`.
 - Trường thiếu nhưng có mặc định an toàn → bổ sung; cấu trúc sai → từ chối.
 - Migration: backup trước, chạy chuỗi `v1→v2→…`, validate sau cùng.
+- Thêm dữ liệu mà bản cũ không biết (như `exercises`) thì **tăng `schemaVersion`**:
+  Zod bỏ trường lạ khi đọc, nên app cũ mở file mới rồi lưu lại sẽ âm thầm làm
+  mất dữ liệu đó; tăng phiên bản khiến app cũ từ chối mở thay vì vậy.
+
+### 4.6. Bài tập
+
+Đề bài tập để học viên tự làm, app chấm điểm. Khác slide: không có giáo viên
+điều khiển, học viên tự bấm.
+
+```
+exercises[]: { id, title, intro, settings, parts[] }
+  settings: timeLimit (phút, 0 = không giới hạn), timerStart ("start" | "first-answer"),
+            attempts ("one" | "many"), shuffleQuestions, shuffleOptions,
+            maxListens (0 = không giới hạn), showAnswers ("after-submit" | "never"),
+            pinyin, passPercent (0 = không đặt)
+  parts[]:  { id, skill (listening | reading | writing | other), title, instruction,
+              audio?, image?, passage, transcript, questions[] }
+  questions[]: { id, type, prompt, pinyin, image?, audio?, points, explanation, transcript, … }
+    choice        options[] { id, text, pinyin, image?, correct } (2–6, một đáp án đúng)
+    true-false    answer: boolean
+    blank-choice  prompt có `___` ở chỗ trống; options[] chỉ có chữ
+```
+
+- **ID ổn định** cho đề (`e_`), phần (`p_`), câu (`q_`), lựa chọn (`o_`). Học viên
+  nộp đáp án theo ID nên xáo trộn không làm sai điểm. Nhân bản câu hoặc đề cấp ID
+  mới, để đáp án của bản này không bị tính cho bản kia.
+- **Schema chỉ giữ cấu trúc và giới hạn cứng.** Khác slide (lưu bị từ chối khi
+  slide chưa hợp lệ), đề soạn dở vẫn lưu được vì một đề 30–40 câu thường soạn
+  trong nhiều ngày. `exerciseIssues` (`core/exerciseCheck.ts`) chia hai mức:
+  *lỗi* là chỗ học viên không làm được hoặc app không chấm được (chưa chọn đáp án,
+  lựa chọn trống, thiếu `___`, đề không tên), chặn giao bài; *cảnh báo* là chỗ
+  nên xem lại (phần nghe chưa có file, hai lựa chọn giống nhau).
+- **Đọc hiểu theo đoạn** là một phần có `passage` cùng các câu trắc nghiệm; câu
+  nghe có thể không có lời hỏi (nghe file của phần rồi chọn).
+- **Chấm điểm** (`core/exerciseGrade.ts`): `gradeExercise` tính điểm từng câu, tổng,
+  phần trăm (làm tròn xuống so với điểm đạt) và điểm theo kỹ năng; đáp án không
+  thuộc câu đó tính như chưa làm. `studentCopy(exercise, seed)` là bản đề gửi học
+  viên: bỏ đáp án, giải thích và lời đoạn nghe, xáo theo cài đặt với `seed` riêng
+  mỗi lượt; phần có file nghe hoặc đoạn văn giữ nguyên thứ tự câu. `exerciseReview`
+  là phần cho xem sau khi nộp. Không phụ thuộc trình duyệt hay app, để máy chủ chấm
+  bằng đúng code đó.
+- **Trình làm bài** (`src/exercise/`, React): màn bắt đầu → làm bài (thanh nghe có
+  lùi 5 giây, tốc độ, giới hạn số lần nghe; đồng hồ đếm ngược tự nộp khi hết giờ;
+  tiến độ và lưới số câu; đánh dấu câu; hỏi lại khi còn câu chưa làm) → kết quả
+  (điểm, điểm từng kỹ năng, lọc câu sai, đáp án, giải thích, lời đoạn nghe). Màu và
+  font lấy từ theme của bài (bọc trong `.ls-deck[data-theme]`). Dùng cho **Làm thử**
+  trong app và sẽ dùng cho trang học viên trên web.
+- **Soạn**: chế độ **Bài tập** của editor (nút ở đầu cột trái): dàn ý đề bên trái,
+  bản xem trước như học viên thấy (đánh dấu đáp án đúng) ở giữa, form bên phải. Form
+  dựng bằng cùng bộ `FormFields` với slide (trường chữ có pinyin tự điền, ảnh tìm
+  Bing/dán/kéo, âm thanh chọn file hoặc tạo giọng đọc từ lời đoạn nghe), thêm hai
+  loại trường: số (`number`) và nút chọn chỉ bật được ở một mục của danh sách
+  (`toggle` với `exclusive`, cho đáp án đúng).
+- Ảnh và âm thanh của đề nằm trong `assets/` của bài; `removeUnusedAssets` và
+  `validateLesson` tính cả tham chiếu từ đề, nên dọn file khi đóng bài không xoá
+  file nghe của đề.
 
 ---
 
@@ -594,7 +653,13 @@ cho chữ mà slide không chọn (lựa chọn của `quiz`, `sort-groups`, `bo
 | `persistence` | Rust | Ghi an toàn, backup, draft, lock, đường dẫn theo OS, sao chép asset, Thùng rác. |
 | `AssetManager` | UI + Rust | Nhập ảnh/audio từ file, web hoặc clipboard; nhận diện định dạng, hash, thu nhỏ ảnh lớn (cạnh dài ≤ 1920 px); dọn asset không dùng. |
 | `web` | Rust | Tìm ảnh (Bing), tải ảnh, giọng đọc (Google Dịch). |
-| `PropertiesPanel` | UI | Dựng form tự động từ `editor` spec của template. |
+| `exercise`, `exerciseSchema` | core | Schema đề bài tập, các dạng câu hỏi (nhãn, form, câu mới), lệnh sửa đề, tham chiếu tài nguyên. |
+| `exerciseCheck` | core | Đề đã giao được chưa: lỗi chặn giao bài và cảnh báo nên xem lại. |
+| `exerciseGrade` | core | Chấm điểm, bản đề cho học viên (bỏ đáp án, xáo trộn theo seed), phần xem lại sau khi nộp. |
+| `FormFields` | UI | Form dựng từ `EditorFieldSpec` cho bất kỳ phần nào của bài (slide hoặc đề). |
+| `PropertiesPanel` | UI | Form của slide và cài đặt bài học, dựng bằng `FormFields`. |
+| `ExerciseEditor` | UI | Chế độ Bài tập của editor: dàn ý đề, xem trước, form, Làm thử. |
+| `ExercisePlayer`, `QuestionCard` | UI (`src/exercise/`) | Trình làm bài của học viên; thẻ câu hỏi và đầu phần dùng chung với bản xem trước khi soạn. |
 | `LibraryScreen`, `LessonEditor`, `SlideNavigator`, `SaveStatus`, `PresentMode` | UI | Giao diện. |
 
 ### Ranh giới bảo mật
@@ -662,6 +727,7 @@ cắt validation, ghi file an toàn, backup, recovery, hay hỗ trợ macOS.
 | 4. Hỏi đáp + theme | 🟢 Xong (Windows) | Đủ 6 loại slide nhóm 2 (`quiz` có biến thể Đúng/Sai và đề bằng ảnh/âm thanh, `matching`, `fill-blank`, `sentence-order`, `tone-pick` tự lấy thanh từ dấu pinyin, `sort-groups`); thứ tự xáo trộn cố định theo ID slide nên Editor, Present và file giống nhau; hoàn thành có pháo giấy. 5 theme (`classic`, `garden`, `ocean`, `space` nền tối, `panda`); tuỳ chọn chữ Khải. Trường form hiện theo điều kiện. Chữ Hán lẫn trong câu tiếng Việt được gắn `lang="zh-CN"` riêng. Đã kiểm tra trong app thật: chạy các bước của cả 6 loại và xem 5 theme. | Thử trên lớp thật. |
 | 5. Trò chơi + công cụ lớp học | 🟢 Xong (Windows) | Đủ 5 trò nhóm 3 (`whats-missing`, `guess-picture` với 4 cách chơi, `box-pick`, `lucky-wheel`, `memory`), mỗi trò có `interaction.js` riêng qua các hook mới của runtime (Tiếp/Lùi tự xử lý, chọn ô bằng số, vào/rời slide). Công cụ lớp học: bảng điểm đội, đồng hồ đếm ngược, gọi số ngẫu nhiên, bảng phím tắt. Runtime có test chạy thật trong DOM giả lập (happy-dom) cho từng trò. Đã kiểm tra trong app thật. | Dạy thử một buổi với lớp thật. |
 | Ảnh và giọng đọc từ web (thêm ở Rev 6) | 🟢 Xong (Windows) | Tìm ảnh Bing, dán/kéo ảnh, giọng đọc Google Dịch, ghi nguồn ảnh. Đã kiểm tra trong app thật: tìm "quả táo" ra 30 ảnh trong ~2,5 giây, chèn ảnh, tạo giọng đọc 苹果, dán ảnh, kéo địa chỉ ảnh vào. | Kéo ảnh thật từ Chrome/Edge sang chưa thử bằng chuột thật. |
+| Bài tập cho học viên (thêm ở Rev 21; Giai đoạn 2 của `PLAN-WEB.md`) | 🟡 Còn nhập đề từ AI | Đề trong bài học (schema v2 + migration), 3 dạng câu (trắc nghiệm chữ/ảnh, đúng/sai, chọn từ điền chỗ trống), phần có file nghe/ảnh/đoạn văn/lời đoạn nghe, cài đặt đề, kiểm tra đề, chấm điểm, bản đề cho học viên có xáo trộn, trình làm bài, chế độ Bài tập trong editor, Làm thử. Đã kiểm tra trong app thật: soạn đề 2 phần 3 câu (tạo giọng đọc cho phần nghe), làm thử, nộp khi còn câu trống, xem kết quả; đóng rồi mở lại bài, file nghe còn nguyên. | Nhập đề từ AI; giao đề cho học viên qua web (Giai đoạn 3). |
 | 6. Import/Export + phát hành | 🟡 Còn macOS + ký số | Xuất một file HTML độc lập (asset nhúng một lần trong `#lesson-assets`); nhập bài từ AI (tạo bài mới hoặc thêm vào cuối bài, một bước undo); mở file bài học từ ngoài (file export hoặc `lesson.html` kèm `assets/`). Bộ cài Windows NSIS build được (`Chinese Lesson Studio_0.1.0_x64-setup.exe`, 5,3 MB), bản release đã chạy thử. Hướng dẫn ngắn: `HUONG-DAN.md`. Đã kiểm tra: file export chạy trên Chrome không cần app (ảnh, audio, trò chơi, công cụ lớp học). | Ký số Windows; build, ký và notarize bản macOS (cần máy Mac hoặc CI macOS); thử file export trên Edge, Safari; thử hộp thoại chọn/lưu file bằng tay. |
 
 ---
@@ -760,11 +826,13 @@ gặp. Đo trên 30 từ khó trước khi bổ sung: 25 đúng; các chỗ sai 
 nhẹ và chữ đa âm hiếm.
 
 Chưa làm:
-- Hoạt động do học sinh tự thao tác (bảng tương tác, máy tính bảng, bài tập về nhà).
+- Hoạt động do học sinh tự thao tác trên lớp (bảng tương tác, máy tính bảng). Bài
+  tập về nhà thì đã có (mục 4.6); học viên làm trên web theo `PLAN-WEB.md`.
 - Canvas tự do kiểu PowerPoint/Canva.
 - Chuyển đổi HTML tuỳ ý sang Lesson Studio.
 - Gọi AI API trực tiếp.
-- Đồng bộ cloud, tài khoản, cộng tác; lưu kết quả học của từng học sinh.
+- Đồng bộ cloud, tài khoản, cộng tác. (Lưu kết quả bài tập của học viên: theo
+  `PLAN-WEB.md`, Giai đoạn 3–4.)
 - Kho template trực tuyến; plugin template do người dùng tự viết.
 - Linux, auto-update.
 - Nhúng font chữ Hán.
@@ -773,6 +841,16 @@ Chưa làm:
 ---
 
 ## 12. Lịch sử thay đổi
+
+### Rev 21
+
+| Thay đổi | Lý do |
+| --- | --- |
+| Đề bài tập trong bài học (`exercises`, `schemaVersion` 2, migration v1→v2): phần, câu trắc nghiệm / đúng-sai / chọn từ điền chỗ trống, cài đặt đề; chấm điểm và bản đề cho học viên là hàm thuần; trình làm bài; chế độ **Bài tập** trong editor với Làm thử (mục 4.6) | Giáo viên muốn giao bài tập cho học viên tự làm như đề thi thử HSK (nghe, đọc, có đồng hồ, chấm điểm, xem đáp án). Đặt đề trong bài học thì dùng chung ảnh, âm thanh, lưu, undo, backup có sẵn; tách thành file riêng sẽ phải làm lại tất cả. |
+| Schema của đề không bắt buộc đủ nội dung; `exerciseIssues` chặn giao bài thay vì chặn lưu | Đề 30–40 câu soạn trong nhiều ngày; chặn lưu như slide thì không lưu được đề đang soạn dở. |
+| Form tự dựng tách khỏi `PropertiesPanel` thành `FormFields` (đích sửa bất kỳ); thêm trường số và nút chọn đáp án đúng (`exclusive`) | Form câu hỏi cần đúng các trường của slide (pinyin tự điền, tìm ảnh, tạo giọng đọc) mà không viết lại. |
+| Nút chuyển **Slide / Bài tập** ở đầu cột trái, không ở thanh công cụ; chế độ Bài tập ẩn các nút chỉ dùng cho slide | Thanh công cụ đã đầy: thêm nút vào đó làm tràn ngang và che nút Lưu khi bài chưa lưu. |
+| Pinyin tự sinh tách `___` khỏi chữ bên cạnh | `丈夫___` thành "zhàng fu___". |
 
 ### Rev 20
 

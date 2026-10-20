@@ -1,7 +1,17 @@
 # Kế hoạch: bản web để dạy và bản web để học viên làm bài
 
-Trạng thái: **kế hoạch, chưa làm**. Khi bắt đầu làm, các quyết định ở mục 2 được
-chuyển vào `ARCHITECTURE.md` (mục 1 và mục 12) và file này chỉ còn theo dõi tiến độ.
+Phần đã làm được ghi vào `ARCHITECTURE.md` (bài tập: mục 4.6, lịch sử: Rev 21); file
+này theo dõi tiến độ và những gì còn lại.
+
+## Trạng thái (20/10/2026)
+
+| Giai đoạn | Trạng thái | Đã xong | Còn lại |
+| --- | --- | --- | --- |
+| 0. Nền tảng | 🟢 Xong | Worker `lesson-studio` trên `*.workers.dev`; file trên Backblaze B2 (bucket `lesson-studio`, region `us-east-005`) qua giao diện `FileStore`; mật khẩu giáo viên bằng secret của Worker; script `worker/scripts/smoke.mjs` thử toàn bộ API | — |
+| 1. Trình chiếu trên web | 🟡 Dùng được | Nút **Đăng lên web** trong app (Rust, mật khẩu trong kho mật khẩu của hệ điều hành); file đặt lại tên theo hash, chỉ gửi file máy chủ chưa có, tự thử lại khi lỗi; trang đăng nhập và danh sách bài (thẻ có chữ Hán của bài, tìm bài, chép link); trang bài chạy dưới CSP chặt; đã thử với ảnh và audio thật (phát, tua) | PWA để dạy khi mất mạng; gỡ bài khỏi web từ app (API đã có); giới hạn số lần đăng nhập sai; file lớn đẩy thẳng lên B2 (hiện qua Worker, tối đa 25 MB); đo độ trễ nghe từ Việt Nam (cache của Cloudflare không chạy trên `workers.dev`) |
+| 2. Soạn đề trong app | 🟡 Còn nhập từ AI | Đề trong bài học (schema v2), 3 dạng câu, phần có file nghe/ảnh/đoạn văn, cài đặt đề, kiểm tra đề, chấm điểm, bản đề cho học viên, trình làm bài, chế độ Bài tập trong editor, Làm thử | Nhập đề từ AI |
+| 3. Học viên làm bài | ⚪ Chưa làm | Đã có sẵn: trình làm bài (`src/exercise/`), chấm điểm và bản đề cho học viên dùng được ở Worker | Nút Giao bài, D1, API làm bài và nộp bài, trang học viên (entry Vite riêng), nhập tên, lưu nháp trên máy, tải phiếu khi mất mạng |
+| 4. Bảng điểm và hoàn thiện | ⚪ Chưa làm | | |
 
 Hai việc, độc lập nhau về giá trị sử dụng:
 
@@ -27,13 +37,13 @@ Soạn bài và soạn đề **vẫn chỉ làm trong app desktop**. Web chỉ c
 | Hạng mục | Quyết định | Lý do |
 | --- | --- | --- |
 | Hosting | Cloudflare: Pages + Workers + D1 | Gói free, không cần thẻ; không bị tạm dừng khi lâu không dùng như gói free của Supabase |
-| File ảnh và audio | **Backblaze B2**, region US West; Worker đứng trước để cache và trả `Range` | B2 free ~10 GB và không cần thẻ (R2 buộc phải thêm thẻ). Không có region châu Á nên cần cache của Cloudflare để học viên ở Việt Nam không phải chạy sang Mỹ mỗi lần |
+| File ảnh và audio | **Backblaze B2** (bucket tạo ở `us-east-005`); Worker đứng trước để cache và trả `Range` | B2 free ~10 GB và không cần thẻ (R2 buộc phải thêm thẻ). Không có region châu Á nên cần cache của Cloudflare để học viên ở Việt Nam không phải chạy sang Mỹ mỗi lần |
 | Không dùng Supabase | Học viên chỉ nhập tên, không cần hệ thống tài khoản | Phần mạnh nhất của Supabase (Auth) không cần đến |
 | Người xem bản trình chiếu | Chỉ giáo viên | Đặt sau một mật khẩu trong Worker (Cloudflare Access là phương án sau, xem mục 7) |
 | Định danh học viên | Chỉ nhập tên, không tài khoản | Đơn giản cho lớp trẻ em |
 | Xáo trộn | Là **lựa chọn của đề**: xáo thứ tự câu, xáo thứ tự đáp án, mỗi cái bật/tắt riêng | Giáo viên quyết định theo từng đề |
 | Chấm điểm | **Phía server (Worker)**; bản gửi cho học viên không chứa đáp án đúng | Học viên không mở DevTools để xem đáp án |
-| Loại tài liệu | `ExerciseDocument` riêng, không nhồi vào slide | Bài làm (nhiều phần, audio, đồng hồ, nộp bài) khác hẳn slide do giáo viên điều khiển |
+| Loại tài liệu | Đề là kiểu dữ liệu riêng (không phải slide), **nằm trong bài học** (`exercises`) | Bài làm (nhiều phần, audio, đồng hồ, nộp bài) khác hẳn slide do giáo viên điều khiển. Đặt trong bài học thì dùng chung ảnh, âm thanh, lưu, undo, backup; một bài chỉ chứa đề dùng cho đề thi thử đứng riêng |
 | Soạn thảo | Chỉ trên desktop | Bing, Google Dịch, thư viện bài nằm trong Rust |
 
 Giới hạn gói free của Cloudflare thay đổi theo thời gian; kiểm tra lại trên trang
@@ -89,7 +99,7 @@ bài), `teacher` (bảng điểm). Dùng chung `core/` và `renderer/` với app
 
 ### Giai đoạn 2: soạn đề trong app desktop
 Chi tiết dạng câu hỏi, âm thanh, trải nghiệm làm bài ở mục 5; phần dưới là bản tóm tắt.
-- Schema `ExerciseDocument` (Zod), có `schemaVersion` và migration như bài học:
+- Đề nằm trong bài học (`exercises`; schema bài học lên v2, có migration v1→v2):
   - Đề gồm nhiều **phần**; mỗi phần có tiêu đề, hướng dẫn, audio hoặc đoạn đọc chung.
   - Trong phần có các **câu hỏi**. Bản đầu: trắc nghiệm A/B/C/D, đáp án là chữ hoặc ảnh,
     có thể kèm audio riêng.
@@ -159,15 +169,14 @@ thấy phần nghe và đầu phần đọc; phần 书写 (viết) chưa thấy
 ### 5.2. Cấu trúc đề
 
 ```
-ExerciseDocument
-├─ settings      thời gian, xáo trộn, số lần nộp, số lần nghe, cho xem đáp án…
-├─ tracks[]      file nghe: id, nhãn ("听力 1"), file, thời lượng, mốc từng câu (tuỳ chọn)
-└─ parts[]       phần: kỹ năng (nghe/đọc/viết), tiêu đề, hướng dẫn
-   ├─ trackId?   file nghe dùng chung cả phần
-   ├─ passage?   đoạn văn dùng chung (bài đọc, hoặc ngân hàng từ A–F)
+exercises[] (trong bài học; chi tiết ở ARCHITECTURE.md mục 4.6)
+├─ settings      thời gian, xáo trộn, số lần nộp, số lần nghe, cho xem đáp án, pinyin, điểm đạt
+└─ parts[]       phần: kỹ năng (nghe/đọc/viết/khác), tiêu đề, hướng dẫn
+   ├─ audio?     file nghe của cả phần (thanh nghe của học viên chuyển giữa các phần)
+   ├─ image?, passage, transcript   ảnh, đoạn văn dùng chung, lời của file nghe
    └─ questions[]
-        id · type · prompt · ảnh/audio riêng (tuỳ chọn) · điểm · giải thích · lời thoại
-        + phần riêng theo type (lựa chọn, đáp án đúng, cặp, thẻ từ…)
+        id · type · prompt · pinyin · ảnh/audio riêng (tuỳ chọn) · điểm · giải thích · lời thoại
+        + phần riêng theo type (lựa chọn có `correct`, hoặc `answer` đúng/sai)
 ```
 
 Mỗi câu có `id` ổn định, mỗi lựa chọn có `optionId` ổn định. Học viên nộp theo
@@ -177,10 +186,10 @@ Mỗi câu có `id` ổn định, mỗi lựa chọn có `optionId` ổn định
 
 | Dạng | Mô tả | Chấm | Dùng lại từ | Giai đoạn |
 | --- | --- | --- | --- | --- |
-| `choice` | 2–4 lựa chọn A–D; lựa chọn là chữ Hán, pinyin, nghĩa hoặc ảnh | Tự động | `quiz` | 2 |
-| `true-false` | Đúng/Sai (✓/✗) cho một câu hoặc một đoạn nghe | Tự động | `quiz` | 2 |
-| `choice-blank` | Câu có chỗ trống, chọn từ điền vào (như câu 15–16 trong video) | Tự động | `fill-blank` | 2 |
-| `passage-choice` | Một đoạn đọc hoặc một file nghe, nhiều câu hỏi đi kèm | Tự động | `passage` + `quiz` | 2 |
+| `choice` | 2–6 lựa chọn A–F; lựa chọn là chữ (kèm pinyin) hoặc ảnh | Tự động | `quiz` | 2 ✓ |
+| `true-false` | Đúng/Sai (✓/✗) cho một câu hoặc một đoạn nghe | Tự động | `quiz` | 2 ✓ |
+| `blank-choice` | Câu có chỗ trống `___`, chọn từ điền vào (như câu 15–16 trong video) | Tự động | `fill-blank` | 2 ✓ |
+| (đọc theo đoạn) | Một đoạn đọc hoặc một file nghe, nhiều câu hỏi đi kèm: làm bằng một phần có `passage`/`audio` và các câu `choice` | Tự động | `passage` + `quiz` | 2 ✓ |
 | `picture-choice` | Nghe hoặc đọc, chọn hình đúng | Tự động | `guess-picture`, `picture-card` | 3 |
 | `word-bank` | Ngân hàng từ A–F dùng chung, điền vào nhiều chỗ trống của một đoạn | Tự động, mỗi chỗ một điểm | `fill-blank` | 3 |
 | `matching` | Nối chữ Hán với nghĩa hoặc hình | Tự động, điểm theo từng cặp | `matching` | 3 |
@@ -202,15 +211,15 @@ Quy tắc chung:
 
 ### 5.4. Âm thanh (phần quan trọng nhất của đề nghe)
 
-- Đề có nhiều file nghe; mỗi phần hoặc nhóm câu gắn một `trackId`. Thanh trên cùng
-  luôn hiện file đang nghe và cho chuyển file.
+- Đề có nhiều file nghe: mỗi phần có một file (`audio`), mỗi câu có thể có âm thanh
+  riêng. Thanh trên cùng hiện file của phần đang nghe và cho chuyển file. *(Đã làm.)*
 - Trình phát: phát/dừng, lùi 5 giây, thanh tua, âm lượng, tốc độ 0.75x–1.5x.
 - **Số lần nghe tối đa mỗi file** là cài đặt của đề: không giới hạn (luyện tập), 1
   hoặc 2 (kiểm tra). Khi giới hạn thì ẩn thanh tua và nút lùi. Số lần nghe đếm ở
   trình duyệt, vì không chặn được người cố tình, nên chỉ dùng cho kiểm tra có người
   giám sát.
-- **Mốc câu** (tuỳ chọn): đánh dấu giây bắt đầu của từng câu trong file nghe để bấm
-  vào câu là nghe lại đúng đoạn đó. Thiếu mốc thì vẫn chạy bình thường.
+- **Mốc câu** (tuỳ chọn, *chưa làm*): đánh dấu giây bắt đầu của từng câu trong file
+  nghe để bấm vào câu là nghe lại đúng đoạn đó. Thiếu mốc thì vẫn chạy bình thường.
 - File phục vụ qua Worker đứng trước B2: Worker đọc từ B2, cache bằng Cache API của
   Cloudflare và trả `Range`, để tua được mà không tải cả file và học viên ở Việt Nam
   nhận từ cache gần thay vì chạy sang Mỹ.
