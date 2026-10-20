@@ -156,6 +156,16 @@ export function createBrowserPersistence(): Persistence {
     async speakChinese() {
       throw new PersistenceError("network", "Tạo giọng đọc chỉ có trong ứng dụng desktop.");
     },
+    getPublishSettings: async () => ({ serverUrl: null, hasPassword: false }),
+    async setPublishSettings() {
+      throw new PersistenceError("network", "Đăng lên web chỉ có trong ứng dụng desktop.");
+    },
+    async publishAssets() {
+      throw new PersistenceError("network", "Đăng lên web chỉ có trong ứng dụng desktop.");
+    },
+    async publishLesson() {
+      throw new PersistenceError("network", "Đăng lên web chỉ có trong ứng dụng desktop.");
+    },
     // The browser build is for UI work, so it asks the same source directly.
     async hanziStrokes(character) {
       const res = await fetch(`https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0.1/${encodeURIComponent(character)}.json`).catch(() => null);

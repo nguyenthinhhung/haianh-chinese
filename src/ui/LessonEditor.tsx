@@ -9,6 +9,7 @@ import { ImageReviewDialog } from "./ImageReviewDialog";
 import { LessonCheckDialog } from "./LessonCheckDialog";
 import { EXPORT_WARN_BYTES, exportLesson } from "./lessonFiles";
 import { PresentMode } from "./PresentMode";
+import { PublishDialog } from "./PublishDialog";
 import { PropertiesPanel } from "./PropertiesPanel";
 import { SaveStatusButton } from "./SaveStatus";
 import { useServices } from "./services";
@@ -38,6 +39,7 @@ export function LessonEditor({ lesson, onClose }: Props) {
   const [aiImport, setAiImport] = useState(false);
   const [reviewing, setReviewing] = useState(false);
   const [checking, setChecking] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const fill = useImageFill(session);
   const voice = useAudioFill(session);
   useStrokeFill(session);
@@ -197,6 +199,17 @@ export function LessonEditor({ lesson, onClose }: Props) {
         >
           {exporting ? "Đang xuất…" : "Xuất file"}
         </button>
+        {services.persistence.kind === "tauri" && (
+          <button
+            type="button"
+            className="ghost"
+            onClick={() => setPublishing(true)}
+            disabled={!doc.slides.length}
+            title="Đăng bài lên máy chủ web riêng để trình chiếu từ bất kỳ máy nào"
+          >
+            Đăng lên web
+          </button>
+        )}
         <button
           type="button"
           className="present-button"
@@ -221,6 +234,7 @@ export function LessonEditor({ lesson, onClose }: Props) {
           </button>
         </div>
       )}
+      {publishing && <PublishDialog dir={lesson.dir} doc={doc} onClose={() => setPublishing(false)} />}
       {aiImport && (
         <AiImportDialog
           mode="append"

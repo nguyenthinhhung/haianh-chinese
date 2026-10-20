@@ -167,6 +167,36 @@ export async function exportLesson(dir: string, doc: LessonDocument, services: S
   return { path, bytes: new Blob([html]).size, missing: files.filter((f) => !data[f]) };
 }
 
+export interface PublishResult {
+  url: string;
+  /** Files sent this time; the others were already on the server. */
+  uploaded: number;
+  /** Asset files that could not be read and are missing from the web page. */
+  missing: string[];
+}
+
+/**
+ * Publishes the lesson to the teacher's web server: files first, then a page
+ * whose pictures and sounds point at the published copies.
+ */
+export async function publishLesson(dir: string, doc: LessonDocument, services: Services): Promise<PublishResult> {
+  const valid = validateLesson(doc, services.templates);
+  if (!valid.ok) throw new Error(`Bài có chỗ chưa hợp lệ — ${formatIssue(valid.issues[0]!, doc, services.templates)}`);
+  const lesson = removeUnusedAssets(valid.doc, services.templates);
+  const assets = await services.persistence.publishAssets(dir, lesson.assets.map((a) => a.file));
+  const env = {
+    templates: services.templates,
+    themes: services.themes,
+    assetUrl: (a: { file: string }) => {
+      const name = assets.names[a.file];
+      return name ? `/f/${name}` : a.file;
+    },
+  };
+  const html = serializeLessonHtml(lesson, env);
+  const { url } = await services.persistence.publishLesson(lesson.id, lesson.title, html);
+  return { url, uploaded: assets.uploaded, missing: assets.missing };
+}
+
 function dataUrlBytes(url: string): Uint8Array {
   return Uint8Array.from(atob(url.slice(url.indexOf(",") + 1)), (c) => c.charCodeAt(0));
 }

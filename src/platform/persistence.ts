@@ -48,7 +48,23 @@ export interface ImportedAsset {
   mime: string;
 }
 
+/** Where lessons are published on the web; the password itself never comes back from the backend. */
+export interface PublishSettings {
+  serverUrl: string | null;
+  hasPassword: boolean;
+}
+
+export interface PublishedAssets {
+  /** Published file name for each `assets/…` path that was read. */
+  names: Record<string, string>;
+  /** Paths that could not be read or are not a picture or sound. */
+  missing: string[];
+  uploaded: number;
+}
+
 export type PersistenceErrorCode =
+  | "not-configured"
+  | "unauthorized"
   | "conflict"
   | "not-found"
   | "invalid-path"
@@ -130,6 +146,13 @@ export interface Persistence {
   writeAsset(dir: string, file: string, bytes: Uint8Array): Promise<void>;
   /** Deletes imported files in `assets/` other than `keep` (`assets/<name>` paths); returns how many. */
   pruneAssets(dir: string, keep: string[]): Promise<number>;
+  getPublishSettings(): Promise<PublishSettings>;
+  /** Saves the server address, and the password unless it is null (keep the stored one). */
+  setPublishSettings(serverUrl: string, password: string | null): Promise<PublishSettings>;
+  /** Uploads the files the server does not have yet; files are published under content-hash names. */
+  publishAssets(dir: string, files: string[]): Promise<PublishedAssets>;
+  /** Uploads the lesson page and returns its web address. */
+  publishLesson(lessonId: string, title: string, html: string): Promise<{ url: string }>;
   /** URL the editor webview can load an asset from. */
   assetUrl(dir: string, file: string): string;
   setWindowTitle(title: string): Promise<void>;

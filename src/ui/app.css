@@ -847,6 +847,21 @@ textarea {
   display: flex;
   gap: 8px;
 }
+.publish-dialog {
+  width: min(560px, 100%);
+}
+.publish-result {
+  display: grid;
+  gap: 8px;
+}
+.publish-link {
+  display: flex;
+  gap: 8px;
+}
+.publish-link input {
+  flex: 1;
+  min-width: 0;
+}
 .image-search-tip {
   margin: -4px 0 0;
   font-size: 12px;

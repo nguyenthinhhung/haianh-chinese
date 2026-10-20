@@ -8,6 +8,8 @@ import {
   type ImageHit,
   type ImportedAsset,
   type PickedLesson,
+  type PublishedAssets,
+  type PublishSettings,
   type LessonFile,
   type LessonLocation,
   type Persistence,
@@ -82,6 +84,10 @@ export function createTauriPersistence(): Persistence {
     writeAsset: (dir, file, bytes) =>
       call("write_asset", bytes, { "x-lesson-dir": encodeURIComponent(dir), "x-asset-file": encodeURIComponent(file) }),
     hanziStrokes: (character) => call<string[]>("hanzi_strokes", { character }),
+    getPublishSettings: () => call<PublishSettings>("get_publish_settings"),
+    setPublishSettings: (serverUrl, password) => call<PublishSettings>("set_publish_settings", { serverUrl, password }),
+    publishAssets: (dir, files) => call<PublishedAssets>("publish_assets", { dir, files }),
+    publishLesson: (lessonId, title, html) => call<{ url: string }>("publish_lesson", { lessonId, title, html }),
     assetUrl: (dir, file) => {
       const sep = dir.includes("\\") ? "\\" : "/";
       return convertFileSrc(`${dir}${sep}${file.split("/").join(sep)}`);

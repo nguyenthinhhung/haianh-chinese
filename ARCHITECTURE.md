@@ -601,7 +601,10 @@ cho chữ mà slide không chọn (lựa chọn của `quiz`, `sort-groups`, `bo
 
 - Capabilities Tauri: chỉ `fs` trong Library + vùng dữ liệu ứng dụng, cộng file
   người dùng chọn qua hộp thoại. Không `shell`, không plugin `http`.
-- Mạng chỉ đi qua các lệnh Rust trong `web.rs`: tìm ảnh, tải ảnh, giọng đọc.
+- Mạng chỉ đi qua các lệnh Rust trong `web.rs` (tìm ảnh, tải ảnh, giọng đọc) và
+  `publish.rs` (đăng bài lên máy chủ web riêng của giáo viên, chỉ địa chỉ https
+  công khai, không theo chuyển hướng vì mật khẩu nằm trong header). Mật khẩu đăng
+  bài nằm trong kho mật khẩu của hệ điều hành, không bao giờ trả về webview.
   Webview không gọi mạng (CSP không mở `connect-src`/`img-src` ra ngoài; ảnh xem
   trước đến dưới dạng `data:`). Mọi địa chỉ, kể cả sau chuyển hướng, phải là
   địa chỉ web công khai: chặn `localhost`, IP nội bộ và mạng LAN.
