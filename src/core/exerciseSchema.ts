@@ -65,7 +65,109 @@ const BlankChoiceQuestionSchema = z.object({
   options: z.array(OptionSchema).max(MAX_OPTIONS),
 });
 
-export const QuestionSchema = z.discriminatedUnion("type", [ChoiceQuestionSchema, TrueFalseQuestionSchema, BlankChoiceQuestionSchema]);
+const ItemId = z.string().regex(ID_PATTERNS.option, "ID không hợp lệ");
+
+/** Typed in by the student; any of the accepted answers counts. */
+const FillTextQuestionSchema = z.object({
+  ...questionBase,
+  type: z.literal("fill-text"),
+  accepted: z.array(z.object({ text: z.string().max(200).default("") })).max(10),
+  /** Ignore tone marks, letter case, spaces and punctuation when comparing. */
+  looseTones: z.boolean().default(true),
+});
+
+/** Hear or read a syllable, pick its tone. */
+const TonePickQuestionSchema = z.object({
+  ...questionBase,
+  type: z.literal("tone-pick"),
+  /** The syllable in pinyin with its tone mark, e.g. `mā`; the answer comes from the mark. */
+  syllable: z.string().max(20).default(""),
+  /** Offer the neutral tone as a fifth choice. */
+  withNeutral: z.boolean().default(false),
+});
+
+/** Words to put in order; tokens are separated by `/` in the correct sentence. */
+const SentenceOrderQuestionSchema = z.object({
+  ...questionBase,
+  type: z.literal("sentence-order"),
+  sentence: z.string().max(300).default(""),
+  /** Other orders that are also right. */
+  alternatives: z.array(z.object({ text: z.string().max(300).default("") })).max(5),
+});
+
+/** Pairs to match: one point each. `rightId` names the right-hand side, so the copy students get does not give pairs away. */
+const MatchingQuestionSchema = z.object({
+  ...questionBase,
+  type: z.literal("matching"),
+  pairs: z
+    .array(
+      z.object({
+        id: ItemId,
+        rightId: ItemId,
+        left: z.string().max(200).default(""),
+        leftImage: AssetRef.optional(),
+        right: z.string().max(200).default(""),
+        rightImage: AssetRef.optional(),
+      }),
+    )
+    .max(8),
+});
+
+/** A box of words shared by several sentences with a gap each (HSK reading, part 1): one point per gap. */
+const WordBankQuestionSchema = z.object({
+  ...questionBase,
+  type: z.literal("word-bank"),
+  bank: z.array(z.object({ id: ItemId, text: z.string().max(40).default("") })).max(10),
+  gaps: z
+    .array(
+      z.object({
+        id: ItemId,
+        /** The sentence, with `___` at the gap. */
+        text: z.string().max(300).default(""),
+        /** The word from the box that fills it. */
+        answer: z.string().max(40).default(""),
+      }),
+    )
+    .max(10),
+});
+
+/** Cards to put into groups: one point per card. `group` is the group's number. */
+const SortGroupsQuestionSchema = z.object({
+  ...questionBase,
+  type: z.literal("sort-groups"),
+  groups: z.array(z.object({ id: ItemId, name: z.string().max(60).default("") })).max(4),
+  cards: z
+    .array(
+      z.object({
+        id: ItemId,
+        text: z.string().max(60).default(""),
+        image: AssetRef.optional(),
+        group: z.enum(["1", "2", "3", "4"]).default("1"),
+      }),
+    )
+    .max(12),
+});
+
+/** Written freely and graded by the teacher; `sample` is shown with the answers. */
+const WritingQuestionSchema = z.object({
+  ...questionBase,
+  type: z.literal("writing"),
+  sample: z.string().max(2000).default(""),
+  maxChars: z.number().int().min(10).max(2000).default(200),
+});
+
+export const QuestionSchema = z.discriminatedUnion("type", [
+  ChoiceQuestionSchema,
+  TrueFalseQuestionSchema,
+  BlankChoiceQuestionSchema,
+  FillTextQuestionSchema,
+  TonePickQuestionSchema,
+  SentenceOrderQuestionSchema,
+  MatchingQuestionSchema,
+  WordBankQuestionSchema,
+  SortGroupsQuestionSchema,
+  WritingQuestionSchema,
+]);
 
 export const PartSchema = z.object({
   id: z.string().regex(ID_PATTERNS.part, "ID phần không hợp lệ"),

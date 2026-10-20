@@ -289,8 +289,14 @@ export function ExercisePlayer(props: ExercisePlayerProps) {
     setNow(Date.now());
   }
 
-  function answer(questionId: string, value: AnswerValue) {
-    setAnswers((a) => ({ ...a, [questionId]: value }));
+  /** `undefined` takes the answer back (typing deleted, every card returned). */
+  function answer(questionId: string, value: AnswerValue | undefined) {
+    setAnswers((a) => {
+      const next = { ...a };
+      if (value === undefined) delete next[questionId];
+      else next[questionId] = value;
+      return next;
+    });
     if (!startedAt) {
       setStartedAt(Date.now());
       setNow(Date.now());
@@ -369,6 +375,7 @@ export function ExercisePlayer(props: ExercisePlayerProps) {
 
   if (phase === "result" && result) {
     const { grade, review } = result;
+    const graded = new Map(grade.questions.map((q) => [q.id, q]));
     const status = new Map(grade.questions.map((q) => [q.id, q.status]));
     const wrongCount = grade.questions.filter((q) => q.status !== "correct").length;
     return (
@@ -384,6 +391,7 @@ export function ExercisePlayer(props: ExercisePlayerProps) {
               {grade.percent}%{grade.passed !== undefined && ` · ${grade.passed ? "Đạt" : "Chưa đạt"} (cần ${settings.passPercent}%)`}
             </p>
             {result.late && <p className="ex-note">Bài được nộp sau giờ quy định.</p>}
+            {grade.pending > 0 && <p className="ex-note">Còn {grade.pending} điểm phần tự luận chờ giáo viên chấm.</p>}
             <ul className="ex-skill-scores">
               {(Object.entries(grade.bySkill) as [Skill, { score: number; max: number }][]).map(([skill, s]) => (
                 <li key={skill}>
@@ -423,6 +431,7 @@ export function ExercisePlayer(props: ExercisePlayerProps) {
                           value={answers[q.id]}
                           expected={r?.expected}
                           status={status.get(q.id)}
+                          earned={graded.get(q.id)?.earned}
                           explanation={r?.explanation}
                           transcript={r?.transcript}
                         />

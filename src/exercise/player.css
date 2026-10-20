@@ -638,3 +638,208 @@
     padding: 22px 16px;
   }
 }
+
+/* Typed answers: fill-in and writing */
+.ex-player .ex-input,
+.ex-player .ex-textarea {
+  width: 100%;
+  margin-top: 8px;
+  padding: 12px 14px;
+  border: 2px solid var(--ex-border);
+  border-radius: 14px;
+  background: var(--ex-surface);
+  color: var(--ex-fg);
+  font: inherit;
+  font-size: 18px;
+}
+.ex-player .ex-input:focus,
+.ex-player .ex-textarea:focus {
+  border-color: var(--ex-accent);
+  outline: none;
+}
+.ex-player .ex-textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+.ex-player .ex-counter {
+  display: block;
+  color: var(--ex-muted);
+  font-size: 13px;
+  text-align: right;
+}
+.ex-player .ex-given,
+.ex-player .ex-expected {
+  margin: 8px 0 0;
+}
+.ex-player .ex-given--block {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--ex-fg) 5%, var(--ex-surface));
+  white-space: pre-wrap;
+}
+.ex-player .ex-expected strong {
+  color: var(--ex-good);
+}
+.ex-player .ex-q--wrong .ex-given strong {
+  color: var(--ex-bad);
+}
+
+/* Tones */
+.ex-player .ex-tone-mark {
+  width: 40px;
+  height: 40px;
+  font-size: 22px;
+}
+
+/* Sentence order */
+.ex-player .ex-answer-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 58px;
+  margin-top: 10px;
+  padding: 10px;
+  border: 2px dashed var(--ex-border);
+  border-radius: 14px;
+}
+.ex-player .ex-hint {
+  color: var(--ex-muted);
+  font-size: 14px;
+}
+.ex-player .ex-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.ex-player .ex-chip {
+  padding: 8px 14px;
+  border: 2px solid var(--ex-border);
+  border-radius: 12px;
+  background: var(--ex-surface);
+  font-size: 19px;
+}
+.ex-player .ex-chip--placed {
+  border-color: var(--ex-accent);
+  background: color-mix(in srgb, var(--ex-accent) 9%, var(--ex-surface));
+}
+.ex-player .ex-q--correct .ex-chip--placed {
+  border-color: var(--ex-good);
+  background: color-mix(in srgb, var(--ex-good) 12%, var(--ex-surface));
+}
+.ex-player .ex-q--wrong .ex-chip--placed {
+  border-color: var(--ex-bad);
+  background: color-mix(in srgb, var(--ex-bad) 10%, var(--ex-surface));
+}
+
+/* Rows that each take a choice: matching, the word box, sorting */
+.ex-player .ex-choices-list,
+.ex-player .ex-bank {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 10px 0 4px;
+  padding: 0;
+  list-style: none;
+}
+.ex-player .ex-choices-list li,
+.ex-player .ex-bank li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+}
+.ex-player .ex-bank {
+  padding: 10px 12px;
+  border: 2px dashed var(--ex-border);
+  border-radius: 14px;
+}
+.ex-player .ex-rows {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.ex-player .ex-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 8px 10px;
+  border: 2px solid var(--ex-border);
+  border-radius: 14px;
+}
+.ex-player .ex-row--right {
+  border-color: var(--ex-good);
+}
+.ex-player .ex-row--wrong {
+  border-color: var(--ex-bad);
+}
+.ex-player .ex-row-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  font-size: 18px;
+}
+.ex-player .ex-row-number {
+  color: var(--ex-muted);
+  font-weight: 800;
+}
+.ex-player .ex-item-image {
+  width: 72px;
+  height: 54px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+.ex-player .ex-choices-list .ex-item-image {
+  width: 96px;
+  height: 72px;
+}
+.ex-player .ex-row-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.ex-player .ex-pick {
+  min-width: 40px;
+  height: 40px;
+  padding: 0 12px;
+  border: 2px solid var(--ex-border);
+  border-radius: 10px;
+  background: var(--ex-surface);
+  font-weight: 700;
+}
+.ex-player .ex-pick--chosen {
+  border-color: var(--ex-accent);
+  background: var(--ex-accent);
+  color: #fff;
+}
+.ex-player .ex-pick--right {
+  border-color: var(--ex-good);
+  background: var(--ex-good);
+  color: #fff;
+}
+.ex-player .ex-pick--wrong {
+  border-color: var(--ex-bad);
+  background: var(--ex-bad);
+  color: #fff;
+}
+.ex-player .ex-gap-sentence {
+  font-size: 19px;
+  line-height: 1.7;
+}
+.ex-player .ex-q-status--partial,
+.ex-player .ex-q-status--pending {
+  background: #fff4d6;
+  color: #8a5a00;
+  font-weight: 700;
+}
+.ex-player .ex-struck {
+  margin-right: 0.3em;
+  color: var(--ex-bad);
+  font-weight: 400;
+}
