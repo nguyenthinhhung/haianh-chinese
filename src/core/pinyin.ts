@@ -86,10 +86,14 @@ export function hanziToPinyin(text: string): string {
   const space = () => {
     if (out && !/[\s[(/"]$/.test(out)) out += " ";
   };
-  for (const part of text.match(/\p{Script=Han}+|[^\p{Script=Han}]/gu) ?? []) {
+  for (const part of text.match(/\p{Script=Han}+|_+|[^\p{Script=Han}]/gu) ?? []) {
     if (HAN.test(part)) {
       space();
       out += runToPinyin(part);
+    } else if (part.startsWith("_")) {
+      // A gap to fill in stands apart from the words around it.
+      space();
+      out += `${part} `;
     } else if (/\s/.test(part)) {
       if (out && !out.endsWith(" ")) out += " ";
     } else {
