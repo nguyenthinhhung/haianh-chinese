@@ -88,6 +88,9 @@ describe("grading the new kinds of question", () => {
     expect(graded.questions[0]).toMatchObject({ status: "partial", earned: 3, manual: true });
     // Never more than the question is worth; blank answers are not graded.
     expect(applyManualGrades(pending, { [q.id]: 99 }, 0).score).toBe(5);
+    // No verdict on passing while the teacher still has answers to grade.
+    expect(applyManualGrades(pending, {}, 50).passed).toBeUndefined();
+    expect(applyManualGrades(pending, { [q.id]: 3 }, 50).passed).toBe(true);
     expect(grade(q, "", { [q.id]: 4 }).status).toBe("blank");
   });
 });

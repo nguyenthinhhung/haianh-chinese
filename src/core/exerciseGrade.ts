@@ -32,7 +32,7 @@ export interface ExerciseGrade {
   max: number;
   /** 0–100, rounded down so a pass mark is never reached by rounding. */
   percent: number;
-  /** Only when the exercise sets a pass mark. */
+  /** Only when the exercise sets a pass mark and nothing is left for the teacher to grade. */
   passed?: boolean;
   /** Points of answers waiting for the teacher to grade. */
   pending: number;
@@ -183,7 +183,7 @@ function totals(questions: QuestionGrade[], passPercent: number): ExerciseGrade 
   const max = questions.reduce((n, q) => n + q.points, 0);
   const pending = questions.reduce((n, q) => n + (q.status === "pending" ? q.points : 0), 0);
   const percent = max ? Math.floor((score * 100) / max) : 0;
-  return { questions, score, max, percent, ...(passPercent > 0 ? { passed: percent >= passPercent } : {}), pending, bySkill };
+  return { questions, score, max, percent, ...(passPercent > 0 && pending === 0 ? { passed: percent >= passPercent } : {}), pending, bySkill };
 }
 
 /** Grades every question; `manual` holds the points the teacher gave to written answers. */
