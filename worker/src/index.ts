@@ -146,8 +146,14 @@ async function handle(request: Request, env: AppEnv, ctx: ExecutionContext): Pro
     if (!Array.isArray(names) || names.length > 500 || !names.every((n) => typeof n === "string" && ASSET_NAME.test(n))) {
       return json({ error: "bad-names" }, 400);
     }
-    const found = await Promise.all(names.map((n) => store.exists(`assets/${n}`)));
-    return json({ missing: names.filter((_, i) => !found[i]) });
+    const missing: string[] = [];
+    // A few at a time, so a big lesson does not fire dozens of B2 requests at once.
+    for (let i = 0; i < names.length; i += 8) {
+      const batch = names.slice(i, i + 8);
+      const found = await Promise.all(batch.map((n) => store.exists(`assets/${n}`)));
+      missing.push(...batch.filter((_, j) => !found[j]));
+    }
+    return json({ missing });
   }
 
   const putAsset = /^\/api\/assets\/([^/]+)$/.exec(pathname);

@@ -35,11 +35,16 @@ export function createB2Store(env: StoreEnv): FileStore {
     get(key, range) {
       return send(key, range ? { headers: { Range: range } } : {});
     },
+    // A one-byte GET rather than HEAD: B2 has answered HEAD for a missing file
+    // with 403 instead of 404, and a HEAD error has no body to say why.
     async exists(key) {
-      const res = await send(key, { method: "HEAD" });
-      if (res.ok) return true;
+      const res = await send(key, { headers: { Range: "bytes=0-0" } });
+      if (res.ok || res.status === 416) {
+        await res.body?.cancel();
+        return true;
+      }
       if (res.status === 404) return false;
-      throw new Error(`B2 head ${key}: ${res.status}`);
+      throw new Error(`B2 probe ${key}: ${res.status} ${(await res.text()).slice(0, 300)}`);
     },
     async put(key, body, contentType) {
       const res = await send(key, { method: "PUT", body, headers: { "Content-Type": contentType } });
