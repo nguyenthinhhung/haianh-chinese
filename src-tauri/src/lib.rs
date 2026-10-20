@@ -64,6 +64,7 @@ pub fn run() {
             publish::publish_assets,
             publish::publish_lesson,
             publish::publish_assignment,
+            publish::unpublish_assignment,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Chinese Lesson Studio");

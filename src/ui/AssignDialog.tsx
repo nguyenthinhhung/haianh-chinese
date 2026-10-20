@@ -21,6 +21,9 @@ export function AssignDialog({ dir, doc, exercise, onClose }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<HandOutResult | null>(null);
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  /** Whether taking the exercise down found it on the server; null before trying. */
+  const [removed, setRemoved] = useState<boolean | null>(null);
   const blocking = useMemo(() => exerciseIssues(exercise).filter((i) => i.level === "error"), [exercise]);
   const numbers = useMemo(() => questionNumbers(exercise), [exercise]);
 
@@ -30,13 +33,14 @@ export function AssignDialog({ dir, doc, exercise, onClose }: Props) {
     return () => window.removeEventListener("keydown", onKey);
   }, [busy, onClose]);
 
-  async function handOut() {
+  async function run(task: () => Promise<void>) {
     setBusy(true);
     setError(null);
     setResult(null);
+    setRemoved(null);
     try {
       await settings.save();
-      setResult(await handOutExercise(dir, doc, exercise, services));
+      await task();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
       settings.handleError(e);
@@ -44,6 +48,14 @@ export function AssignDialog({ dir, doc, exercise, onClose }: Props) {
       setBusy(false);
     }
   }
+
+  const handOut = () => run(async () => setResult(await handOutExercise(dir, doc, exercise, services)));
+
+  const takeDown = () =>
+    run(async () => {
+      setRemoved(await services.persistence.unpublishAssignment(exercise.id));
+      setConfirmRemove(false);
+    });
 
   return (
     <div className="dialog-backdrop" onMouseDown={(e) => e.target === e.currentTarget && !busy && onClose()}>
@@ -99,14 +111,41 @@ export function AssignDialog({ dir, doc, exercise, onClose }: Props) {
             <CopyLink url={result.resultsUrl} label="Link bảng điểm" />
           </div>
         )}
-        <div className="form-actions">
-          <button type="button" className="ghost" onClick={onClose} disabled={busy}>
-            Đóng
-          </button>
-          <button type="submit" className="primary" disabled={!settings.loaded || busy || blocking.length > 0}>
-            {busy ? "Đang giao…" : result ? "Giao lại" : "Giao bài"}
-          </button>
-        </div>
+        {removed !== null && (
+          <p className="publish-result" role="status">
+            {removed
+              ? "Đã gỡ đề khỏi web: link cũ không mở được nữa và mọi bài nộp đã bị xoá. Giao lại sẽ tạo link mới."
+              : "Đề này không có trên web (chưa giao, hoặc đã gỡ rồi)."}
+          </p>
+        )}
+        {confirmRemove ? (
+          <div className="remove-confirm" role="alertdialog" aria-label="Gỡ đề khỏi web">
+            <p>
+              Gỡ đề này khỏi web? Link của học viên sẽ không mở được nữa và <strong>mọi bài nộp bị xoá</strong>. Tải bảng điểm
+              (CSV) trên trang bảng điểm trước nếu cần giữ.
+            </p>
+            <div className="form-actions">
+              <button type="button" autoFocus onClick={() => setConfirmRemove(false)} disabled={busy}>
+                Huỷ
+              </button>
+              <button type="button" className="danger" onClick={() => void takeDown()} disabled={busy}>
+                {busy ? "Đang gỡ…" : "Gỡ khỏi web"}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="form-actions">
+            <button type="button" className="ghost danger take-down" onClick={() => setConfirmRemove(true)} disabled={!settings.loaded || busy}>
+              Gỡ khỏi web…
+            </button>
+            <button type="button" className="ghost" onClick={onClose} disabled={busy}>
+              Đóng
+            </button>
+            <button type="submit" className="primary" disabled={!settings.loaded || busy || blocking.length > 0}>
+              {busy ? "Đang giao…" : result ? "Giao lại" : "Giao bài"}
+            </button>
+          </div>
+        )}
       </form>
     </div>
   );

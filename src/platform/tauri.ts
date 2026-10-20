@@ -89,6 +89,7 @@ export function createTauriPersistence(): Persistence {
     publishAssets: (dir, files) => call<PublishedAssets>("publish_assets", { dir, files }),
     publishLesson: (lessonId, title, hanzi, html) => call<{ url: string }>("publish_lesson", { lessonId, title, hanzi, html }),
     publishAssignment: (exerciseId, payload) => call<{ url: string; resultsUrl: string }>("publish_assignment", { exerciseId, payload }),
+    unpublishAssignment: (exerciseId) => call<boolean>("unpublish_assignment", { exerciseId }),
     assetUrl: (dir, file) => {
       const sep = dir.includes("\\") ? "\\" : "/";
       return convertFileSrc(`${dir}${sep}${file.split("/").join(sep)}`);

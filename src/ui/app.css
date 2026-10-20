@@ -856,6 +856,19 @@ textarea {
   display: grid;
   gap: 8px;
 }
+.publish-dialog .take-down {
+  margin-right: auto;
+}
+.remove-confirm {
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid #f4c7c3;
+  border-radius: 10px;
+}
+.remove-confirm p {
+  margin: 0;
+}
 .publish-link {
   display: flex;
   gap: 8px;

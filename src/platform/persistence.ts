@@ -155,6 +155,8 @@ export interface Persistence {
   publishLesson(lessonId: string, title: string, hanzi: string | null, html: string): Promise<{ url: string }>;
   /** Hands an exercise out to students (`payload` is the server's JSON); the students' link and the results page. */
   publishAssignment(exerciseId: string, payload: string): Promise<{ url: string; resultsUrl: string }>;
+  /** Takes a handed-out exercise off the server with every hand-in; false when it was not there. */
+  unpublishAssignment(exerciseId: string): Promise<boolean>;
   /** URL the editor webview can load an asset from. */
   assetUrl(dir: string, file: string): string;
   setWindowTitle(title: string): Promise<void>;

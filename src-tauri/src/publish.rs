@@ -304,13 +304,32 @@ pub async fn publish_assignment(state: State<'_, AppState>, exercise_id: String,
     struct Saved {
         slug: String,
     }
-    let invalid = |e: &dyn std::fmt::Display| AppError::new("network", format!("Máy chủ trả lời không hợp lệ: {e}"));
-    let bytes = response.bytes().await.map_err(|e| invalid(&e))?;
-    let saved: Saved = serde_json::from_slice(&bytes).map_err(|e| invalid(&e))?;
+    let bytes = response.bytes().await.map_err(|e| invalid_reply(&e))?;
+    let saved: Saved = serde_json::from_slice(&bytes).map_err(|e| invalid_reply(&e))?;
     if !saved.slug.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit()) {
-        return Err(invalid(&"slug"));
+        return Err(invalid_reply(&"slug"));
     }
     Ok(HandedOut { url: format!("{}/a/{}", server.base, saved.slug), results_url: format!("{}/results/{exercise_id}", server.base) })
+}
+
+/// Takes a handed-out exercise off the server, with every hand-in. False when
+/// the server did not have it.
+#[tauri::command]
+pub async fn unpublish_assignment(state: State<'_, AppState>, exercise_id: String) -> AppResult<bool> {
+    check_exercise_id(&exercise_id)?;
+    let server = server(&state)?;
+    let response = send(client().delete(format!("{}/api/assignments/{exercise_id}", server.base)).bearer_auth(&server.password)).await?;
+    #[derive(Deserialize)]
+    struct Removed {
+        removed: bool,
+    }
+    let bytes = response.bytes().await.map_err(|e| invalid_reply(&e))?;
+    let body: Removed = serde_json::from_slice(&bytes).map_err(|e| invalid_reply(&e))?;
+    Ok(body.removed)
+}
+
+fn invalid_reply(e: &dyn std::fmt::Display) -> AppError {
+    AppError::new("network", format!("Máy chủ trả lời không hợp lệ: {e}"))
 }
 
 #[cfg(test)]

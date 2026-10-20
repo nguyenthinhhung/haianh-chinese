@@ -288,10 +288,11 @@ export async function exportAll(db: D1Database): Promise<unknown> {
   };
 }
 
+/** Takes an exercise off the web with every hand-in; `removed` is false when it was not there. */
 export async function deleteAssignment(db: D1Database, id: string): Promise<Response> {
   if (!EXERCISE_ID.test(id)) return json({ error: "bad-id" }, 400);
-  await db.batch([db.prepare("DELETE FROM attempts WHERE assignment_id = ?").bind(id), db.prepare("DELETE FROM assignments WHERE id = ?").bind(id)]);
-  return json({ ok: true });
+  const [, assignment] = await db.batch([db.prepare("DELETE FROM attempts WHERE assignment_id = ?").bind(id), db.prepare("DELETE FROM assignments WHERE id = ?").bind(id)]);
+  return json({ ok: true, removed: (assignment?.meta.changes ?? 0) > 0 });
 }
 
 export interface AssignmentSummary {
