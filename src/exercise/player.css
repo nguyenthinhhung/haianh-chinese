@@ -1,0 +1,640 @@
+/* The exercise player and the editor's preview of it. Colours and fonts come
+   from the lesson's theme (the --ls-* variables of .ls-deck), so an exercise
+   looks like the lesson it belongs to. Every rule starts with .ex-player to
+   stay clear of the app's own styles. */
+
+.ex-player {
+  --ex-accent: var(--ls-accent, #c8102e);
+  --ex-bg: var(--ls-bg, #fbf8f2);
+  --ex-fg: var(--ls-fg, #1f2933);
+  --ex-muted: var(--ls-muted, #5f6b7a);
+  --ex-surface: var(--ls-surface, #fff);
+  --ex-border: var(--ls-surface-border, #e3e6ea);
+  --ex-good: var(--ls-good, #2f8a4f);
+  --ex-bad: #c2410c;
+  --ex-radius: 16px;
+  box-sizing: border-box;
+  min-height: 100%;
+  background: var(--ex-bg);
+  color: var(--ex-fg);
+  font-family: var(--ls-font-latin, "Segoe UI", sans-serif);
+  font-size: 16px;
+  line-height: 1.45;
+}
+.ex-player *,
+.ex-player *::before,
+.ex-player *::after {
+  box-sizing: border-box;
+}
+.ex-player [lang="zh-CN"] {
+  font-family: var(--ls-font-hanzi, "Microsoft YaHei", "PingFang SC", sans-serif);
+}
+.ex-player button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.ex-player select {
+  width: auto;
+}
+
+.ex-player .ex-main {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 16px 16px 40px;
+}
+
+/* Start and result screens */
+.ex-player .ex-cover,
+.ex-player .ex-score {
+  margin-top: 8px;
+  padding: 28px 24px;
+  border: 2px solid var(--ex-border);
+  border-radius: 24px;
+  background: var(--ex-surface);
+  text-align: center;
+}
+.ex-player .ex-kicker {
+  margin: 0;
+  color: var(--ex-accent);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 13px;
+}
+.ex-player .ex-cover h1 {
+  margin: 8px 0 14px;
+  font-size: clamp(24px, 5vw, 34px);
+  line-height: 1.2;
+}
+.ex-player .ex-facts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ex-player .ex-facts li {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ex-accent) 10%, var(--ex-surface));
+  font-size: 14px;
+}
+.ex-player .ex-skills {
+  margin: 14px 0 0;
+  color: var(--ex-muted);
+}
+.ex-player .ex-intro-text {
+  margin: 20px 4px 0;
+  white-space: pre-line;
+}
+.ex-player .ex-note {
+  margin: 16px 4px 0;
+  color: var(--ex-muted);
+}
+.ex-player .ex-start {
+  display: block;
+  width: min(360px, 100%);
+  margin: 24px auto 0;
+  padding: 14px;
+  font-size: 18px;
+}
+
+.ex-player .ex-primary,
+.ex-player .ex-secondary {
+  padding: 11px 20px;
+  border-radius: 14px;
+  font-weight: 700;
+}
+.ex-player .ex-primary {
+  border: 2px solid var(--ex-accent);
+  background: var(--ex-accent);
+  color: #fff;
+}
+.ex-player .ex-primary:hover:not(:disabled) {
+  filter: brightness(0.94);
+}
+.ex-player .ex-secondary {
+  border: 2px solid var(--ex-border);
+  background: var(--ex-surface);
+}
+.ex-player .ex-primary:disabled,
+.ex-player .ex-secondary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Top bar: title, clock, progress, audio */
+.ex-player .ex-top {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--ex-border);
+  background: color-mix(in srgb, var(--ex-bg) 94%, transparent);
+  backdrop-filter: blur(6px);
+}
+.ex-player .ex-top-row,
+.ex-player .ex-audio {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 860px;
+  margin: 0 auto;
+}
+.ex-player .ex-audio {
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.ex-player .ex-top-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ex-player .ex-clock {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+.ex-player .ex-clock--low {
+  color: var(--ex-bad);
+}
+.ex-player .ex-progress {
+  padding: 6px 12px;
+  border: 2px solid var(--ex-border);
+  border-radius: 999px;
+  background: var(--ex-surface);
+  white-space: nowrap;
+}
+.ex-player .ex-play,
+.ex-player .ex-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ex-accent);
+  color: #fff;
+  font-weight: 700;
+}
+.ex-player .ex-icon {
+  background: var(--ex-surface);
+  color: var(--ex-fg);
+  box-shadow: inset 0 0 0 2px var(--ex-border);
+  font-size: 13px;
+}
+.ex-player .ex-play:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.ex-player .ex-seek {
+  flex: 1;
+  min-width: 120px;
+  accent-color: var(--ex-accent);
+}
+.ex-player .ex-time {
+  font-variant-numeric: tabular-nums;
+  color: var(--ex-muted);
+  font-size: 14px;
+}
+.ex-player .ex-track,
+.ex-player .ex-rate {
+  padding: 6px 8px;
+  border: 2px solid var(--ex-border);
+  border-radius: 10px;
+  background: var(--ex-surface);
+  font: inherit;
+  font-size: 14px;
+}
+.ex-player .ex-track {
+  max-width: 220px;
+}
+.ex-player .ex-listens {
+  flex: 1;
+  color: var(--ex-muted);
+  font-size: 14px;
+}
+.ex-player .ex-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  gap: 6px;
+  max-width: 860px;
+  margin: 10px auto 2px;
+}
+.ex-player .ex-grid-cell {
+  height: 40px;
+  border: 2px solid var(--ex-border);
+  border-radius: 10px;
+  background: var(--ex-surface);
+  font-weight: 700;
+}
+.ex-player .ex-grid-cell--done {
+  border-color: var(--ex-accent);
+  background: color-mix(in srgb, var(--ex-accent) 12%, var(--ex-surface));
+}
+.ex-player .ex-grid-cell--flag {
+  box-shadow: inset 0 -4px 0 #d97706;
+}
+
+/* Parts */
+.ex-player .ex-part {
+  margin: 28px 0 8px;
+  padding: 0 4px;
+}
+.ex-player .ex-skill {
+  margin: 0;
+  color: var(--ex-accent);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.ex-player .ex-part-title {
+  margin: 4px 0;
+  font-size: 22px;
+}
+.ex-player .ex-instruction {
+  margin: 4px 0 10px;
+  font-size: 17px;
+  white-space: pre-line;
+}
+.ex-player .ex-listen {
+  padding: 8px 14px;
+  border: 2px solid var(--ex-accent);
+  border-radius: 999px;
+  background: var(--ex-surface);
+  color: var(--ex-accent);
+  font-weight: 700;
+}
+.ex-player .ex-part-image,
+.ex-player .ex-q-image {
+  display: block;
+  max-width: 100%;
+  max-height: 320px;
+  margin: 10px 0;
+  border-radius: 12px;
+}
+.ex-player .ex-passage {
+  margin: 10px 0;
+  padding: 16px 18px;
+  border-left: 4px solid var(--ex-accent);
+  border-radius: 12px;
+  background: var(--ex-surface);
+  font-size: 18px;
+  line-height: 1.8;
+  white-space: pre-line;
+}
+
+/* Questions */
+.ex-player .ex-q {
+  margin: 12px 0;
+  padding: 16px;
+  border: 2px solid var(--ex-border);
+  border-radius: var(--ex-radius);
+  background: var(--ex-surface);
+  scroll-margin: 140px 0 100px;
+}
+.ex-player .ex-q-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.ex-player .ex-q-number {
+  font-weight: 800;
+  color: var(--ex-accent);
+}
+.ex-player .ex-q-points,
+.ex-player .ex-q-status,
+.ex-player .ex-q-problem {
+  padding: 1px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  background: color-mix(in srgb, var(--ex-fg) 7%, var(--ex-surface));
+}
+.ex-player .ex-q-status--correct {
+  background: color-mix(in srgb, var(--ex-good) 16%, var(--ex-surface));
+  color: var(--ex-good);
+  font-weight: 700;
+}
+.ex-player .ex-q-status--wrong,
+.ex-player .ex-q-problem--error {
+  background: color-mix(in srgb, var(--ex-bad) 14%, var(--ex-surface));
+  color: var(--ex-bad);
+  font-weight: 700;
+}
+.ex-player .ex-q-problem--warning {
+  background: #fff4d6;
+  color: #8a5a00;
+}
+.ex-player .ex-flag {
+  margin-left: auto;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ex-muted);
+  font-size: 13px;
+}
+.ex-player .ex-flag[aria-pressed="true"] {
+  background: #fff4d6;
+  color: #8a5a00;
+}
+.ex-player .ex-prompt {
+  margin: 4px 0 6px;
+  font-size: 18px;
+  white-space: pre-line;
+}
+.ex-player .ex-prompt[lang="zh-CN"] {
+  font-size: 21px;
+  line-height: 1.7;
+}
+.ex-player .ex-pinyin {
+  display: block;
+  margin: 0 0 6px;
+  color: var(--ls-pinyin, var(--ex-muted));
+  font-size: 14px;
+}
+.ex-player .ex-gap {
+  display: inline-block;
+  min-width: 3.5em;
+  margin: 0 0.15em;
+  padding: 0 0.3em;
+  border-bottom: 3px solid var(--ex-accent);
+  text-align: center;
+  color: var(--ex-accent);
+  font-weight: 700;
+}
+.ex-player .ex-gap--right {
+  border-color: var(--ex-good);
+  color: var(--ex-good);
+}
+.ex-player .ex-gap--wrong {
+  border-color: var(--ex-bad);
+  color: var(--ex-bad);
+}
+.ex-player .ex-clip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 8px;
+}
+.ex-player .ex-clip-button {
+  padding: 6px 14px;
+  border: 2px solid var(--ex-accent);
+  border-radius: 999px;
+  background: var(--ex-surface);
+  color: var(--ex-accent);
+  font-weight: 700;
+}
+.ex-player .ex-clip-button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.ex-player .ex-options {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+.ex-player .ex-options[data-layout="grid"],
+.ex-player .ex-options[data-layout="tf"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.ex-player .ex-options[data-layout="images"] {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+.ex-player .ex-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 54px;
+  padding: 10px 14px;
+  border: 2px solid var(--ex-border);
+  border-radius: 14px;
+  background: var(--ex-surface);
+  text-align: left;
+  transition: border-color 0.12s, background-color 0.12s, transform 0.08s;
+}
+.ex-player .ex-options[data-layout="images"] .ex-option {
+  flex-direction: column;
+  align-items: stretch;
+}
+.ex-player .ex-option:hover {
+  border-color: color-mix(in srgb, var(--ex-accent) 45%, var(--ex-border));
+}
+.ex-player .ex-option:active {
+  transform: scale(0.99);
+}
+.ex-player .ex-letter {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ex-fg) 8%, var(--ex-surface));
+  font-weight: 800;
+}
+.ex-player .ex-option-body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.ex-player .ex-option-text {
+  font-size: 17px;
+}
+.ex-player .ex-option-text[lang="zh-CN"] {
+  font-size: 20px;
+}
+.ex-player .ex-option-image {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--ex-fg) 4%, var(--ex-surface));
+}
+.ex-player .ex-option--chosen {
+  border-color: var(--ex-accent);
+  background: color-mix(in srgb, var(--ex-accent) 9%, var(--ex-surface));
+}
+.ex-player .ex-option--chosen .ex-letter {
+  background: var(--ex-accent);
+  color: #fff;
+}
+.ex-player .ex-option--right {
+  border-color: var(--ex-good);
+  background: color-mix(in srgb, var(--ex-good) 12%, var(--ex-surface));
+}
+.ex-player .ex-option--right .ex-letter {
+  background: var(--ex-good);
+  color: #fff;
+}
+.ex-player .ex-option--wrong {
+  border-color: var(--ex-bad);
+  background: color-mix(in srgb, var(--ex-bad) 10%, var(--ex-surface));
+}
+.ex-player .ex-option--wrong .ex-letter {
+  background: var(--ex-bad);
+  color: #fff;
+}
+.ex-player .ex-review {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--ex-border);
+}
+.ex-player .ex-explanation {
+  margin: 0 0 6px;
+  white-space: pre-line;
+}
+.ex-player .ex-transcript summary {
+  color: var(--ex-accent);
+  font-weight: 700;
+  cursor: pointer;
+}
+.ex-player .ex-transcript p {
+  margin: 6px 0 0;
+  font-size: 17px;
+  white-space: pre-line;
+}
+
+/* Bottom bar and confirmations */
+.ex-player .ex-bottom {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--ex-border);
+  background: color-mix(in srgb, var(--ex-bg) 94%, transparent);
+  backdrop-filter: blur(6px);
+}
+.ex-player .ex-bottom-row,
+.ex-player .ex-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  max-width: 860px;
+  margin: 0 auto;
+}
+.ex-player .ex-actions {
+  justify-content: center;
+  margin-top: 24px;
+}
+.ex-player .ex-error {
+  max-width: 860px;
+  margin: 0 auto 8px;
+  color: var(--ex-bad);
+  font-weight: 600;
+}
+.ex-player .ex-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgb(0 0 0 / 0.35);
+}
+.ex-player .ex-confirm {
+  width: min(440px, 100%);
+  padding: 20px;
+  border-radius: 18px;
+  background: var(--ex-surface);
+  box-shadow: 0 16px 48px rgb(0 0 0 / 0.25);
+}
+.ex-player .ex-confirm p {
+  margin: 0 0 16px;
+  font-size: 17px;
+}
+
+/* Result */
+.ex-player .ex-score-big {
+  margin: 6px 0 0;
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1;
+}
+.ex-player .ex-score-big span {
+  font-size: 22px;
+  color: var(--ex-muted);
+}
+.ex-player .ex-score-percent {
+  margin: 8px 0 0;
+  font-weight: 700;
+}
+.ex-player .ex-score--pass .ex-score-percent {
+  color: var(--ex-good);
+}
+.ex-player .ex-score--fail .ex-score-percent {
+  color: var(--ex-bad);
+}
+.ex-player .ex-skill-scores {
+  display: grid;
+  gap: 6px;
+  max-width: 420px;
+  margin: 16px auto 0;
+  padding: 0;
+  list-style: none;
+}
+.ex-player .ex-skill-scores li {
+  display: grid;
+  grid-template-columns: 60px 1fr 56px;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+}
+.ex-player .ex-skill-scores meter {
+  width: 100%;
+  height: 12px;
+}
+.ex-player .ex-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 20px 0 0;
+}
+.ex-player .ex-filter button {
+  padding: 6px 14px;
+  border: 2px solid var(--ex-border);
+  border-radius: 999px;
+  background: var(--ex-surface);
+}
+.ex-player .ex-filter button[aria-pressed="true"] {
+  border-color: var(--ex-accent);
+  color: var(--ex-accent);
+  font-weight: 700;
+}
+
+/* The teacher's preview in the editor */
+.ex-player .ex-selectable {
+  cursor: pointer;
+}
+.ex-player .ex-selected {
+  outline: 3px solid var(--ex-accent);
+  outline-offset: 3px;
+  border-radius: var(--ex-radius);
+}
+.ex-player .ex-q--error {
+  border-color: color-mix(in srgb, var(--ex-bad) 60%, var(--ex-border));
+}
+
+@media (max-width: 560px) {
+  .ex-player .ex-main {
+    padding: 12px 12px 32px;
+  }
+  .ex-player .ex-options[data-layout="grid"] {
+    grid-template-columns: 1fr;
+  }
+  .ex-player .ex-q {
+    padding: 14px 12px;
+  }
+  .ex-player .ex-cover,
+  .ex-player .ex-score {
+    padding: 22px 16px;
+  }
+}

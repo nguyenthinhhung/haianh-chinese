@@ -1,4 +1,4 @@
-import type { Exercise, ExerciseSettings, Question, QuestionType, Skill } from "./exerciseSchema";
+import type { Exercise, ExercisePart, ExerciseSettings, Question, QuestionType, Skill } from "./exerciseSchema";
 
 /**
  * Grading, and the copy of an exercise a student receives. Plain functions
@@ -143,6 +143,35 @@ function shuffled<T>(items: readonly T[], random: () => number): T[] {
 
 const withAsset = (key: "image" | "audio", id: string | undefined) => (id ? { [key]: id } : {});
 
+/** A question as students see it: everything but the answer, explanation and words. */
+export function studentQuestion(q: Question, pinyin: boolean): StudentQuestion {
+  const base: StudentQuestion = {
+    id: q.id,
+    type: q.type,
+    prompt: q.prompt,
+    pinyin: pinyin ? q.pinyin : "",
+    ...withAsset("image", q.image),
+    ...withAsset("audio", q.audio),
+    points: q.points,
+  };
+  if (q.type === "true-false") return base;
+  return { ...base, options: q.options.map((o) => ({ id: o.id, text: o.text, pinyin: pinyin ? o.pinyin : "", ...withAsset("image", o.image) })) };
+}
+
+/** A part as students see it, with `questions` in the order given. */
+export function studentPart(part: ExercisePart, questions: StudentQuestion[]): StudentPart {
+  return {
+    id: part.id,
+    skill: part.skill,
+    title: part.title,
+    instruction: part.instruction,
+    ...withAsset("audio", part.audio),
+    ...withAsset("image", part.image),
+    passage: part.passage,
+    questions,
+  };
+}
+
 /**
  * The copy a student works on: no right answers, explanations or recordings'
  * words, shuffled as the settings ask with `seed` (one per attempt). Questions
@@ -151,7 +180,6 @@ const withAsset = (key: "image" | "audio", id: string | undefined) => (id ? { [k
 export function studentCopy(exercise: Exercise, seed: string): StudentExercise {
   const random = seededRandom(seed);
   const { settings } = exercise;
-  const pinyin = (s: string) => (settings.pinyin ? s : "");
   return {
     id: exercise.id,
     title: exercise.title,
@@ -160,29 +188,13 @@ export function studentCopy(exercise: Exercise, seed: string): StudentExercise {
     parts: exercise.parts.map((part) => {
       const fixed = !!part.audio || part.passage.trim().length > 0;
       const order = settings.shuffleQuestions && !fixed ? shuffled(part.questions, random) : part.questions;
-      return {
-        id: part.id,
-        skill: part.skill,
-        title: part.title,
-        instruction: part.instruction,
-        ...withAsset("audio", part.audio),
-        ...withAsset("image", part.image),
-        passage: part.passage,
-        questions: order.map((q): StudentQuestion => {
-          const base: StudentQuestion = {
-            id: q.id,
-            type: q.type,
-            prompt: q.prompt,
-            pinyin: pinyin(q.pinyin),
-            ...withAsset("image", q.image),
-            ...withAsset("audio", q.audio),
-            points: q.points,
-          };
-          if (q.type === "true-false") return base;
-          const options = q.options.map((o) => ({ id: o.id, text: o.text, pinyin: pinyin(o.pinyin), ...withAsset("image", o.image) }));
-          return { ...base, options: settings.shuffleOptions ? shuffled(options, random) : options };
+      return studentPart(
+        part,
+        order.map((q) => {
+          const copy = studentQuestion(q, settings.pinyin);
+          return copy.options && settings.shuffleOptions ? { ...copy, options: shuffled(copy.options, random) } : copy;
         }),
-      };
+      );
     }),
   };
 }
