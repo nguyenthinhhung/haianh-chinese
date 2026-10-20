@@ -120,8 +120,7 @@ async function handle(request: Request, env: AppEnv, ctx: ExecutionContext): Pro
   }
 
   // Everything below is for the teacher.
-  if (!(await isTeacher(request, env.TEACHER_PASSWORD))) {
-    return pathname.startsWith("/api/") ? json({ error: "unauthorized" }, 401) : new Response(null, { status: 303, headers: { Location: "/login" } });
+  if (!(await isTeacher(request, env.TEACHER_PASSWORD))) {    return pathname.startsWith("/api/") ? json({ error: "unauthorized" }, 401) : new Response(null, { status: 303, headers: { Location: "/login" } });
   }
 
   if (pathname === "/" && method === "GET") {

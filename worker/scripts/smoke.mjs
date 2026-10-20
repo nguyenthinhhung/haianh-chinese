@@ -22,7 +22,7 @@ function askHidden(question) {
   );
 }
 
-const password = await askHidden("Teacher password: ");
+const password = (process.env.TEACHER_PASSWORD ?? (await askHidden("Teacher password: "))).trim();
 const auth = { Authorization: `Bearer ${password}` };
 const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
 let failed = 0;
