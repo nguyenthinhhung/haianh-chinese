@@ -27,6 +27,8 @@ const MAX_THUMBNAIL_BYTES: u64 = 512 * 1024;
 const MAX_SPEECH_BYTES: u64 = 2 * 1024 * 1024;
 /// Google Translate refuses longer text in one request.
 const MAX_SPEECH_CHARS: usize = 200;
+/// Longer text, such as a listening passage, is read in pieces joined into one MP3.
+const MAX_SPEECH_TEXT_CHARS: usize = 3000;
 
 fn offline(e: impl std::fmt::Display) -> AppError {
     AppError::new("network", format!("Không kết nối được: {e}"))
@@ -361,28 +363,72 @@ fn is_mp3(bytes: &[u8]) -> bool {
     bytes.starts_with(b"ID3") || (bytes.len() >= 2 && bytes[0] == 0xFF && (bytes[1] & 0xE0) == 0xE0)
 }
 
+/// Text cut into pieces Google Translate reads in one request, each ending
+/// after a sentence or clause where possible so the voice pauses naturally.
+/// Pieces with nothing to say (only punctuation) are dropped.
+fn speech_pieces(text: &str) -> Vec<String> {
+    let mut pieces = Vec::new();
+    let mut piece: Vec<char> = Vec::new();
+    let mut last_break = 0;
+    for c in text.chars() {
+        piece.push(c);
+        if matches!(c, '。' | '！' | '？' | '!' | '?' | '；' | ';' | '，' | ',' | '、' | '\n') {
+            last_break = piece.len();
+        }
+        if piece.len() == MAX_SPEECH_CHARS {
+            let rest = piece.split_off(if last_break > 0 { last_break } else { piece.len() });
+            pieces.push(piece.iter().collect::<String>());
+            piece = rest;
+            last_break = 0;
+        }
+    }
+    pieces.push(piece.into_iter().collect());
+    pieces.into_iter().map(|p| p.trim().to_string()).filter(|p| p.chars().any(char::is_alphanumeric)).collect()
+}
+
+/// An MP3 without its leading ID3 tag, so pieces join into one stream of frames.
+fn without_id3(bytes: &[u8]) -> &[u8] {
+    if bytes.len() < 10 || !bytes.starts_with(b"ID3") {
+        return bytes;
+    }
+    // The tag's size is stored in four 7-bit bytes, after the header; a footer adds 10 more.
+    let size = bytes[6..10].iter().fold(0usize, |n, b| (n << 7) | usize::from(b & 0x7f));
+    let footer = if bytes[5] & 0x10 != 0 { 10 } else { 0 };
+    bytes.get(10 + size + footer..).unwrap_or(&[])
+}
+
 /// Reads Chinese text aloud with Google Translate's voice and stores the MP3
-/// in the lesson, so presenting needs no network.
+/// in the lesson, so presenting needs no network. Text longer than one
+/// request allows is read piece by piece into the same file.
 #[tauri::command]
 pub async fn speak_chinese(state: State<'_, AppState>, dir: String, text: String) -> AppResult<ImportedAsset> {
     let lesson = state.lesson_dir(&dir)?;
     let text = text.trim();
-    if text.is_empty() || text.chars().count() > MAX_SPEECH_CHARS {
+    let pieces = speech_pieces(text);
+    if pieces.is_empty() || text.chars().count() > MAX_SPEECH_TEXT_CHARS {
         return Err(AppError::new(
             "invalid-path",
-            format!("Cần từ 1 đến {MAX_SPEECH_CHARS} ký tự để tạo giọng đọc."),
+            format!("Cần từ 1 đến {MAX_SPEECH_TEXT_CHARS} ký tự để tạo giọng đọc."),
         ));
     }
-    let url = Url::parse_with_params(
-        "https://translate.google.com/translate_tts",
-        [("ie", "UTF-8"), ("client", "tw-ob"), ("tl", "zh-CN"), ("q", text)],
-    )
-    .expect("static URL");
-    let bytes = fetch(url.as_str(), MAX_SPEECH_BYTES, Duration::from_secs(15)).await?;
-    if !is_mp3(&bytes) {
-        return Err(AppError::new("network", "Dịch vụ đọc không trả về âm thanh. Thử lại sau."));
+    let mut audio = Vec::new();
+    for (i, piece) in pieces.iter().enumerate() {
+        if i > 0 {
+            // One request after another, not a burst.
+            tokio::time::sleep(Duration::from_millis(250)).await;
+        }
+        let url = Url::parse_with_params(
+            "https://translate.google.com/translate_tts",
+            [("ie", "UTF-8"), ("client", "tw-ob"), ("tl", "zh-CN"), ("q", piece.as_str())],
+        )
+        .expect("static URL");
+        let bytes = fetch(url.as_str(), MAX_SPEECH_BYTES, Duration::from_secs(15)).await?;
+        if !is_mp3(&bytes) {
+            return Err(AppError::new("network", "Dịch vụ đọc không trả về âm thanh. Thử lại sau."));
+        }
+        audio.extend_from_slice(if i == 0 { &bytes } else { without_id3(&bytes) });
     }
-    assets::store_audio(&lesson, "mp3", "audio/mpeg", &bytes)
+    assets::store_audio(&lesson, "mp3", "audio/mpeg", &audio)
 }
 
 /// Stroke outlines from Make Me a Hanzi, as published by hanzi-writer-data.
@@ -512,5 +558,29 @@ mod tests {
         assert!(is_mp3(b"ID3\x04rest"));
         assert!(is_mp3(&[0xFF, 0xF3, 0x84, 0xC4]));
         assert!(!is_mp3(b"<html>"));
+    }
+
+    #[test]
+    fn long_text_is_read_in_pieces_at_sentence_ends() {
+        assert_eq!(speech_pieces("  你好！ "), ["你好！"]);
+        assert!(speech_pieces("。。 ……").is_empty());
+
+        let sentence = format!("{}。", "好".repeat(59));
+        let pieces = speech_pieces(&sentence.repeat(5));
+        assert_eq!(pieces.len(), 2);
+        assert_eq!(pieces[0], sentence.repeat(3));
+        assert_eq!(pieces[1], sentence.repeat(2));
+
+        // Without punctuation, a piece is cut at the limit.
+        let pieces = speech_pieces(&"好".repeat(450));
+        assert_eq!(pieces.iter().map(|p| p.chars().count()).collect::<Vec<_>>(), [200, 200, 50]);
+    }
+
+    #[test]
+    fn id3_tags_are_skipped_when_joining() {
+        let tagged = [b"ID3\x04\x00\x00\x00\x00\x00\x02".as_slice(), &[0xAA, 0xBB], &[0xFF, 0xF3, 0x01]].concat();
+        assert_eq!(without_id3(&tagged), [0xFF, 0xF3, 0x01]);
+        assert_eq!(without_id3(&[0xFF, 0xF3, 0x01]), [0xFF, 0xF3, 0x01]);
+        assert_eq!(without_id3(b"ID3\x04\x00\x00\x00\x00\x7f\x7f"), [] as [u8; 0]);
     }
 }
