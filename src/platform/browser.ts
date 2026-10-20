@@ -166,6 +166,9 @@ export function createBrowserPersistence(): Persistence {
     async publishLesson() {
       throw new PersistenceError("network", "Đăng lên web chỉ có trong ứng dụng desktop.");
     },
+    async publishAssignment() {
+      throw new PersistenceError("network", "Giao bài chỉ có trong ứng dụng desktop.");
+    },
     // The browser build is for UI work, so it asks the same source directly.
     async hanziStrokes(character) {
       const res = await fetch(`https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0.1/${encodeURIComponent(character)}.json`).catch(() => null);

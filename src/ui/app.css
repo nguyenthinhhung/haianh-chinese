@@ -90,6 +90,8 @@ button.muted-button {
 
 input[type="text"],
 input[type="search"],
+input[type="url"],
+input[type="password"],
 input:not([type]),
 select,
 textarea {
@@ -1752,4 +1754,8 @@ input.library-search {
   background: var(--accent);
   color: #fff;
   box-shadow: none;
+}
+.exercise-head-actions {
+  display: flex;
+  gap: 8px;
 }

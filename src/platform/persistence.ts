@@ -153,6 +153,8 @@ export interface Persistence {
   publishAssets(dir: string, files: string[]): Promise<PublishedAssets>;
   /** Uploads the lesson page and returns its web address; `hanzi` is shown large on the lesson's card. */
   publishLesson(lessonId: string, title: string, hanzi: string | null, html: string): Promise<{ url: string }>;
+  /** Hands an exercise out to students (`payload` is the server's JSON); the students' link and the results page. */
+  publishAssignment(exerciseId: string, payload: string): Promise<{ url: string; resultsUrl: string }>;
   /** URL the editor webview can load an asset from. */
   assetUrl(dir: string, file: string): string;
   setWindowTitle(title: string): Promise<void>;

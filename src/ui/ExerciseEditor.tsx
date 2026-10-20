@@ -26,6 +26,7 @@ import { SKILL_LABELS, type Exercise, type QuestionType } from "../core/exercise
 import type { RenderEnv } from "../renderer/render";
 import { ExercisePlayer } from "../exercise/ExercisePlayer";
 import { PartHeader, QuestionCard, type AssetUrl } from "../exercise/QuestionCard";
+import { AssignDialog } from "./AssignDialog";
 import { addMessage, FormFields, type FormTarget, type Messages } from "./FormFields";
 import { useServices } from "./services";
 import type { LessonSession } from "./useLessonSession";
@@ -98,6 +99,7 @@ export function ExerciseEditor({ session, env, onNotice }: Props) {
   const [node, setNode] = useState<Node>({ kind: "exercise" });
   const [adding, setAdding] = useState(false);
   const [trying, setTrying] = useState(false);
+  const [assigning, setAssigning] = useState(false);
 
   const assets = useMemo(() => new Map(doc.assets.map((a) => [a.id, a])), [doc.assets]);
   const assetUrl: AssetUrl = (id) => {
@@ -307,9 +309,21 @@ export function ExerciseEditor({ session, env, onNotice }: Props) {
           <span className={`exercise-status${errors ? " exercise-status--error" : ""}`}>
             {errors ? `${errors} chỗ cần sửa trước khi giao bài` : issues.length ? `Sẵn sàng · ${issues.length} chỗ nên xem lại` : "✓ Sẵn sàng giao bài"}
           </span>
-          <button type="button" className="primary" onClick={() => setTrying(true)} disabled={!questionCount(exercise)}>
-            ▶ Làm thử
-          </button>
+          <div className="exercise-head-actions">
+            {persistence.kind === "tauri" && (
+              <button
+                type="button"
+                onClick={() => setAssigning(true)}
+                disabled={!questionCount(exercise)}
+                title="Gửi link cho học viên làm bài; máy chủ chấm điểm và lưu vào bảng điểm"
+              >
+                Giao bài…
+              </button>
+            )}
+            <button type="button" className="primary" onClick={() => setTrying(true)} disabled={!questionCount(exercise)}>
+              ▶ Làm thử
+            </button>
+          </div>
         </div>
         <div className="exercise-preview">
           <div
@@ -487,6 +501,7 @@ export function ExerciseEditor({ session, env, onNotice }: Props) {
         </div>
       </aside>
 
+      {assigning && <AssignDialog dir={session.dir} doc={doc} exercise={exercise} onClose={() => setAssigning(false)} />}
       {trying && (
         <TryDialog
           exercise={exercise}

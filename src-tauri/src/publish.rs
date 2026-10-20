@@ -266,6 +266,52 @@ pub async fn publish_lesson(
     Ok(PublishedLesson { url: format!("{}/l/{lesson_id}", server.base) })
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HandedOut {
+    /// The link students open.
+    url: String,
+    /// The teacher's results page for this exercise.
+    results_url: String,
+}
+
+/// Exercise IDs end up in the server's addresses, so only the generated shape is sent.
+fn check_exercise_id(id: &str) -> AppResult<()> {
+    let ok = id.len() >= 6 && id.len() <= 34 && id.starts_with("e_") && id[2..].bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit());
+    if ok {
+        Ok(())
+    } else {
+        Err(AppError::new("invalid-path", "ID đề không hợp lệ."))
+    }
+}
+
+/// Hands an exercise out to students (or updates one handed out before):
+/// `payload` is the JSON the server's `/api/assignments` takes.
+#[tauri::command]
+pub async fn publish_assignment(state: State<'_, AppState>, exercise_id: String, payload: String) -> AppResult<HandedOut> {
+    check_exercise_id(&exercise_id)?;
+    let server = server(&state)?;
+    let response = send(
+        client()
+            .put(format!("{}/api/assignments/{exercise_id}", server.base))
+            .bearer_auth(&server.password)
+            .header("Content-Type", "application/json")
+            .body(payload),
+    )
+    .await?;
+    #[derive(Deserialize)]
+    struct Saved {
+        slug: String,
+    }
+    let invalid = |e: &dyn std::fmt::Display| AppError::new("network", format!("Máy chủ trả lời không hợp lệ: {e}"));
+    let bytes = response.bytes().await.map_err(|e| invalid(&e))?;
+    let saved: Saved = serde_json::from_slice(&bytes).map_err(|e| invalid(&e))?;
+    if !saved.slug.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit()) {
+        return Err(invalid(&"slug"));
+    }
+    Ok(HandedOut { url: format!("{}/a/{}", server.base, saved.slug), results_url: format!("{}/results/{exercise_id}", server.base) })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -284,6 +330,14 @@ mod tests {
         assert!(check_password("Correct-Horse_9!").is_ok());
         for bad in ["", "có dấu", "two words", "tab\there", &"x".repeat(201)] {
             assert!(check_password(bad).is_err(), "{bad}");
+        }
+    }
+
+    #[test]
+    fn exercise_ids() {
+        assert!(check_exercise_id("e_k3f9a0x2mq").is_ok());
+        for bad in ["e_ab", "q_k3f9a0x2mq", "e_K3F9A0X2MQ", "e_../../x", ""] {
+            assert!(check_exercise_id(bad).is_err(), "{bad}");
         }
     }
 

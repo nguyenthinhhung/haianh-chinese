@@ -1,6 +1,9 @@
 import { produce } from "immer";
 import { parseLessonHtml, parseLessonJson, readAssetData, serializeLessonHtml, type ParseResult } from "../core/codec";
 import { createLesson, removeUnusedAssets, setTitle, touchUpdatedAt } from "../core/document";
+import { exerciseAssetRefs } from "../core/exercise";
+import { exerciseIssues } from "../core/exerciseCheck";
+import type { Exercise } from "../core/exerciseSchema";
 import { folderNameFromTitle } from "../core/fsNames";
 import { newId } from "../core/ids";
 import type { LessonDocument, Slide } from "../core/schema";
@@ -202,6 +205,33 @@ export async function publishLesson(dir: string, doc: LessonDocument, services: 
   const html = serializeLessonHtml(lesson, env);
   const { url } = await services.persistence.publishLesson(lesson.id, lesson.title, coverHanzi(lesson), html);
   return { url, uploaded: assets.uploaded, missing: assets.missing };
+}
+
+export interface HandOutResult {
+  /** The link students open. */
+  url: string;
+  resultsUrl: string;
+  /** Files sent this time; the others were already on the server. */
+  uploaded: number;
+  /** Asset files that could not be read and are missing for students. */
+  missing: string[];
+}
+
+/**
+ * Hands an exercise out: its pictures and sounds first (as for a published
+ * lesson), then the exercise itself with where each file is. Handing it out
+ * again updates it under the same link.
+ */
+export async function handOutExercise(dir: string, doc: LessonDocument, exercise: Exercise, services: Services): Promise<HandOutResult> {
+  const blocking = exerciseIssues(exercise).filter((i) => i.level === "error");
+  if (blocking.length) throw new Error(`Đề còn ${blocking.length} chỗ cần sửa trước khi giao.`);
+  const ids = new Set(exerciseAssetRefs(exercise).map((r) => r.assetId));
+  const files = new Map(doc.assets.filter((a) => ids.has(a.id)).map((a) => [a.id, a.file]));
+  const assets = await services.persistence.publishAssets(dir, [...files.values()]);
+  const assetUrls = Object.fromEntries([...files].flatMap(([id, file]) => (assets.names[file] ? [[id, `/f/${assets.names[file]}`]] : [])));
+  const payload = { lessonTitle: doc.title, theme: doc.theme.id, hanziFont: doc.settings.hanziFont, exercise, assetUrls };
+  const { url, resultsUrl } = await services.persistence.publishAssignment(exercise.id, JSON.stringify(payload));
+  return { url, resultsUrl, uploaded: assets.uploaded, missing: assets.missing };
 }
 
 function dataUrlBytes(url: string): Uint8Array {
