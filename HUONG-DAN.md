@@ -245,7 +245,22 @@ nghe, phần đọc, có đồng hồ, xem đáp án sau khi nộp. Đề nằm 
 7. **▶ Làm thử** để làm đề như học viên: bắt đầu, nghe, chọn đáp án, nộp, xem điểm,
    đáp án và giải thích. Kết quả làm thử không được lưu.
 
-Giao đề cho học viên qua đường link và xem bảng điểm sẽ có ở bản sau.
+### Giao bài và xem điểm
+
+1. Khi đề không còn chấm đỏ, bấm **Giao bài…** (cạnh nút Làm thử). Lần đầu nhập
+   địa chỉ máy chủ và mật khẩu như ở mục 6 (đã nhập rồi thì không phải nhập lại).
+2. Bấm **Giao bài**, rồi **Sao chép link** và gửi link cho học viên (Zalo,
+   Messenger…). Học viên mở link trên điện thoại hoặc máy tính, nhập **họ tên**,
+   làm bài và nộp; không cần tài khoản, không cần cài gì.
+   - Học viên lỡ tải lại trang hay tắt máy giữa chừng: mở lại link là làm tiếp,
+     đáp án đã chọn vẫn còn.
+   - Đề đặt **Chỉ nộp một lần**: mở lại link sau khi nộp chỉ thấy lại kết quả.
+3. Sửa đề rồi bấm **Giao bài** lần nữa: link giữ nguyên, bài làm sau đó được chấm
+   theo đề mới; điểm đã nộp trước vẫn giữ.
+4. Xem điểm: mở địa chỉ máy chủ trong trình duyệt, đăng nhập, chọn **Bảng điểm**.
+   Mỗi đề có số bài nộp, số học viên, điểm trung bình; bấm **Xem điểm** để thấy từng
+   học viên: điểm, Đạt/Chưa đạt (nếu đề có điểm đạt), thời gian làm (**Quá giờ** khi
+   nộp sau giờ quy định), lúc nộp và lần thứ mấy.
 
 ## 8. Tạo bài bằng AI
 

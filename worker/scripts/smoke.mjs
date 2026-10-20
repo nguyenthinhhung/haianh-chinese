@@ -65,5 +65,51 @@ res = await fetch(`${base}/api/lessons/smoke-test`, { method: "DELETE", headers:
 check("delete lesson", res.ok, String(res.status));
 check("lesson gone", (await fetch(`${base}/l/smoke-test`, { headers: auth })).status === 404);
 
+// Hand an exercise out, do it as a student, see it in the results, take it down.
+const option = (id, text, correct = false) => ({ id, text, pinyin: "", correct });
+const exercise = {
+  id: "e_smokecheck",
+  title: "Smoke test",
+  intro: "",
+  settings: { timeLimit: 0, timerStart: "start", attempts: "many", shuffleQuestions: false, shuffleOptions: true, maxListens: 0, showAnswers: "after-submit", pinyin: true, passPercent: 0 },
+  parts: [
+    {
+      id: "p_smokecheck",
+      skill: "reading",
+      title: "",
+      instruction: "",
+      passage: "",
+      transcript: "",
+      questions: [
+        { id: "q_smokecheck1", type: "choice", prompt: "猫", pinyin: "", points: 1, explanation: "secret-explanation", transcript: "", options: [option("o_smokeright", "con mèo", true), option("o_smokewrong", "con chó")] },
+        { id: "q_smokecheck2", type: "true-false", prompt: "我是学生。", pinyin: "", points: 1, explanation: "", transcript: "", answer: false },
+      ],
+    },
+  ],
+};
+const assignmentUrl = `${base}/api/assignments/${exercise.id}`;
+res = await fetch(assignmentUrl, { method: "PUT", headers: { ...auth, "Content-Type": "application/json" }, body: JSON.stringify({ lessonTitle: "Smoke", theme: "classic", hanziFont: "sans", exercise, assetUrls: {} }) });
+const handedOut = res.ok ? await res.json() : null;
+check("hand out exercise", !!handedOut?.slug, String(res.status));
+if (handedOut?.slug) {
+  const studentApi = `${base}/api/a/${handedOut.slug}`;
+  res = await fetch(`${studentApi}?seed=smoke`);
+  const copyText = await res.text();
+  check("student copy hides answers", res.ok && !/"correct"|"answer"|secret-explanation/.test(copyText), String(res.status));
+  check("student page served", (await fetch(`${base}/a/${handedOut.slug}`)).status === 200);
+  const post = (path, body) => fetch(`${studentApi}/${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  res = await post("start", { name: "Smoke Test", clientId: "smoketestclient" });
+  const attempt = res.ok ? await res.json() : null;
+  check("start attempt", !!attempt?.attemptId, String(res.status));
+  res = await post("submit", { attemptId: attempt?.attemptId, answers: { q_smokecheck1: "o_smokeright", q_smokecheck2: true } });
+  const graded = res.ok ? await res.json() : null;
+  check("grade hand-in", graded?.grade?.score === 1 && graded?.grade?.max === 2 && !!graded?.review, `${res.status} ${JSON.stringify(graded?.grade?.score)}`);
+  res = await fetch(`${base}/results/${exercise.id}`, { headers: auth });
+  check("results page lists the student", res.status === 200 && (await res.text()).includes("Smoke Test"), String(res.status));
+  res = await fetch(assignmentUrl, { method: "DELETE", headers: auth });
+  check("take exercise down", res.ok, String(res.status));
+  check("student link gone", (await fetch(`${studentApi}`)).status === 404);
+}
+
 console.log(failed ? `\n${failed} check(s) failed` : "\nAll checks passed");
 process.exit(failed ? 1 : 0);

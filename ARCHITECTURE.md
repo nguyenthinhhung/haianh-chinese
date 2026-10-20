@@ -14,7 +14,7 @@ chiếu và trả lời bằng lời; giáo viên là người điều khiển m
 Ngoài giờ học, giáo viên soạn **đề bài tập** (mục 4.6) để học viên tự làm và được
 chấm điểm tự động; học viên làm bài trên trang web, không cài ứng dụng.
 
-> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 21).
+> Lịch sử các lần sửa ở mục 12 (bản hiện tại: Rev 22).
 >
 > Kế hoạch đưa lên web (trình chiếu mọi nơi, học viên làm bài tập) và tiến độ của
 > nó nằm ở `PLAN-WEB.md`; phần đã làm được ghi vào tài liệu này.
@@ -476,6 +476,15 @@ exercises[]: { id, title, intro, settings, parts[] }
 - Ảnh và âm thanh của đề nằm trong `assets/` của bài; `removeUnusedAssets` và
   `validateLesson` tính cả tham chiếu từ đề, nên dọn file khi đóng bài không xoá
   file nghe của đề.
+- **Giao bài** (nút trong chế độ Bài tập, chỉ khi đề không còn lỗi): app gửi ảnh và
+  âm thanh của đề như khi đăng bài (tên theo hash, chỉ file máy chủ chưa có), rồi
+  gửi đề kèm theme và địa chỉ từng file (`publish_assignment`). Máy chủ (Worker
+  trong `worker/`, D1) giữ đề có đáp án, cấp một link ngẫu nhiên; giao lại thì link
+  giữ nguyên, đề lên phiên bản mới. Học viên mở link, nhập họ tên; máy chủ ghi lượt
+  làm, gửi `studentCopy` theo seed của lượt đó, chấm bằng `gradeExercise` khi nộp
+  và chỉ gửi `exerciseReview` khi đề cho xem đáp án. Trang học viên là entry Vite
+  riêng (`student.html`, `src/student/`) dùng đúng trình làm bài của app; giáo viên
+  xem điểm ở trang `/results` của máy chủ. Chi tiết và việc còn lại: `PLAN-WEB.md`.
 
 ---
 
@@ -660,6 +669,9 @@ cho chữ mà slide không chọn (lựa chọn của `quiz`, `sort-groups`, `bo
 | `PropertiesPanel` | UI | Form của slide và cài đặt bài học, dựng bằng `FormFields`. |
 | `ExerciseEditor` | UI | Chế độ Bài tập của editor: dàn ý đề, xem trước, form, Làm thử. |
 | `ExercisePlayer`, `QuestionCard` | UI (`src/exercise/`) | Trình làm bài của học viên; thẻ câu hỏi và đầu phần dùng chung với bản xem trước khi soạn. |
+| `AssignDialog`, `PublishDialog`, `ServerSettings` | UI | Giao bài và đăng bài lên máy chủ web riêng; địa chỉ máy chủ và mật khẩu dùng chung. |
+| `StudentApp` | Web (`src/student/`) | Trang học viên làm bài trên máy chủ: họ tên, lượt làm, nộp bài, xem lại kết quả. |
+| `publish` | Rust | Đăng bài, gửi file, giao bài lên máy chủ web riêng; mật khẩu trong kho mật khẩu của hệ điều hành. |
 | `LibraryScreen`, `LessonEditor`, `SlideNavigator`, `SaveStatus`, `PresentMode` | UI | Giao diện. |
 
 ### Ranh giới bảo mật
@@ -727,6 +739,7 @@ cắt validation, ghi file an toàn, backup, recovery, hay hỗ trợ macOS.
 | 4. Hỏi đáp + theme | 🟢 Xong (Windows) | Đủ 6 loại slide nhóm 2 (`quiz` có biến thể Đúng/Sai và đề bằng ảnh/âm thanh, `matching`, `fill-blank`, `sentence-order`, `tone-pick` tự lấy thanh từ dấu pinyin, `sort-groups`); thứ tự xáo trộn cố định theo ID slide nên Editor, Present và file giống nhau; hoàn thành có pháo giấy. 5 theme (`classic`, `garden`, `ocean`, `space` nền tối, `panda`); tuỳ chọn chữ Khải. Trường form hiện theo điều kiện. Chữ Hán lẫn trong câu tiếng Việt được gắn `lang="zh-CN"` riêng. Đã kiểm tra trong app thật: chạy các bước của cả 6 loại và xem 5 theme. | Thử trên lớp thật. |
 | 5. Trò chơi + công cụ lớp học | 🟢 Xong (Windows) | Đủ 5 trò nhóm 3 (`whats-missing`, `guess-picture` với 4 cách chơi, `box-pick`, `lucky-wheel`, `memory`), mỗi trò có `interaction.js` riêng qua các hook mới của runtime (Tiếp/Lùi tự xử lý, chọn ô bằng số, vào/rời slide). Công cụ lớp học: bảng điểm đội, đồng hồ đếm ngược, gọi số ngẫu nhiên, bảng phím tắt. Runtime có test chạy thật trong DOM giả lập (happy-dom) cho từng trò. Đã kiểm tra trong app thật. | Dạy thử một buổi với lớp thật. |
 | Ảnh và giọng đọc từ web (thêm ở Rev 6) | 🟢 Xong (Windows) | Tìm ảnh Bing, dán/kéo ảnh, giọng đọc Google Dịch, ghi nguồn ảnh. Đã kiểm tra trong app thật: tìm "quả táo" ra 30 ảnh trong ~2,5 giây, chèn ảnh, tạo giọng đọc 苹果, dán ảnh, kéo địa chỉ ảnh vào. | Kéo ảnh thật từ Chrome/Edge sang chưa thử bằng chuột thật. |
+| Giao bài và bảng điểm (thêm ở Rev 22; Giai đoạn 3 của `PLAN-WEB.md`) | 🟢 Dùng được | Nút Giao bài, máy chủ chấm điểm và lưu lượt làm (D1), trang học viên làm trên điện thoại, bảng điểm trên web. Đã kiểm tra thật: giao từ app, làm bài trên khổ điện thoại, tải lại giữa chừng không mất bài, nộp, đề nộp một lần mở lại hiện kết quả cũ. | Xem `PLAN-WEB.md`. |
 | Bài tập cho học viên (thêm ở Rev 21; Giai đoạn 2 của `PLAN-WEB.md`) | 🟡 Còn nhập đề từ AI | Đề trong bài học (schema v2 + migration), 3 dạng câu (trắc nghiệm chữ/ảnh, đúng/sai, chọn từ điền chỗ trống), phần có file nghe/ảnh/đoạn văn/lời đoạn nghe, cài đặt đề, kiểm tra đề, chấm điểm, bản đề cho học viên có xáo trộn, trình làm bài, chế độ Bài tập trong editor, Làm thử. Đã kiểm tra trong app thật: soạn đề 2 phần 3 câu (tạo giọng đọc cho phần nghe), làm thử, nộp khi còn câu trống, xem kết quả; đóng rồi mở lại bài, file nghe còn nguyên. | Nhập đề từ AI; giao đề cho học viên qua web (Giai đoạn 3). |
 | 6. Import/Export + phát hành | 🟡 Còn macOS + ký số | Xuất một file HTML độc lập (asset nhúng một lần trong `#lesson-assets`); nhập bài từ AI (tạo bài mới hoặc thêm vào cuối bài, một bước undo); mở file bài học từ ngoài (file export hoặc `lesson.html` kèm `assets/`). Bộ cài Windows NSIS build được (`Chinese Lesson Studio_0.1.0_x64-setup.exe`, 5,3 MB), bản release đã chạy thử. Hướng dẫn ngắn: `HUONG-DAN.md`. Đã kiểm tra: file export chạy trên Chrome không cần app (ảnh, audio, trò chơi, công cụ lớp học). | Ký số Windows; build, ký và notarize bản macOS (cần máy Mac hoặc CI macOS); thử file export trên Edge, Safari; thử hộp thoại chọn/lưu file bằng tay. |
 
@@ -841,6 +854,14 @@ Chưa làm:
 ---
 
 ## 12. Lịch sử thay đổi
+
+### Rev 22
+
+| Thay đổi | Lý do |
+| --- | --- |
+| **Giao bài**: đề lên máy chủ web riêng (Worker + D1), học viên làm qua link, máy chủ chấm, giáo viên xem bảng điểm (mục 4.6) | Đề chỉ có ích khi học viên tự làm được; chấm ở máy chủ để học viên không xem được đáp án trong trình duyệt. |
+| Trang học viên là entry Vite riêng dùng lại `ExercisePlayer`; trình làm bài thêm chỗ cho họ tên, bước đăng ký lượt làm và mở thẳng kết quả đã nộp | Một trình làm bài cho cả Làm thử trong app lẫn học viên trên web, nên hai bên luôn giống nhau. |
+| Ô địa chỉ máy chủ và mật khẩu tách thành `ServerSettings`, dùng chung cho Đăng lên web và Giao bài | Hai việc dùng cùng máy chủ và mật khẩu. |
 
 ### Rev 21
 
