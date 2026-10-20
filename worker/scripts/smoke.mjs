@@ -43,6 +43,10 @@ res = await fetch(`${base}/f/smoke-test.png`, { headers: { Range: "bytes=0-9" } 
 const part = Buffer.from(await res.arrayBuffer());
 check("Range read", res.status === 206 && part.length === 10, `${res.status} ${part.length} bytes`);
 
+res = await fetch(`${base}/api/assets/missing`, { method: "POST", headers: { ...auth, "Content-Type": "application/json" }, body: JSON.stringify({ names: ["smoke-test.png", "smoke-absent.png"] }) });
+const missing = res.ok ? (await res.json()).missing : null;
+check("missing-files check", JSON.stringify(missing) === JSON.stringify(["smoke-absent.png"]), `${res.status} ${JSON.stringify(missing)}`);
+
 check("reject wrong password", (await fetch(`${base}/api/assets/x.png`, { method: "PUT", headers: { Authorization: "Bearer nope" }, body: PNG })).status === 401);
 check("reject svg", (await fetch(`${base}/api/assets/x.svg`, { method: "PUT", headers: auth, body: "<svg/>" })).status === 400);
 

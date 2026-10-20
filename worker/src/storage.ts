@@ -4,6 +4,7 @@ import { AwsClient } from "aws4fetch";
 export interface FileStore {
   /** `range` is passed through as the HTTP Range header; the response keeps B2's status (200 or 206). */
   get(key: string, range?: string | null): Promise<Response>;
+  exists(key: string): Promise<boolean>;
   put(key: string, body: ArrayBuffer | string, contentType: string): Promise<void>;
   delete(key: string): Promise<void>;
 }
@@ -23,6 +24,12 @@ export function createB2Store(env: StoreEnv): FileStore {
   return {
     get(key, range) {
       return client.fetch(url(key), range ? { headers: { Range: range } } : {});
+    },
+    async exists(key) {
+      const res = await client.fetch(url(key), { method: "HEAD" });
+      if (res.ok) return true;
+      if (res.status === 404) return false;
+      throw new Error(`B2 head ${key}: ${res.status}`);
     },
     async put(key, body, contentType) {
       const res = await client.fetch(url(key), { method: "PUT", body, headers: { "Content-Type": contentType } });
