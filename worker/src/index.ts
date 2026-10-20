@@ -10,6 +10,7 @@ import {
   submitAttempt,
 } from "./assignments";
 import { clearSessionCookie, isTeacher, makeSession, safeEqual, sessionCookie } from "./auth";
+import { clientKey, count, LIMITS, overLimit } from "./limits";
 import { libraryPage, loginPage, PAGE_CSP, resultsListPage, resultsPage, type LessonEntry } from "./pages";
 import { createB2Store, type FileStore } from "./storage";
 
@@ -139,8 +140,12 @@ async function handle(request: Request, env: AppEnv, ctx: ExecutionContext): Pro
     const action = studentApi[2];
     const attemptId = studentApi[3];
     if (!action && !attemptId && method === "GET") return getStudentCopy(env.DB, slug, url);
-    if (action === "start" && method === "POST") return startAttempt(env.DB, slug, request);
-    if (action === "submit" && method === "POST") return submitAttempt(env.DB, slug, request);
+    if (action && method === "POST") {
+      const key = `${action}:${await clientKey(request, env.TEACHER_PASSWORD)}`;
+      if (await overLimit(env.DB, key, LIMITS[action as "start" | "submit"])) return json({ error: "too-many" }, 429);
+      ctx.waitUntil(count(env.DB, key));
+      return action === "start" ? startAttempt(env.DB, slug, request) : submitAttempt(env.DB, slug, request);
+    }
     if (attemptId && method === "GET") return getResult(env.DB, slug, attemptId);
     return json({ error: "not-found" }, 404);
   }
@@ -148,8 +153,13 @@ async function handle(request: Request, env: AppEnv, ctx: ExecutionContext): Pro
   if (pathname === "/login") {
     if (method === "GET") return html(loginPage());
     if (method === "POST") {
+      const key = `login:${await clientKey(request, env.TEACHER_PASSWORD)}`;
+      if (await overLimit(env.DB, key, LIMITS.login)) return html(loginPage("Sai mật khẩu quá nhiều lần. Thử lại sau 15 phút."), 429);
       const password = String((await request.formData()).get("password") ?? "");
-      if (!safeEqual(password, env.TEACHER_PASSWORD)) return html(loginPage("Sai mật khẩu."), 401);
+      if (!safeEqual(password, env.TEACHER_PASSWORD)) {
+        await count(env.DB, key);
+        return html(loginPage("Sai mật khẩu."), 401);
+      }
       return new Response(null, { status: 303, headers: { Location: "/", "Set-Cookie": sessionCookie(await makeSession(env.TEACHER_PASSWORD)) } });
     }
   }
@@ -158,8 +168,12 @@ async function handle(request: Request, env: AppEnv, ctx: ExecutionContext): Pro
     return new Response(null, { status: 303, headers: { Location: "/login", "Set-Cookie": clearSessionCookie() } });
   }
 
-  // Everything below is for the teacher.
+  // Everything below is for the teacher. The app's password tries count like sign-ins.
+  const bearer = /^Bearer /.test(request.headers.get("Authorization") ?? "");
+  const loginKey = bearer ? `login:${await clientKey(request, env.TEACHER_PASSWORD)}` : "";
+  if (bearer && (await overLimit(env.DB, loginKey, LIMITS.login))) return json({ error: "too-many" }, 429);
   if (!(await isTeacher(request, env.TEACHER_PASSWORD))) {
+    if (bearer) await count(env.DB, loginKey);
     return pathname.startsWith("/api/") ? json({ error: "unauthorized" }, 401) : new Response(null, { status: 303, headers: { Location: "/login" } });
   }
 

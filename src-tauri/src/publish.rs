@@ -153,6 +153,7 @@ async fn send(request: reqwest::RequestBuilder) -> AppResult<reqwest::Response> 
             200..=299 => return Ok(response),
             401 => return Err(AppError::new("unauthorized", "Máy chủ từ chối mật khẩu. Kiểm tra lại mật khẩu đăng bài.")),
             413 => return Err(AppError::new("too-large", "File quá lớn để đăng lên máy chủ.")),
+            429 => return Err(AppError::new("rate-limited", "Thử sai mật khẩu quá nhiều lần; máy chủ tạm khoá 15 phút.")),
             500..=599 if retry => tokio::time::sleep(Duration::from_millis(700 * attempt)).await,
             _ => {
                 let body = response.text().await.unwrap_or_default();

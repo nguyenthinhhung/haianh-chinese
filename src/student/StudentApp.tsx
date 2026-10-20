@@ -167,6 +167,7 @@ export function StudentApp() {
       throw new Error("Em đã nộp bài này rồi.");
     }
     if (status === 410) throw new Error("Bài tập này đã đóng.");
+    if (status === 429) throw new Error("Có quá nhiều lượt bắt đầu từ mạng này. Đợi vài phút rồi thử lại.");
     if (status !== 200 || !data.attemptId) throw new Error(data.error === "bad-name" ? "Nhập họ và tên của em." : "Chưa bắt đầu được, thử lại sau ít phút.");
     const next = { attemptId: data.attemptId, seed };
     write(keys.progress, next);
@@ -178,7 +179,13 @@ export function StudentApp() {
     if (!progress) throw new Error("Bài chưa được bắt đầu; tải lại trang.");
     const { status, data } = await api<ResultBody>(`/api/a/${slug}/submit`, { attemptId: progress.attemptId, answers });
     if (status !== 200 || !data.grade) {
-      throw new Error(status === 404 ? "Không tìm thấy lượt làm bài này; tải lại trang rồi làm lại." : "Máy chủ chưa nhận được bài. Bấm Nộp bài lần nữa.");
+      throw new Error(
+        status === 404
+          ? "Không tìm thấy lượt làm bài này; tải lại trang rồi làm lại."
+          : status === 429
+            ? "Máy chủ đang bận vì quá nhiều bài nộp từ mạng này. Đợi một phút rồi bấm Nộp bài lần nữa."
+            : "Máy chủ chưa nhận được bài. Bấm Nộp bài lần nữa.",
+      );
     }
     write(keys.done, progress.attemptId);
     write(keys.progress, null);
