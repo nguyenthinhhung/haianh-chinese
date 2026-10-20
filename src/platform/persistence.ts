@@ -151,8 +151,8 @@ export interface Persistence {
   setPublishSettings(serverUrl: string, password: string | null): Promise<PublishSettings>;
   /** Uploads the files the server does not have yet; files are published under content-hash names. */
   publishAssets(dir: string, files: string[]): Promise<PublishedAssets>;
-  /** Uploads the lesson page and returns its web address. */
-  publishLesson(lessonId: string, title: string, html: string): Promise<{ url: string }>;
+  /** Uploads the lesson page and returns its web address; `hanzi` is shown large on the lesson's card. */
+  publishLesson(lessonId: string, title: string, hanzi: string | null, html: string): Promise<{ url: string }>;
   /** URL the editor webview can load an asset from. */
   assetUrl(dir: string, file: string): string;
   setWindowTitle(title: string): Promise<void>;

@@ -252,12 +252,16 @@ pub async fn publish_lesson(
     state: State<'_, AppState>,
     lesson_id: String,
     title: String,
+    hanzi: Option<String>,
     html: String,
 ) -> AppResult<PublishedLesson> {
     check_lesson_id(&lesson_id)?;
     let server = server(&state)?;
     let mut url = Url::parse(&format!("{}/api/lessons/{lesson_id}", server.base)).map_err(|_| AppError::invalid_path())?;
     url.query_pairs_mut().append_pair("title", &title);
+    if let Some(hanzi) = hanzi {
+        url.query_pairs_mut().append_pair("hanzi", &hanzi);
+    }
     send(client().put(url).bearer_auth(&server.password).header("Content-Type", "text/html; charset=utf-8").body(html)).await?;
     Ok(PublishedLesson { url: format!("{}/l/{lesson_id}", server.base) })
 }

@@ -175,6 +175,13 @@ export interface PublishResult {
   missing: string[];
 }
 
+/** The Chinese title on the lesson's first cover slide (e.g. 动物), if it is short enough for a card. */
+export function coverHanzi(doc: LessonDocument): string | null {
+  const cover = doc.slides.find((s) => s.type === "cover");
+  const title = (cover?.content as { title?: unknown } | undefined)?.title;
+  return typeof title === "string" && /^\p{Script=Han}{1,6}$/u.test(title.trim()) ? title.trim() : null;
+}
+
 /**
  * Publishes the lesson to the teacher's web server: files first, then a page
  * whose pictures and sounds point at the published copies.
@@ -193,7 +200,7 @@ export async function publishLesson(dir: string, doc: LessonDocument, services: 
     },
   };
   const html = serializeLessonHtml(lesson, env);
-  const { url } = await services.persistence.publishLesson(lesson.id, lesson.title, html);
+  const { url } = await services.persistence.publishLesson(lesson.id, lesson.title, coverHanzi(lesson), html);
   return { url, uploaded: assets.uploaded, missing: assets.missing };
 }
 
