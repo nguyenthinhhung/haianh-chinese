@@ -38,6 +38,8 @@ export interface AssignmentRow {
   payload: string;
   version: number;
   closed: number;
+  /** After this, no attempt starts; attempts under way may still hand in, marked late. */
+  closes_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -55,6 +57,35 @@ export interface AttemptRow {
   score: number | null;
   max_score: number | null;
   percent: number | null;
+  late: number;
+}
+
+/** A hand-in this long after the time is up still counts as on time: the network and the student's device lag a little. */
+const GRACE_MS = 2 * 60 * 1000;
+
+/** Whether new attempts may start: not closed by the teacher, and before the deadline. */
+export function isOpen(row: Pick<AssignmentRow, "closed" | "closes_at">, now = Date.now()): boolean {
+  return !row.closed && !(row.closes_at && Date.parse(row.closes_at) <= now);
+}
+
+/**
+ * When an attempt's time runs out, by the server's clock: its time limit from
+ * the start, or the deadline, whichever comes first. A clock that starts with
+ * the first answer runs in the student's browser, so only the deadline holds there.
+ */
+export function attemptDeadline(exercise: Exercise, row: Pick<AssignmentRow, "closes_at">, startedAt: string): number | null {
+  const ends: number[] = [];
+  const { timeLimit, timerStart } = exercise.settings;
+  if (timeLimit > 0 && timerStart === "start") ends.push(Date.parse(startedAt) + timeLimit * 60_000);
+  if (row.closes_at) ends.push(Date.parse(row.closes_at));
+  return ends.length ? Math.min(...ends) : null;
+}
+
+/** A deadline typed on the results page (`2026-10-25T21:00`, Vietnam time) as ISO; null when unreadable. */
+export function vietnamTimeToIso(value: string): string | null {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return null;
+  const t = Date.parse(`${value}:00+07:00`);
+  return Number.isNaN(t) ? null : new Date(t).toISOString();
 }
 
 const ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz";
@@ -106,11 +137,12 @@ export function readPayload(row: AssignmentRow): AssignmentPayload {
 }
 
 /** The result a student sees: always the grade, and the review when the exercise allows it. */
-function resultBody(exercise: Exercise, grade: ExerciseGrade, answers: Answers, attemptId: string) {
+function resultBody(exercise: Exercise, grade: ExerciseGrade, answers: Answers, attemptId: string, late: boolean) {
   return {
     attemptId,
     answers,
     grade,
+    late,
     ...(exercise.settings.showAnswers === "after-submit" ? { review: exerciseReview(exercise) } : {}),
   };
 }
@@ -156,6 +188,30 @@ export async function putAssignment(db: D1Database, id: string, request: Request
   return json({ ok: true, slug, version: 1 });
 }
 
+/**
+ * The results page's controls: stop or resume taking hand-ins, set or clear
+ * the deadline. False when the form makes no sense.
+ */
+export async function updateAssignment(db: D1Database, id: string, form: FormData): Promise<boolean> {
+  if (!EXERCISE_ID.test(id)) return false;
+  const action = form.get("action");
+  if (action === "close" || action === "open") {
+    await db.prepare("UPDATE assignments SET closed = ? WHERE id = ?").bind(action === "close" ? 1 : 0, id).run();
+    return true;
+  }
+  if (action === "clear-deadline") {
+    await db.prepare("UPDATE assignments SET closes_at = NULL WHERE id = ?").bind(id).run();
+    return true;
+  }
+  if (action === "deadline") {
+    const iso = vietnamTimeToIso(String(form.get("deadline") ?? ""));
+    if (!iso) return false;
+    await db.prepare("UPDATE assignments SET closes_at = ? WHERE id = ?").bind(iso, id).run();
+    return true;
+  }
+  return false;
+}
+
 export async function deleteAssignment(db: D1Database, id: string): Promise<Response> {
   if (!EXERCISE_ID.test(id)) return json({ error: "bad-id" }, 400);
   await db.batch([db.prepare("DELETE FROM attempts WHERE assignment_id = ?").bind(id), db.prepare("DELETE FROM assignments WHERE id = ?").bind(id)]);
@@ -168,6 +224,8 @@ export interface AssignmentSummary {
   title: string;
   lesson_title: string;
   updated_at: string;
+  closed: number;
+  closes_at: string | null;
   submitted: number;
   students: number;
   avg_percent: number | null;
@@ -177,7 +235,7 @@ export interface AssignmentSummary {
 export async function listAssignments(db: D1Database): Promise<AssignmentSummary[]> {
   const rows = await db
     .prepare(
-      `SELECT a.id, a.slug, a.title, a.lesson_title, a.updated_at,
+      `SELECT a.id, a.slug, a.title, a.lesson_title, a.updated_at, a.closed, a.closes_at,
               COUNT(t.submitted_at) AS submitted,
               COUNT(DISTINCT CASE WHEN t.submitted_at IS NOT NULL THEN t.client_id END) AS students,
               ROUND(AVG(t.percent)) AS avg_percent,
@@ -211,7 +269,7 @@ export async function assignmentResults(db: D1Database, id: string): Promise<{ a
 export async function getStudentCopy(db: D1Database, slug: string, url: URL): Promise<Response> {
   const row = await findBySlug(db, slug);
   if (!row) return json({ error: "not-found" }, 404);
-  if (row.closed) return json({ error: "closed", title: row.title }, 410);
+  // Sent even when closed: a student part-way through still needs it to hand in.
   const payload = readPayload(row);
   const seedParam = url.searchParams.get("seed") ?? "";
   const copy = studentCopy(payload.exercise, SEED.test(seedParam) ? seedParam : randomId(10));
@@ -222,6 +280,8 @@ export async function getStudentCopy(db: D1Database, slug: string, url: URL): Pr
     theme: payload.theme,
     hanziFont: payload.hanziFont,
     version: row.version,
+    open: isOpen(row),
+    closesAt: row.closes_at,
     exercise: copy,
     assetUrls: Object.fromEntries(Object.entries(payload.assetUrls).filter(([id]) => used.has(id))),
   });
@@ -242,7 +302,7 @@ async function readJson(request: Request, maxBytes: number): Promise<Record<stri
 export async function startAttempt(db: D1Database, slug: string, request: Request): Promise<Response> {
   const row = await findBySlug(db, slug);
   if (!row) return json({ error: "not-found" }, 404);
-  if (row.closed) return json({ error: "closed" }, 410);
+  if (!isOpen(row)) return json({ error: "closed" }, 410);
   const body = await readJson(request, 4096);
   const name = cleanName(body?.name);
   const clientId = typeof body?.clientId === "string" && CLIENT_ID.test(body.clientId) ? body.clientId : null;
@@ -263,7 +323,9 @@ export async function startAttempt(db: D1Database, slug: string, request: Reques
     .prepare("INSERT INTO attempts (id, assignment_id, version, student_name, client_id, started_at) VALUES (?, ?, ?, ?, ?, ?)")
     .bind(id, row.id, row.version, name, clientId, startedAt)
     .run();
-  return json({ attemptId: id, startedAt });
+  const deadline = attemptDeadline(exercise, row, startedAt);
+  // The browser turns `deadline` into its own clock with `serverNow`, so a wrong clock on the device changes nothing.
+  return json({ attemptId: id, startedAt, deadline: deadline === null ? null : new Date(deadline).toISOString(), serverNow: new Date().toISOString() });
 }
 
 /** Grades and keeps a hand-in. Handing in twice returns the first result, so a retry after a dropped connection is safe. */
@@ -279,17 +341,20 @@ export async function submitAttempt(db: D1Database, slug: string, request: Reque
   if (!attempt) return json({ error: "no-attempt" }, 404);
   const { exercise } = readPayload(row);
   if (attempt.submitted_at && attempt.grade && attempt.answers) {
-    return json(resultBody(exercise, JSON.parse(attempt.grade) as ExerciseGrade, JSON.parse(attempt.answers) as Answers, attempt.id));
+    return json(resultBody(exercise, JSON.parse(attempt.grade) as ExerciseGrade, JSON.parse(attempt.answers) as Answers, attempt.id, !!attempt.late));
   }
 
+  // Late work is kept, never refused: the teacher decides what it counts for.
+  const deadline = attemptDeadline(exercise, row, attempt.started_at);
+  const late = deadline !== null && Date.now() > deadline + GRACE_MS;
   const grade = gradeExercise(exercise, answers);
   await db
     .prepare(
-      "UPDATE attempts SET submitted_at = ?, answers = ?, grade = ?, score = ?, max_score = ?, percent = ?, version = ? WHERE id = ? AND submitted_at IS NULL",
+      "UPDATE attempts SET submitted_at = ?, answers = ?, grade = ?, score = ?, max_score = ?, percent = ?, version = ?, late = ? WHERE id = ? AND submitted_at IS NULL",
     )
-    .bind(new Date().toISOString(), JSON.stringify(answers), JSON.stringify(grade), grade.score, grade.max, grade.percent, row.version, attempt.id)
+    .bind(new Date().toISOString(), JSON.stringify(answers), JSON.stringify(grade), grade.score, grade.max, grade.percent, row.version, late ? 1 : 0, attempt.id)
     .run();
-  return json(resultBody(exercise, grade, answers, attempt.id));
+  return json(resultBody(exercise, grade, answers, attempt.id, late));
 }
 
 /** A student's own result again, e.g. after reloading the page. */
@@ -299,5 +364,5 @@ export async function getResult(db: D1Database, slug: string, attemptId: string)
   const attempt = await db.prepare("SELECT * FROM attempts WHERE id = ? AND assignment_id = ?").bind(attemptId, row.id).first<AttemptRow>();
   if (!attempt?.submitted_at || !attempt.grade || !attempt.answers) return json({ error: "not-submitted" }, 404);
   const { exercise } = readPayload(row);
-  return json(resultBody(exercise, JSON.parse(attempt.grade) as ExerciseGrade, JSON.parse(attempt.answers) as Answers, attempt.id));
+  return json(resultBody(exercise, JSON.parse(attempt.grade) as ExerciseGrade, JSON.parse(attempt.answers) as Answers, attempt.id, !!attempt.late));
 }

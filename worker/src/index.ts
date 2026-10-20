@@ -1,17 +1,8 @@
-import {
-  assignmentResults,
-  deleteAssignment,
-  getResult,
-  getStudentCopy,
-  listAssignments,
-  putAssignment,
-  readPayload,
-  startAttempt,
-  submitAttempt,
-} from "./assignments";
+import { deleteAssignment, getResult, getStudentCopy, putAssignment, startAttempt, submitAttempt } from "./assignments";
 import { clearSessionCookie, isTeacher, makeSession, safeEqual, sessionCookie } from "./auth";
 import { clientKey, count, LIMITS, overLimit } from "./limits";
-import { libraryPage, loginPage, PAGE_CSP, resultsListPage, resultsPage, type LessonEntry } from "./pages";
+import { libraryPage, loginPage, PAGE_CSP, type LessonEntry } from "./pages";
+import { handleResults } from "./results";
 import { createB2Store, type FileStore } from "./storage";
 
 export type AppEnv = Env & { B2_KEY_ID: string; B2_APP_KEY: string; TEACHER_PASSWORD: string };
@@ -179,51 +170,8 @@ async function handle(request: Request, env: AppEnv, ctx: ExecutionContext): Pro
 
   if (pathname === "/" && method === "GET") return html(libraryPage(await readIndex(store)));
 
-  if (pathname === "/results" && method === "GET") {
-    const rows = await listAssignments(env.DB);
-    return html(
-      resultsListPage(
-        rows.map((r) => ({
-          id: r.id,
-          slug: r.slug,
-          title: r.title,
-          lessonTitle: r.lesson_title,
-          submitted: r.submitted,
-          students: r.students,
-          avgPercent: r.avg_percent,
-          lastSubmitted: r.last_submitted,
-        })),
-      ),
-    );
-  }
-  const results = /^\/results\/([^/]+)$/.exec(pathname);
-  if (results && method === "GET") {
-    const found = await assignmentResults(env.DB, results[1]!);
-    if (!found) return text("Not found", 404);
-    const { settings } = readPayload(found.assignment).exercise;
-    return html(
-      resultsPage(
-        {
-          origin: url.origin,
-          slug: found.assignment.slug,
-          title: found.assignment.title,
-          lessonTitle: found.assignment.lesson_title,
-          timeLimit: settings.timeLimit,
-          passPercent: settings.passPercent,
-          inProgress: found.inProgress,
-        },
-        found.attempts.map((a) => ({
-          name: a.student_name,
-          clientId: a.client_id,
-          score: a.score ?? 0,
-          max: a.max_score ?? 0,
-          percent: a.percent ?? 0,
-          startedAt: a.started_at,
-          submittedAt: a.submitted_at!,
-        })),
-      ),
-    );
-  }
+  const results = await handleResults(request, env.DB, url);
+  if (results) return results;
 
   const assignment = /^\/api\/assignments\/([^/]+)$/.exec(pathname);
   if (assignment && method === "PUT") return putAssignment(env.DB, assignment[1]!, request);

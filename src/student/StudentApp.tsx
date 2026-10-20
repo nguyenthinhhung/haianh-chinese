@@ -17,6 +17,9 @@ interface Assignment {
   theme: string;
   hanziFont: "sans" | "kai";
   version: number;
+  /** New attempts may start (not closed, before the deadline). */
+  open: boolean;
+  closesAt: string | null;
   exercise: StudentExercise;
   assetUrls: Record<string, string>;
 }
@@ -25,6 +28,8 @@ interface Assignment {
 interface Progress {
   attemptId: string;
   seed: string;
+  /** When time is up, in this device's clock (from the server's). */
+  deadline?: number | null;
 }
 
 interface Finished {
@@ -37,6 +42,7 @@ interface ResultBody {
   answers?: Answers;
   grade?: ExerciseGrade;
   review?: ExerciseReview;
+  late?: boolean;
   error?: string;
 }
 
@@ -88,7 +94,10 @@ async function api<T>(path: string, body?: unknown): Promise<{ status: number; d
   return { status: res.status, data };
 }
 
-const toResult = (body: ResultBody): PlayerResult => ({ grade: body.grade!, ...(body.review ? { review: body.review } : {}) });
+const toResult = (body: ResultBody): PlayerResult => ({ grade: body.grade!, ...(body.review ? { review: body.review } : {}), late: !!body.late });
+
+const vietnamTime = (iso: string) =>
+  new Date(iso).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", hour: "2-digit", minute: "2-digit", day: "numeric", month: "numeric", year: "numeric" });
 
 const themes = createThemeRegistry();
 
@@ -119,10 +128,13 @@ export function StudentApp() {
         if (status === 410) return setFailure("closed");
         if (status !== 200) return setFailure("network");
         document.title = data.title;
-        // An exercise handed in once only: coming back shows that result instead of a new start.
+        // Coming back to an exercise handed in once only, or closed since: show that result instead of a new start.
         const done = read<string>(keys.done);
-        if (!progress && done && data.exercise.settings.attempts === "one") await showResult(done);
-        if (!cancelled) setAssignment(data);
+        const shown = !progress && done && (data.exercise.settings.attempts === "one" || !data.open) ? await showResult(done) : false;
+        if (cancelled) return;
+        // Closed, with nothing under way here: only a student part-way through may still hand in.
+        if (!data.open && !progress && !shown) return setFailure("closed");
+        setAssignment(data);
       } catch {
         if (!cancelled) setFailure("network");
       }
@@ -159,7 +171,10 @@ export function StudentApp() {
   async function start(): Promise<boolean> {
     const studentName = name.replace(/\s+/g, " ").trim();
     write(keys.name, studentName);
-    const { status, data } = await api<{ attemptId?: string; error?: string }>(`/api/a/${slug}/start`, { name: studentName, clientId: clientId() });
+    const { status, data } = await api<{ attemptId?: string; deadline?: string | null; serverNow?: string; error?: string }>(`/api/a/${slug}/start`, {
+      name: studentName,
+      clientId: clientId(),
+    });
     if (status === 409 && data.attemptId) {
       // Handed in before from this browser, and the exercise allows one attempt.
       write(keys.done, data.attemptId);
@@ -169,7 +184,11 @@ export function StudentApp() {
     if (status === 410) throw new Error("Bài tập này đã đóng.");
     if (status === 429) throw new Error("Có quá nhiều lượt bắt đầu từ mạng này. Đợi vài phút rồi thử lại.");
     if (status !== 200 || !data.attemptId) throw new Error(data.error === "bad-name" ? "Nhập họ và tên của em." : "Chưa bắt đầu được, thử lại sau ít phút.");
-    const next = { attemptId: data.attemptId, seed };
+    // A clock that starts with "Bắt đầu" runs to the server's deadline, moved into this device's time.
+    const { timeLimit, timerStart } = assignment!.exercise.settings;
+    const serverClock = timeLimit > 0 && timerStart === "start" && data.deadline && data.serverNow;
+    const deadline = serverClock ? Date.now() + (Date.parse(data.deadline!) - Date.parse(data.serverNow!)) : null;
+    const next: Progress = { attemptId: data.attemptId, seed, deadline };
     write(keys.progress, next);
     setProgress(next);
     return true;
@@ -225,6 +244,8 @@ export function StudentApp() {
         canStart={/\p{L}/u.test(name)}
         onStart={start}
         finished={finished ?? undefined}
+        deadline={progress?.deadline ?? null}
+        facts={assignment.closesAt ? [`Hạn nộp ${vietnamTime(assignment.closesAt)}`] : []}
       />
     </>
   );

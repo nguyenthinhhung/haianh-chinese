@@ -167,6 +167,9 @@ export interface ResultsSummary {
   slug: string;
   title: string;
   lessonTitle: string;
+  /** Taking hand-ins: not closed by the teacher, and before the deadline. */
+  open: boolean;
+  closesAt: string | null;
   submitted: number;
   students: number;
   avgPercent: number | null;
@@ -181,6 +184,18 @@ export interface ResultsAttempt {
   percent: number;
   startedAt: string;
   submittedAt: string;
+  /** Handed in after the time limit or the deadline. */
+  late: boolean;
+}
+
+/** An ISO time as the value of a `datetime-local` field, in Vietnam time. */
+function vietnamInputValue(iso: string): string {
+  return new Date(Date.parse(iso) + 7 * 3600_000).toISOString().slice(0, 16);
+}
+
+function openState(open: boolean, closesAt: string | null): string {
+  if (!open) return `<span class="pill fail">Đã đóng nhận bài</span>`;
+  return closesAt ? `<span class="pill pass">Nhận bài đến ${escapeHtml(formatTime(closesAt))}</span>` : `<span class="pill pass">Đang nhận bài</span>`;
 }
 
 const RESULTS_CSS = `
@@ -211,13 +226,17 @@ td.name{white-space:normal;font-weight:600}
 .fail{background:rgb(192 57 43/.12);color:#c0392b}
 .late{background:#fff4d6;color:#8a5a00}
 .back{display:inline-block;margin-bottom:12px;color:var(--accent);text-decoration:none;font-weight:600}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 18px}
+.controls input{padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--panel)}
+.assignment .info p:last-child{margin-top:6px}
 `;
 
 export function resultsListPage(rows: ResultsSummary[]): string {
   const items = rows
     .map(
       (r) => `<li class="assignment"><div class="info"><h2>${escapeHtml(r.title)}</h2>
-<p class="muted">${r.lessonTitle ? `${escapeHtml(r.lessonTitle)} · ` : ""}${r.lastSubmitted ? `Nộp gần nhất ${escapeHtml(formatTime(r.lastSubmitted))}` : "Chưa có bài nộp"}</p></div>
+<p class="muted">${r.lessonTitle ? `${escapeHtml(r.lessonTitle)} · ` : ""}${r.lastSubmitted ? `Nộp gần nhất ${escapeHtml(formatTime(r.lastSubmitted))}` : "Chưa có bài nộp"}</p>
+<p>${openState(r.open, r.closesAt)}</p></div>
 <div class="stat"><span><strong>${r.submitted}</strong>bài nộp</span><span><strong>${r.students}</strong>học viên</span><span><strong>${r.avgPercent === null ? "–" : `${r.avgPercent}%`}</strong>điểm TB</span></div>
 <button type="button" class="copy" data-href="/a/${escapeHtml(r.slug)}">Chép link học viên</button><a class="open" href="/results/${escapeHtml(r.id)}">Xem điểm</a></li>`,
     )
@@ -242,7 +261,12 @@ function took(total: number): string {
 export interface ResultsHeader {
   /** This server's address, to show the students' link in full. */
   origin: string;
+  id: string;
   slug: string;
+  /** Closed by the teacher, regardless of the deadline. */
+  closed: boolean;
+  open: boolean;
+  closesAt: string | null;
   title: string;
   lessonTitle: string;
   /** Minutes; 0 means none. */
@@ -265,19 +289,31 @@ export function resultsPage(header: ResultsHeader, attempts: ResultsAttempt[]): 
   const rows = attempts
     .map((a) => {
       const time = seconds(a.startedAt, a.submittedAt);
-      // A minute of grace: the clock on the student's device and the network both lag a little.
-      const late = header.timeLimit > 0 && time > header.timeLimit * 60 + 60;
+      const late = a.late;
       const passed = a.percent >= header.passPercent;
       const pass = header.passPercent > 0 ? ` <span class="pill ${passed ? "pass" : "fail"}">${passed ? "Đạt" : "Chưa đạt"}</span>` : "";
       return `<tr><td class="name">${escapeHtml(a.name)}</td><td>${a.score}/${a.max}</td><td>${a.percent}%${pass}</td>
-<td>${took(time)}${late ? ' <span class="pill late">Quá giờ</span>' : ""}</td><td>${escapeHtml(formatTime(a.submittedAt))}</td><td>${nth.get(a)}</td></tr>`;
+<td>${took(time)}${late ? ' <span class="pill late">Nộp trễ</span>' : ""}</td><td>${escapeHtml(formatTime(a.submittedAt))}</td><td>${nth.get(a)}</td></tr>`;
     })
     .join("");
   const slug = escapeHtml(header.slug);
   const content = `<a class="back" href="/results">← Tất cả bài tập</a>
-<div class="summary"><div><h2>${escapeHtml(header.title)}</h2>${header.lessonTitle ? `<p class="muted">${escapeHtml(header.lessonTitle)}</p>` : ""}</div>
+<div class="summary"><div><h2>${escapeHtml(header.title)}</h2><p class="muted">${[
+    header.lessonTitle && escapeHtml(header.lessonTitle),
+    header.timeLimit ? `${header.timeLimit} phút` : "Không giới hạn thời gian",
+    header.passPercent ? `Điểm đạt ${header.passPercent}%` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ")}</p></div>
 <div class="stat"><span><strong>${attempts.length}</strong>bài nộp</span><span><strong>${counts.size}</strong>học viên</span><span><strong>${avg === null ? "–" : `${avg}%`}</strong>điểm TB</span><span><strong>${header.inProgress}</strong>đang làm</span></div></div>
 <div class="linkbox"><span class="muted">Link cho học viên:</span><code>${escapeHtml(header.origin)}/a/${slug}</code><button type="button" class="copy" data-href="/a/${slug}">Chép link</button></div>
+<form class="controls" method="post" action="/results/${escapeHtml(header.id)}/settings">
+<span>${openState(header.open, header.closesAt)}</span>
+${header.closed ? `<button class="copy" name="action" value="open">Mở lại nhận bài</button>` : `<button class="copy" name="action" value="close">Đóng nhận bài</button>`}
+<label class="muted">Hạn nộp <input type="datetime-local" name="deadline" value="${header.closesAt ? vietnamInputValue(header.closesAt) : ""}"></label>
+<button class="copy" name="action" value="deadline">Lưu hạn nộp</button>
+${header.closesAt ? `<button class="copy" name="action" value="clear-deadline">Bỏ hạn nộp</button>` : ""}
+</form>
 ${
   attempts.length
     ? `<div class="table-wrap"><table><thead><tr><th>Học viên</th><th>Điểm</th><th>%</th><th>Thời gian làm</th><th>Nộp lúc</th><th>Lần</th></tr></thead><tbody>${rows}</tbody></table></div>`

@@ -14,6 +14,8 @@ export interface PlayerResult {
   grade: ExerciseGrade;
   /** Present when the exercise lets students see the answers. */
   review?: ExerciseReview;
+  /** Handed in after the time was up (the server says so). */
+  late?: boolean;
 }
 
 export interface ExercisePlayerProps {
@@ -39,6 +41,14 @@ export interface ExercisePlayerProps {
   onStart?(): Promise<boolean | void>;
   /** An attempt handed in before, e.g. on reopening the page: the player opens on its result. */
   finished?: { answers: Answers; result: PlayerResult };
+  /**
+   * When time is up, set by the server and turned into this device's clock
+   * (the web), so changing the device's clock gains nothing. Without it the
+   * clock runs from the local start.
+   */
+  deadline?: number | null;
+  /** More facts for the start screen, e.g. the deadline for handing in. */
+  facts?: string[];
 }
 
 type Phase = "intro" | "doing" | "result";
@@ -188,7 +198,7 @@ function AudioBar({
 }
 
 export function ExercisePlayer(props: ExercisePlayerProps) {
-  const { exercise, assetUrl, submit, themeId, hanziFont, onRestart, storageKey, startExtra, canStart = true, onStart, finished } = props;
+  const { exercise, assetUrl, submit, themeId, hanziFont, onRestart, storageKey, startExtra, canStart = true, onStart, finished, deadline, facts } = props;
   const saved = useMemo(() => load(storageKey), [storageKey]);
   const [phase, setPhase] = useState<Phase>(finished ? "result" : saved?.startedAt ? "doing" : "intro");
   const [answers, setAnswers] = useState<Answers>(finished?.answers ?? saved?.answers ?? {});
@@ -229,7 +239,7 @@ export function ExercisePlayer(props: ExercisePlayerProps) {
   }, [phase, answers, flags, startedAt, used, storageKey]);
 
   const limit = settings.timeLimit * 60;
-  const remaining = limit && startedAt ? limit - (now - startedAt) / 1000 : null;
+  const remaining = limit && deadline ? (deadline - now) / 1000 : limit && startedAt ? limit - (now - startedAt) / 1000 : null;
 
   const send = useCallback(async () => {
     setConfirm(null);
@@ -249,10 +259,10 @@ export function ExercisePlayer(props: ExercisePlayerProps) {
 
   // The clock: ticks every second while running, and hands in what is done when time is up.
   useEffect(() => {
-    if (phase !== "doing" || !limit || !startedAt) return;
+    if (phase !== "doing" || !limit || !(startedAt || deadline)) return;
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
-  }, [phase, limit, startedAt]);
+  }, [phase, limit, startedAt, deadline]);
   const expired = useRef(false);
   useEffect(() => {
     if (remaining !== null && remaining <= 0 && phase === "doing" && !expired.current && !sending) {
@@ -333,6 +343,9 @@ export function ExercisePlayer(props: ExercisePlayerProps) {
               <li>{settings.timeLimit ? `${settings.timeLimit} phút` : "Không giới hạn thời gian"}</li>
               {settings.maxListens > 0 && <li>Mỗi file nghe tối đa {settings.maxListens} lần</li>}
               {settings.attempts === "one" && <li>Chỉ nộp một lần</li>}
+              {facts?.map((f) => (
+                <li key={f}>{f}</li>
+              ))}
             </ul>
             <p className="ex-skills">{skills.map((s) => SKILL_LABELS[s]).join(" · ")}</p>
           </div>
@@ -370,6 +383,7 @@ export function ExercisePlayer(props: ExercisePlayerProps) {
             <p className="ex-score-percent">
               {grade.percent}%{grade.passed !== undefined && ` · ${grade.passed ? "Đạt" : "Chưa đạt"} (cần ${settings.passPercent}%)`}
             </p>
+            {result.late && <p className="ex-note">Bài được nộp sau giờ quy định.</p>}
             <ul className="ex-skill-scores">
               {(Object.entries(grade.bySkill) as [Skill, { score: number; max: number }][]).map(([skill, s]) => (
                 <li key={skill}>
