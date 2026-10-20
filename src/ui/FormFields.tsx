@@ -1,0 +1,506 @@
+import { useEffect, useState } from "react";
+import { markReviewed } from "../core/autoImages";
+import { addAsset } from "../core/document";
+import { getIn, type Path } from "../core/fields";
+import { hanziToPinyin, pinyinFits, pinyinPairs } from "../core/pinyin";
+import type { LessonDocument } from "../core/schema";
+import type { EditorField, EditorFieldSpec } from "../core/template";
+import type { ImportedAsset } from "../platform/persistence";
+import { ImageSearchDialog } from "./ImageSearchDialog";
+import { prefersClipart } from "./useImageFill";
+import type { LessonSession } from "./useLessonSession";
+import { useServices } from "./services";
+
+/**
+ * Forms built from an `EditorFieldSpec`, for any part of the lesson: a
+ * slide's content, or an exercise and its questions.
+ */
+
+const LANG_ATTR = { zh: "zh-CN", vi: "vi", pinyin: "zh-Latn-pinyin" } as const;
+
+export type Messages = Map<string, { errors: string[]; warnings: string[] }>;
+
+export const pathKey = (path: Path) => path.join(".");
+
+/** Adds a message for `path`; the form shows it under that field. */
+export function addMessage(map: Messages, path: Path, level: "error" | "warning", message: string): void {
+  const key = pathKey(path);
+  if (!map.has(key)) map.set(key, { errors: [], warnings: [] });
+  map.get(key)![level === "error" ? "errors" : "warnings"].push(message);
+}
+
+/** What a form edits: paths are read from `content` and written through `set`. */
+export interface FormTarget {
+  /** The slide or exercise being edited; field IDs and list state follow it. */
+  id: string;
+  content: unknown;
+  set(doc: LessonDocument, path: Path, value: unknown): LessonDocument;
+}
+
+interface FieldProps {
+  field: EditorField;
+  /** The fields next to this one (the content's, or a list item's), to find its pinyin partner. */
+  siblings: EditorFieldSpec;
+  path: Path;
+  messages: Messages;
+  session: LessonSession;
+  target: FormTarget;
+}
+
+function FieldMessages({ messages, path }: { messages: Messages; path: Path }) {
+  const m = messages.get(pathKey(path));
+  if (!m) return null;
+  return (
+    <>
+      {m.errors.map((e) => (
+        <p key={e} className="field-error">
+          {e}
+        </p>
+      ))}
+      {m.warnings.map((w) => (
+        <p key={w} className="field-warning">
+          {w}
+        </p>
+      ))}
+    </>
+  );
+}
+
+/** First URL in dropped data: a link list, an `<img>` in dropped HTML, or plain text. */
+function droppedUrl(data: DataTransfer): string | null {
+  const uri = data
+    .getData("text/uri-list")
+    .split(/\r?\n/)
+    .find((l) => l && !l.startsWith("#"));
+  if (uri) return uri.trim();
+  const html = data.getData("text/html");
+  if (html) {
+    // DOMParser builds an inert document: nothing in it loads or runs.
+    const src = new DOMParser().parseFromString(html, "text/html").querySelector("img")?.getAttribute("src");
+    if (src) return src;
+  }
+  const text = data.getData("text/plain").trim();
+  return /^(https?:|data:image\/)/.test(text) ? text : null;
+}
+
+function dataUrlBytes(url: string): Uint8Array | null {
+  const m = /^data:image\/[a-z0-9.+-]+;base64,([A-Za-z0-9+/=]+)$/i.exec(url);
+  return m ? Uint8Array.from(atob(m[1]!), (c) => c.charCodeAt(0)) : null;
+}
+
+const hostOf = (url: string) => {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+};
+
+function AssetField({ field, path, session, target }: FieldProps & { field: Extract<EditorField, { kind: "asset" }> }) {
+  const { persistence, themes } = useServices();
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const assetId = getIn(target.content, path) as string | undefined;
+  const asset = assetId ? session.doc.assets.find((a) => a.id === assetId) : undefined;
+  const isImage = field.assetKind === "image";
+
+  const sibling = (key: string) => {
+    const v = getIn(target.content, [...path.slice(0, -1), key]);
+    return typeof v === "string" ? v.trim() : "";
+  };
+  const searchQuery = (field.searchFrom ?? []).map(sibling).find(Boolean) ?? "";
+  const speakText = field.speakFrom ? sibling(field.speakFrom) : "";
+
+  function attach(imported: ImportedAsset, source?: string) {
+    session.update((d) => {
+      const added = addAsset(d, { file: imported.file, kind: field.assetKind, mime: imported.mime, ...(source ? { source } : {}) });
+      // The same file may already be in the lesson, still marked; the teacher chose it now.
+      return markReviewed(target.set(added.doc, path, added.assetId), [added.assetId]);
+    });
+  }
+
+  async function run(label: string, action: () => Promise<ImportedAsset | null>, source?: string) {
+    setError(null);
+    setBusy(label);
+    try {
+      const imported = await action();
+      if (imported) attach(imported, source);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  const importBytes = (bytes: Uint8Array) => run("Đang thêm ảnh…", () => persistence.importImageBytes(session.dir, bytes));
+
+  function onPaste(e: React.ClipboardEvent) {
+    if (!isImage || busy) return;
+    const file = [...e.clipboardData.files].find((f) => f.type.startsWith("image/"));
+    if (!file) return;
+    e.preventDefault();
+    void file.arrayBuffer().then((b) => importBytes(new Uint8Array(b)));
+  }
+
+  function onDrop(e: React.DragEvent) {
+    if (!isImage) return;
+    e.preventDefault();
+    setDragOver(false);
+    if (busy) return;
+    const file = [...e.dataTransfer.files].find((f) => f.type.startsWith("image/"));
+    if (file) {
+      void file.arrayBuffer().then((b) => importBytes(new Uint8Array(b)));
+      return;
+    }
+    const url = droppedUrl(e.dataTransfer);
+    const bytes = url ? dataUrlBytes(url) : null;
+    if (bytes) void importBytes(bytes);
+    else if (url && /^https?:/.test(url)) void run("Đang tải ảnh…", () => persistence.importImageUrl(session.dir, [url]), url);
+    else setError("Không nhận được ảnh. Thử chuột phải vào ảnh → Sao chép hình ảnh, rồi bấm vào đây và Ctrl+V.");
+  }
+
+  return (
+    <div
+      className={`asset-field${isImage ? " asset-drop" : ""}${dragOver ? " drag-over" : ""}`}
+      tabIndex={isImage ? 0 : undefined}
+      onPaste={onPaste}
+      onDragOver={(e) => {
+        if (!isImage) return;
+        e.preventDefault();
+        setDragOver(true);
+      }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={onDrop}
+    >
+      {asset && isImage && <img className="asset-thumb" src={persistence.assetUrl(session.dir, asset.file)} alt="" />}
+      {asset?.needsReview && (
+        <p className="asset-review">
+          <span>Ảnh tự chọn, chưa duyệt.</span>
+          <button type="button" onClick={() => session.update((d) => markReviewed(d, [asset.id]))}>
+            Giữ ảnh này
+          </button>
+        </p>
+      )}
+      {asset && !isImage && <audio controls preload="none" src={persistence.assetUrl(session.dir, asset.file)} />}
+      {asset?.source && (
+        <p className="asset-source muted" title={asset.source}>
+          Nguồn: {hostOf(asset.source)}
+        </p>
+      )}
+      <div className="asset-actions">
+        {isImage && (
+          <button type="button" className="primary" disabled={!!busy} onClick={() => setSearching(true)}>
+            {asset?.needsReview ? "Đổi ảnh…" : "Tìm ảnh…"}
+          </button>
+        )}
+        {field.speakFrom && (
+          <button
+            type="button"
+            className="primary"
+            disabled={!!busy || !speakText}
+            title={speakText ? `Đọc “${speakText}” bằng giọng Google Dịch` : "Nhập chữ Hán trước"}
+            onClick={() => void run("Đang tạo giọng đọc…", () => persistence.speakChinese(session.dir, speakText))}
+          >
+            🔊 Tạo giọng đọc
+          </button>
+        )}
+        <button
+          type="button"
+          disabled={!!busy}
+          onClick={() => void run("Đang mở file…", () => persistence.importAsset(session.dir, field.assetKind))}
+        >
+          {asset ? "Thay bằng file…" : "Chọn file…"}
+        </button>
+        {asset && (
+          <button type="button" disabled={!!busy} onClick={() => session.update((d) => target.set(d, path, undefined))}>
+            Bỏ
+          </button>
+        )}
+      </div>
+      {isImage && <p className="asset-hint muted">{busy ?? "hoặc dán ảnh (Ctrl+V) / kéo ảnh vào đây"}</p>}
+      {!isImage && busy && <p className="asset-hint muted">{busy}</p>}
+      {error && <p className="field-error">{error}</p>}
+      {searching && (
+        <ImageSearchDialog
+          initialQuery={asset?.query ?? searchQuery}
+          initialClipart={prefersClipart(session.doc, themes)}
+          onClose={() => setSearching(false)}
+          onPick={async (hit) => {
+            // Many sites refuse downloads from apps; Bing's copy is the fallback.
+            const imported = await persistence.importImageUrl(session.dir, [hit.url, hit.thumbnailUrl]);
+            attach(imported, hit.sourcePage ?? hit.url);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+/** One line standing for a list item while it is closed: its text, and marks for picture and sound. */
+function itemSummary(item: unknown, fields: EditorFieldSpec): string {
+  if (!item || typeof item !== "object") return "";
+  const obj = item as Record<string, unknown>;
+  const marks = fields.flatMap((f) => (f.kind === "toggle" && f.exclusive && obj[f.key] === true ? [`✓ ${f.label.toLowerCase()}`] : []));
+  const texts = fields.flatMap((f) => (f.kind === "text" && typeof obj[f.key] === "string" && (obj[f.key] as string).trim() ? [(obj[f.key] as string).trim()] : []));
+  const media = fields.flatMap((f) => (f.kind === "asset" && obj[f.key] ? [f.assetKind === "image" ? "có ảnh" : "có âm thanh"] : []));
+  const line = [...texts, ...[...new Set(media)], ...marks].join(" · ");
+  return line.length > 80 ? `${line.slice(0, 79)}…` : line;
+}
+
+/** Lists longer than this start closed, one line per item, so a form stays short. */
+const OPEN_LIST_MAX = 2;
+
+function ListField(props: FieldProps & { field: Extract<EditorField, { kind: "list" }> }) {
+  const { field, path, session, target, messages } = props;
+  const items = (getIn(target.content, path) as unknown[] | undefined) ?? [];
+  const setItems = (next: unknown[]) => session.update((d) => target.set(d, path, next));
+  // Lists short enough to see at once start open, as do lists holding a choice to make (the right answer).
+  const startOpen = () => new Set(items.length <= OPEN_LIST_MAX || field.fields.some((f) => f.kind === "toggle" && f.exclusive) ? items.map((_, i) => i) : []);
+  const [open, setOpen] = useState(startOpen);
+  // Another slide's or question's list starts again from its own default.
+  useEffect(() => setOpen(startOpen()), [target.id, pathKey(path)]);
+
+  const prefix = (i: number) => pathKey([...path, i]);
+  const hasError = (i: number) =>
+    [...messages].some(([key, m]) => m.errors.length > 0 && (key === prefix(i) || key.startsWith(`${prefix(i)}.`)));
+  const toggle = (i: number) =>
+    setOpen((s) => {
+      const next = new Set(s);
+      if (!next.delete(i)) next.add(i);
+      return next;
+    });
+
+  const move = (from: number, to: number) => {
+    const next = [...items];
+    const [item] = next.splice(from, 1);
+    next.splice(to, 0, item);
+    setItems(next);
+    // The open state travels with the item.
+    setOpen((s) => {
+      const out = new Set<number>();
+      for (const i of s) out.add(i === from ? to : i === to ? from : i);
+      return out;
+    });
+  };
+  const remove = (index: number) => {
+    setItems(items.filter((_, k) => k !== index));
+    setOpen((s) => new Set([...s].filter((i) => i !== index).map((i) => (i > index ? i - 1 : i))));
+  };
+
+  return (
+    <div className="list-field">
+      {items.length > OPEN_LIST_MAX && (
+        <button
+          type="button"
+          className="ghost list-toggle-all"
+          onClick={() => setOpen(open.size === items.length ? new Set() : new Set(items.map((_, i) => i)))}
+        >
+          {open.size === items.length ? "Thu gọn tất cả" : "Mở tất cả"}
+        </button>
+      )}
+      {items.map((item, i) => {
+        // An item with an error stays open so the error is seen.
+        const isOpen = open.has(i) || hasError(i);
+        return (
+          <fieldset key={i} className={`list-item${isOpen ? "" : " list-item--closed"}`}>
+            <legend>
+              <button type="button" className="list-item-toggle" aria-expanded={isOpen} onClick={() => toggle(i)}>
+                {isOpen ? "▾" : "▸"} {field.itemLabel} {i + 1}
+              </button>
+            </legend>
+            <div className="list-item-actions">
+              <button type="button" title="Lên" disabled={i === 0} onClick={() => move(i, i - 1)}>
+                ↑
+              </button>
+              <button type="button" title="Xuống" disabled={i === items.length - 1} onClick={() => move(i, i + 1)}>
+                ↓
+              </button>
+              <button
+                type="button"
+                title={`Xoá ${field.itemLabel}`}
+                disabled={items.length <= field.min}
+                onClick={() => remove(i)}
+              >
+                ✕
+              </button>
+            </div>
+            {isOpen ? (
+              field.fields.map((sub) => (
+                <Field key={sub.key} {...props} field={sub} siblings={field.fields} path={[...path, i, sub.key]} />
+              ))
+            ) : (
+              <button type="button" className="list-item-summary" onClick={() => toggle(i)} title="Bấm để sửa">
+                {itemSummary(item, field.fields) || <span className="muted">(trống)</span>}
+              </button>
+            )}
+          </fieldset>
+        );
+      })}
+      <button
+        type="button"
+        className="add-item"
+        disabled={items.length >= field.max}
+        onClick={() => {
+          setItems([...items, field.newItem()]);
+          setOpen((s) => new Set(s).add(items.length));
+        }}
+      >
+        + Thêm {field.itemLabel}
+      </button>
+      <FieldMessages messages={props.messages} path={path} />
+    </div>
+  );
+}
+
+function Field(props: FieldProps) {
+  const { field, siblings, path, session, target, messages } = props;
+  const content = target.content;
+  if (field.when && !field.when(getIn(content, path.slice(0, -1)))) return null;
+  const value = getIn(content, path);
+  const id = `f-${target.id}-${pathKey(path)}`;
+  const set = (v: unknown) => session.update((d) => target.set(d, path, v), { coalesce: id });
+  const sibling = (key: string) => [...path.slice(0, -1), key];
+  const pair = pinyinPairs(siblings).find((p) => p.hanzi === field.key || p.pinyin === field.key);
+  let fill: React.ReactNode = null;
+
+  let control: React.ReactNode;
+  switch (field.kind) {
+    case "text": {
+      let onChange = (text: string) => set(text);
+      if (pair?.hanzi === field.key) {
+        // Pinyin follows the characters while it is empty or still what was filled in for them.
+        onChange = (text: string) => {
+          const old = getIn(content, sibling(pair.pinyin));
+          const follows = !old || old === hanziToPinyin(typeof value === "string" ? value : "");
+          session.update((d) => {
+            const next = target.set(d, path, text);
+            return follows ? target.set(next, sibling(pair.pinyin), hanziToPinyin(text)) : next;
+          }, { coalesce: id });
+        };
+      } else if (pair?.pinyin === field.key) {
+        const hanzi = getIn(content, sibling(pair.hanzi));
+        const suggested = typeof hanzi === "string" ? hanziToPinyin(hanzi) : "";
+        // Offered only when the pinyin is missing or cannot be right, not for every difference in style.
+        const current = typeof value === "string" ? value : "";
+        if (suggested && suggested !== current && (!current.trim() || !pinyinFits(hanzi as string, current))) {
+          fill = (
+            <button type="button" className="ghost field-fill" title={`Điền "${suggested}" theo chữ Hán`} onClick={() => set(suggested)}>
+              Tự điền
+            </button>
+          );
+        }
+      }
+      const common = {
+        id,
+        value: typeof value === "string" ? value : "",
+        placeholder: field.placeholder,
+        lang: field.lang ? LANG_ATTR[field.lang] : undefined,
+        className: field.lang === "zh" ? "input-zh" : undefined,
+        onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => onChange(e.target.value),
+      };
+      control = field.multiline ? <textarea rows={3} {...common} /> : <input type="text" {...common} />;
+      break;
+    }
+    case "toggle": {
+      const listPath = path.slice(0, -2);
+      const index = path[path.length - 2];
+      // The one right answer: turning it on for this item turns it off for the rest of the list.
+      const onChange = (on: boolean) =>
+        field.exclusive && on && typeof index === "number"
+          ? session.update((d) => {
+              const items = (getIn(content, listPath) as Record<string, unknown>[] | undefined) ?? [];
+              return target.set(d, listPath, items.map((item, k) => ({ ...item, [field.key]: k === index })));
+            })
+          : set(on);
+      return (
+        <div className={`field field-toggle${field.exclusive ? " field-toggle--answer" : ""}`}>
+          <label>
+            <input type="checkbox" checked={value === true} onChange={(e) => onChange(e.target.checked)} /> {field.label}
+          </label>
+          <FieldMessages messages={messages} path={path} />
+        </div>
+      );
+    }
+    case "number":
+      control = (
+        <input
+          id={id}
+          type="number"
+          className="input-number"
+          min={field.min}
+          max={field.max}
+          value={typeof value === "number" ? value : field.min}
+          onChange={(e) => {
+            const n = Math.round(Number(e.target.value));
+            set(Number.isFinite(n) ? Math.min(field.max, Math.max(field.min, n)) : field.min);
+          }}
+        />
+      );
+      break;
+    case "select":
+      control = (
+        <select id={id} value={String(value ?? "")} onChange={(e) => set(e.target.value)}>
+          {field.options.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      );
+      break;
+    case "asset":
+      control = <AssetField {...props} field={field} />;
+      break;
+    case "list":
+      return (
+        <div className="field">
+          <span className="field-label">{field.label}</span>
+          <ListField {...props} field={field} />
+        </div>
+      );
+  }
+
+  return (
+    <div className="field">
+      <label className="field-label" htmlFor={id}>
+        {field.label}
+        {fill}
+      </label>
+      {control}
+      <FieldMessages messages={messages} path={path} />
+    </div>
+  );
+}
+
+/** The form for `fields`, read from and written to `base` inside the target. */
+export function FormFields({
+  fields,
+  base = [],
+  target,
+  session,
+  messages,
+}: {
+  fields: EditorFieldSpec;
+  base?: Path;
+  target: FormTarget;
+  session: LessonSession;
+  messages: Messages;
+}) {
+  return (
+    <>
+      {fields.map((field) => (
+        <Field
+          key={field.key}
+          field={field}
+          siblings={fields}
+          path={[...base, field.key]}
+          messages={messages}
+          session={session}
+          target={target}
+        />
+      ))}
+    </>
+  );
+}
