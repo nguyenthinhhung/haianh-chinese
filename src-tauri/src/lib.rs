@@ -3,6 +3,7 @@ mod closing;
 mod error;
 mod fsutil;
 mod library;
+mod publish;
 mod session;
 mod state;
 mod transfer;
@@ -58,6 +59,10 @@ pub fn run() {
             transfer::pick_lesson_file,
             transfer::copy_sibling_assets,
             transfer::write_asset,
+            publish::get_publish_settings,
+            publish::set_publish_settings,
+            publish::publish_assets,
+            publish::publish_lesson,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Chinese Lesson Studio");

@@ -20,7 +20,7 @@ const MAX_ASSET_BYTES: usize = 30 * 1024 * 1024;
 
 /// `assets/<name>` with a plain file name, like `isSafeAssetPath` in the
 /// frontend. Returns the name.
-fn safe_asset_name(file: &str) -> AppResult<&str> {
+pub(crate) fn safe_asset_name(file: &str) -> AppResult<&str> {
     let name = file
         .strip_prefix("assets/")
         .ok_or_else(|| AppError::new("invalid-path", "Đường dẫn tài nguyên không hợp lệ."))?;
@@ -54,7 +54,7 @@ fn sniff_audio(bytes: &[u8]) -> Option<&'static str> {
     None
 }
 
-fn media_type(bytes: &[u8]) -> Option<&'static str> {
+pub(crate) fn media_type(bytes: &[u8]) -> Option<&'static str> {
     sniff_image(bytes).map(|(_, mime)| mime).or_else(|| sniff_audio(bytes))
 }
 

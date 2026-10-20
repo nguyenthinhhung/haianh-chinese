@@ -29,6 +29,8 @@ futures-util = { version = "0.3", default-features = false, features = ["std"] }
 base64 = "0.22"
 url = "2"
 percent-encoding = "2"
+# The publish password lives in Windows Credential Manager / macOS Keychain.
+keyring = { version = "3", features = ["apple-native", "windows-native"] }
 # Already in the tree through Tauri; used to space out image searches.
 tokio = { version = "1", features = ["sync", "time"] }
 

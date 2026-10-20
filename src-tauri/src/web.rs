@@ -34,7 +34,7 @@ fn offline(e: impl std::fmt::Display) -> AppError {
 
 /// Only public web addresses: a request must never reach this machine or
 /// the local network, whoever supplied the URL.
-fn is_public_url(url: &Url) -> bool {
+pub(crate) fn is_public_url(url: &Url) -> bool {
     if !matches!(url.scheme(), "http" | "https") {
         return false;
     }
