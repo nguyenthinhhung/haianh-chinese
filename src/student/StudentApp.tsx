@@ -4,6 +4,7 @@ import { ExercisePlayer, type PlayerResult } from "../exercise/ExercisePlayer";
 import baseCss from "../renderer/base.css?raw";
 import { FONT_CSS } from "../renderer/fonts";
 import { createThemeRegistry } from "../themes";
+import { slipFileName, slipText } from "./slip";
 
 /**
  * The page a student opens from the teacher's link (/a/<link>): the same
@@ -211,6 +212,19 @@ export function StudentApp() {
     return toResult(data);
   }
 
+  function saveSlip(answers: Answers) {
+    if (!progress) return;
+    const studentName = name.replace(/\s+/g, " ").trim();
+    const text = slipText(assignment!.exercise, answers, { name: studentName, attemptId: progress.attemptId, savedAt: vietnamTime(new Date().toISOString()) });
+    // The mark tells Notepad and phones the file is UTF-8.
+    const url = URL.createObjectURL(new Blob(["﻿", text], { type: "text/plain;charset=utf-8" }));
+    const link = Object.assign(document.createElement("a"), { href: url, download: slipFileName(studentName) });
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  }
+
   function restart() {
     write(keys.progress, null);
     setProgress(null);
@@ -246,6 +260,7 @@ export function StudentApp() {
         finished={finished ?? undefined}
         deadline={progress?.deadline ?? null}
         facts={assignment.closesAt ? [`Hạn nộp ${vietnamTime(assignment.closesAt)}`] : []}
+        saveSlip={saveSlip}
       />
     </>
   );

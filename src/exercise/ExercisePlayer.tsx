@@ -49,6 +49,8 @@ export interface ExercisePlayerProps {
   deadline?: number | null;
   /** More facts for the start screen, e.g. the deadline for handing in. */
   facts?: string[];
+  /** Offered when handing in fails: keeps the answers in a file the student can send the teacher. */
+  saveSlip?(answers: Answers): void;
 }
 
 type Phase = "intro" | "doing" | "result";
@@ -198,7 +200,7 @@ function AudioBar({
 }
 
 export function ExercisePlayer(props: ExercisePlayerProps) {
-  const { exercise, assetUrl, submit, themeId, hanziFont, onRestart, storageKey, startExtra, canStart = true, onStart, finished, deadline, facts } = props;
+  const { exercise, assetUrl, submit, themeId, hanziFont, onRestart, storageKey, startExtra, canStart = true, onStart, finished, deadline, facts, saveSlip } = props;
   const saved = useMemo(() => load(storageKey), [storageKey]);
   const [phase, setPhase] = useState<Phase>(finished ? "result" : saved?.startedAt ? "doing" : "intro");
   const [answers, setAnswers] = useState<Answers>(finished?.answers ?? saved?.answers ?? {});
@@ -528,6 +530,16 @@ export function ExercisePlayer(props: ExercisePlayerProps) {
           {error && (
             <p className="ex-error" role="alert">
               Chưa nộp được: {error}
+              {saveSlip && (
+                <>
+                  {" "}
+                  Nếu vẫn không nộp được,{" "}
+                  <button type="button" className="ex-slip" onClick={() => saveSlip(answers)}>
+                    tải phiếu trả lời
+                  </button>{" "}
+                  rồi gửi cho giáo viên.
+                </>
+              )}
             </p>
           )}
           <div className="ex-bottom-row">

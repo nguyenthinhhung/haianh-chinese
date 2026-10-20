@@ -531,6 +531,15 @@
   color: var(--ex-bad);
   font-weight: 600;
 }
+.ex-player .ex-slip {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
 .ex-player .ex-confirm-backdrop {
   position: fixed;
   inset: 0;
