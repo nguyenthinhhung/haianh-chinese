@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { exerciseAudioJobs, type AudioJob } from "../core/autoAudio";
 import {
   addExercise,
   addPart,
@@ -27,6 +28,7 @@ import type { RenderEnv } from "../renderer/render";
 import { ExercisePlayer } from "../exercise/ExercisePlayer";
 import { PartHeader, QuestionCard, type AssetUrl } from "../exercise/QuestionCard";
 import { AssignDialog } from "./AssignDialog";
+import { ExerciseImportDialog } from "./ExerciseImportDialog";
 import { addMessage, FormFields, type FormTarget, type Messages } from "./FormFields";
 import { useServices } from "./services";
 import type { LessonSession } from "./useLessonSession";
@@ -43,6 +45,8 @@ interface Props {
   session: LessonSession;
   env: RenderEnv;
   onNotice(text: string): void;
+  /** Queues recordings to make in the background; how many were new. */
+  onReadAloud(jobs: AudioJob[]): number;
 }
 
 const worst = (issues: ExerciseIssue[]) => (issues.some((i) => i.level === "error") ? "error" : issues.length ? "warning" : undefined);
@@ -91,7 +95,7 @@ function TryDialog({ exercise, assetUrl, themeId, hanziFont, onClose }: { exerci
   );
 }
 
-export function ExerciseEditor({ session, env, onNotice }: Props) {
+export function ExerciseEditor({ session, env, onNotice, onReadAloud }: Props) {
   const { persistence } = useServices();
   const doc = session.doc;
   const [exerciseId, setExerciseId] = useState(doc.exercises[0]?.id);
@@ -100,6 +104,7 @@ export function ExerciseEditor({ session, env, onNotice }: Props) {
   const [adding, setAdding] = useState(false);
   const [trying, setTrying] = useState(false);
   const [assigning, setAssigning] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   const assets = useMemo(() => new Map(doc.assets.map((a) => [a.id, a])), [doc.assets]);
   const assetUrl: AssetUrl = (id) => {
@@ -140,6 +145,17 @@ export function ExerciseEditor({ session, env, onNotice }: Props) {
     setNode({ kind: "exercise" });
   }
 
+  function importExercise(imported: Exercise) {
+    session.update((d) => addExercise(d, imported).doc);
+    setExerciseId(imported.id);
+    setNode({ kind: "exercise" });
+    const reading = onReadAloud(exerciseAudioJobs(imported));
+    onNotice(`Đã thêm đề “${imported.title}” (Ctrl+Z để bỏ).${reading ? ` Đang tạo giọng đọc cho ${reading} đoạn nghe.` : ""}`);
+  }
+
+  const importDialog = importing && <ExerciseImportDialog pinyin={doc.settings.pinyin} onImport={importExercise} onClose={() => setImporting(false)} />;
+  const listening = useMemo(() => (exercise ? exerciseAudioJobs(exercise) : []), [exercise]);
+
   if (!exercise) {
     return (
       <>
@@ -149,14 +165,18 @@ export function ExerciseEditor({ session, env, onNotice }: Props) {
             <button type="button" className="primary" onClick={createExercise}>
               + Tạo đề bài tập
             </button>
+            <button type="button" onClick={() => setImporting(true)}>
+              Nhập đề từ AI…
+            </button>
           </div>
         </nav>
         <main className="workspace exercise-workspace">
           <div className="exercise-intro">
             <h2>Bài tập cho học viên</h2>
             <p>
-              Đề bài tập để học viên tự làm và được chấm điểm tự động: trắc nghiệm, đúng/sai, chọn từ điền chỗ trống, kèm file nghe, ảnh
-              và đoạn văn. Đề nằm trong bài học này, dùng chung ảnh và âm thanh của bài.
+              Đề bài tập để học viên tự làm và được chấm điểm tự động: trắc nghiệm, đúng/sai, điền chỗ trống, nối cặp, sắp xếp câu, thanh
+              điệu, phân nhóm, tự luận…, kèm file nghe, ảnh và đoạn văn. Đề nằm trong bài học này, dùng chung ảnh và âm thanh của bài. Có thể
+              nhờ AI chép bài tập từ giáo trình rồi nhập vào.
             </p>
             <button type="button" className="primary" onClick={createExercise}>
               + Tạo đề bài tập
@@ -164,6 +184,7 @@ export function ExerciseEditor({ session, env, onNotice }: Props) {
           </div>
         </main>
         <aside className="properties" aria-label="Thuộc tính" />
+        {importDialog}
       </>
     );
   }
@@ -301,6 +322,9 @@ export function ExerciseEditor({ session, env, onNotice }: Props) {
               + Đề mới
             </button>
           </div>
+          <button type="button" onClick={() => setImporting(true)} title="Nhờ AI chép bài tập từ giáo trình hoặc soạn đề mới, rồi dán vào đây">
+            Nhập đề từ AI…
+          </button>
         </div>
       </nav>
 
@@ -310,6 +334,17 @@ export function ExerciseEditor({ session, env, onNotice }: Props) {
             {errors ? `${errors} chỗ cần sửa trước khi giao bài` : issues.length ? `Sẵn sàng · ${issues.length} chỗ nên xem lại` : "✓ Sẵn sàng giao bài"}
           </span>
           <div className="exercise-head-actions">
+            {listening.length > 0 && persistence.kind === "tauri" && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (!onReadAloud(listening)) onNotice("Đang tạo giọng đọc cho các đoạn nghe này rồi.");
+                }}
+                title="Đọc lời bài nghe thành file nghe cho phần nghe và câu nghe chưa có file (giọng Google Dịch)"
+              >
+                🔊 Tạo file nghe ({listening.length})
+              </button>
+            )}
             {persistence.kind === "tauri" && (
               <button
                 type="button"
@@ -501,6 +536,7 @@ export function ExerciseEditor({ session, env, onNotice }: Props) {
         </div>
       </aside>
 
+      {importDialog}
       {assigning && <AssignDialog dir={session.dir} doc={doc} exercise={exercise} onClose={() => setAssigning(false)} />}
       {trying && (
         <TryDialog

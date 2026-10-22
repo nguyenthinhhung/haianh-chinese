@@ -298,7 +298,7 @@ export function LessonEditor({ lesson, onClose }: Props) {
         </button>
       </div>
       {mode === "exercises" ? (
-        <ExerciseEditor session={session} env={env} onNotice={(text) => setNotice({ text })} />
+        <ExerciseEditor session={session} env={env} onNotice={(text) => setNotice({ text })} onReadAloud={voice.enqueue} />
       ) : (
         <>
           <SlideNavigator

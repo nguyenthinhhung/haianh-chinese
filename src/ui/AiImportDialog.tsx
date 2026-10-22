@@ -89,11 +89,11 @@ async function copyText(text: string): Promise<boolean> {
 }
 
 /** What to paste back into the AI chat so it fixes its own answer. */
-function fixRequest(problems: string[]): string {
+export function fixRequest(problems: string[]): string {
   return `Bài bạn vừa soạn còn các vấn đề sau. Hãy sửa và trả lời lại TOÀN BỘ bài bằng một khối JSON theo đúng định dạng cũ:\n${problems.map((p) => `- ${p}`).join("\n")}`;
 }
 
-function CopyButton({ text, label, primary, disabled }: { text: () => string; label: string; primary?: boolean; disabled?: boolean }) {
+export function CopyButton({ text, label, primary, disabled }: { text: () => string; label: string; primary?: boolean; disabled?: boolean }) {
   const [state, setState] = useState<"" | "ok" | "fail">("");
   return (
     <span className="copy-button">
