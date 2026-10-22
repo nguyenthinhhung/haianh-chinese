@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { exerciseAudioJobs, type AudioJob } from "../core/autoAudio";
 import {
   addExercise,
@@ -29,9 +29,11 @@ import type { RenderEnv } from "../renderer/render";
 import { ExercisePlayer } from "../exercise/ExercisePlayer";
 import { PartHeader, QuestionCard, type AssetUrl } from "../exercise/QuestionCard";
 import { AssignDialog } from "./AssignDialog";
+import { ContextMenu, type MenuItem } from "./ContextMenu";
 import { ExerciseImportDialog } from "./ExerciseImportDialog";
 import { addMessage, FormFields, type FormTarget, type Messages } from "./FormFields";
 import { useServices } from "./services";
+import { isTyping } from "./SlideNavigator";
 import type { LessonSession } from "./useLessonSession";
 
 /**
@@ -41,6 +43,8 @@ import type { LessonSession } from "./useLessonSession";
  */
 
 type Node = { kind: "exercise" } | { kind: "part"; id: string } | { kind: "question"; id: string };
+/** Like Node, but naming the exercise too, since the list holds the lesson's other exercises. */
+type Target = { kind: "exercise"; id: string } | { kind: "part"; id: string } | { kind: "question"; id: string };
 
 interface Props {
   session: LessonSession;
@@ -106,6 +110,9 @@ export function ExerciseEditor({ session, env, onNotice, onReadAloud }: Props) {
   const [trying, setTrying] = useState(false);
   const [assigning, setAssigning] = useState(false);
   const [importing, setImporting] = useState(false);
+  /** Right-click menu: the exercise, part or question it acts on and where it opened. */
+  const [menu, setMenu] = useState<{ target: Target; x: number; y: number } | null>(null);
+  const closeMenu = useCallback(() => setMenu(null), []);
 
   const assets = useMemo(() => new Map(doc.assets.map((a) => [a.id, a])), [doc.assets]);
   const assetUrl: AssetUrl = (id) => {
@@ -235,10 +242,111 @@ export function ExerciseEditor({ session, env, onNotice, onReadAloud }: Props) {
   }
 
   const issuesOf = (questionId: string) => issues.filter((i) => i.questionId === questionId);
+  const allQuestions = exercise.parts.flatMap((p) => p.questions);
+
+  function duplicateTarget(t: Target) {
+    let id = "";
+    if (t.kind === "exercise") {
+      update((d) => {
+        const r = duplicateExercise(d, t.id);
+        id = r.exerciseId;
+        return r.doc;
+      });
+      setExerciseId(id);
+      setNode({ kind: "exercise" });
+    } else if (t.kind === "question") {
+      update((d) => {
+        const r = duplicateQuestion(d, exId, t.id);
+        id = r.questionId;
+        return r.doc;
+      });
+      setNode({ kind: "question", id });
+    }
+  }
+
+  /** Deleting the selected exercise or question moves the selection to a neighbour, as with slides. */
+  function removeTarget(t: Target) {
+    if (t.kind === "exercise") {
+      const i = doc.exercises.findIndex((e) => e.id === t.id);
+      const title = doc.exercises[i]?.title || "chưa đặt tên";
+      update((d) => removeExercise(d, t.id));
+      if (t.id === exId) {
+        setExerciseId((doc.exercises[i + 1] ?? doc.exercises[i - 1])?.id);
+        setNode({ kind: "exercise" });
+      }
+      onNotice(`Đã xoá đề “${title}”. Bấm Ctrl+Z để lấy lại.`);
+    } else if (t.kind === "part") {
+      const p = exercise!.parts.findIndex((x) => x.id === t.id);
+      update((d) => removePart(d, exId, t.id));
+      onNotice(`Đã xoá phần ${p + 1}. Bấm Ctrl+Z để lấy lại.`);
+    } else {
+      const i = allQuestions.findIndex((q) => q.id === t.id);
+      update((d) => removeQuestion(d, exId, t.id));
+      if (selected.kind === "question" && selected.id === t.id) {
+        const next = allQuestions[i + 1] ?? allQuestions[i - 1];
+        setNode(next ? { kind: "question", id: next.id } : { kind: "exercise" });
+      }
+      onNotice(`Đã xoá câu ${numbers.get(t.id)}. Bấm Ctrl+Z để lấy lại.`);
+    }
+  }
+
+  /** Delete (or Backspace) removes what is selected while the list of exercises, parts and questions has focus. */
+  function onNavKeyDown(e: React.KeyboardEvent) {
+    if ((e.key !== "Delete" && e.key !== "Backspace") || isTyping(e.target)) return;
+    if (!(e.target instanceof HTMLElement && e.target.closest(".outline, .exercise-list"))) return;
+    e.preventDefault();
+    removeTarget(selected.kind === "exercise" ? { kind: "exercise", id: exId } : selected);
+  }
+
+  function openMenu(e: React.MouseEvent, target: Target) {
+    e.preventDefault();
+    setAdding(false);
+    if (target.kind === "exercise") {
+      setExerciseId(target.id);
+      setNode({ kind: "exercise" });
+    } else setNode(target);
+    setMenu({ target, x: e.clientX, y: e.clientY });
+  }
+
+  function menuFor(t: Target): { label: string; items: (MenuItem | "-")[] } {
+    if (t.kind === "exercise") {
+      const title = doc.exercises.find((e) => e.id === t.id)?.title || "(chưa đặt tên)";
+      return {
+        label: title,
+        items: [{ label: "Nhân bản đề", run: () => duplicateTarget(t) }, "-", { label: "Xoá đề", run: () => removeTarget(t), hint: "Delete", danger: true }],
+      };
+    }
+    if (t.kind === "part") {
+      const p = exercise!.parts.findIndex((x) => x.id === t.id);
+      return {
+        label: `Phần ${p + 1}`,
+        items: [
+          { label: "Lên trên", run: () => update((d) => movePart(d, exId, t.id, p - 1)), disabled: p <= 0 },
+          { label: "Xuống dưới", run: () => update((d) => movePart(d, exId, t.id, p + 1)), disabled: p >= exercise!.parts.length - 1 },
+          "-",
+          { label: "Xoá phần", run: () => removeTarget(t), hint: "Delete", danger: true },
+        ],
+      };
+    }
+    const i = allQuestions.findIndex((q) => q.id === t.id);
+    return {
+      label: `Câu ${numbers.get(t.id)}`,
+      items: [
+        { label: "Nhân bản câu", run: () => duplicateTarget(t) },
+        "-",
+        { label: "Lên trên", run: () => update((d) => moveQuestion(d, exId, t.id, -1)), disabled: i <= 0 },
+        { label: "Xuống dưới", run: () => update((d) => moveQuestion(d, exId, t.id, 1)), disabled: i >= allQuestions.length - 1 },
+        "-",
+        { label: "Xoá câu", run: () => removeTarget(t), hint: "Delete", danger: true },
+      ],
+    };
+  }
+
+  const ITEM_HINT = "Chuột phải để nhân bản, xoá… · Delete để xoá";
 
   return (
     <>
-      <nav className="navigator exercise-nav" aria-label="Danh sách đề">
+      <nav className="navigator exercise-nav" aria-label="Danh sách đề" onKeyDown={onNavKeyDown}>
         {doc.exercises.length > 1 && (
           <div className="exercise-list">
             {doc.exercises.map((e) => (
@@ -246,6 +354,8 @@ export function ExerciseEditor({ session, env, onNotice, onReadAloud }: Props) {
                 key={e.id}
                 type="button"
                 className={`exercise-item${e.id === exId ? " selected" : ""}`}
+                title={ITEM_HINT}
+                onContextMenu={(ev) => openMenu(ev, { kind: "exercise", id: e.id })}
                 onClick={() => {
                   setExerciseId(e.id);
                   setNode({ kind: "exercise" });
@@ -259,7 +369,11 @@ export function ExerciseEditor({ session, env, onNotice, onReadAloud }: Props) {
         )}
         <ol className="outline">
           <li>
-            <button type="button" className={`outline-item outline-exercise${selected.kind === "exercise" ? " selected" : ""}`} onClick={() => setNode({ kind: "exercise" })}>
+            <button type="button" className={`outline-item outline-exercise${selected.kind === "exercise" ? " selected" : ""}`}
+              title={ITEM_HINT}
+              onContextMenu={(e) => openMenu(e, { kind: "exercise", id: exId })}
+              onClick={() => setNode({ kind: "exercise" })}
+            >
               <strong>{exercise.title || "(chưa đặt tên)"}</strong>
               <span className="muted">Cài đặt đề · {questionCount(exercise)} câu</span>
             </button>
@@ -271,6 +385,8 @@ export function ExerciseEditor({ session, env, onNotice, onReadAloud }: Props) {
                 <button
                   type="button"
                   className={`outline-item outline-part${selected.kind === "part" && selected.id === part.id ? " selected" : ""}`}
+                  title={ITEM_HINT}
+                  onContextMenu={(e) => openMenu(e, { kind: "part", id: part.id })}
                   onClick={() => setNode({ kind: "part", id: part.id })}
                 >
                   <span>
@@ -287,6 +403,8 @@ export function ExerciseEditor({ session, env, onNotice, onReadAloud }: Props) {
                         <button
                           type="button"
                           className={`outline-item outline-question${selected.kind === "question" && selected.id === q.id ? " selected" : ""}`}
+                          title={ITEM_HINT}
+                          onContextMenu={(e) => openMenu(e, { kind: "question", id: q.id })}
                           onClick={() => setNode({ kind: "question", id: q.id })}
                         >
                           <span>
@@ -416,26 +534,14 @@ export function ExerciseEditor({ session, env, onNotice, onReadAloud }: Props) {
               <div className="node-actions">
                 <button
                   type="button"
-                  onClick={() => {
-                    let id = "";
-                    update((d) => {
-                      const r = duplicateExercise(d, exId);
-                      id = r.exerciseId;
-                      return r.doc;
-                    });
-                    setExerciseId(id);
-                  }}
+                  onClick={() => duplicateTarget({ kind: "exercise", id: exId })}
                 >
                   Nhân bản đề
                 </button>
                 <button
                   type="button"
                   className="danger"
-                  onClick={() => {
-                    update((d) => removeExercise(d, exId));
-                    setExerciseId(undefined);
-                    onNotice(`Đã xoá đề “${exercise.title || "chưa đặt tên"}”. Bấm Ctrl+Z để lấy lại.`);
-                  }}
+                  onClick={() => removeTarget({ kind: "exercise", id: exId })}
                 >
                   Xoá đề
                 </button>
@@ -483,10 +589,7 @@ export function ExerciseEditor({ session, env, onNotice, onReadAloud }: Props) {
                 <button
                   type="button"
                   className="danger"
-                  onClick={() => {
-                    update((d) => removePart(d, exId, selected.id));
-                    onNotice(`Đã xoá phần ${partIndex + 1}. Bấm Ctrl+Z để lấy lại.`);
-                  }}
+                  onClick={() => removeTarget(selected)}
                 >
                   Xoá phần
                 </button>
@@ -509,25 +612,14 @@ export function ExerciseEditor({ session, env, onNotice, onReadAloud }: Props) {
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    let id = "";
-                    update((d) => {
-                      const r = duplicateQuestion(d, exId, selected.id);
-                      id = r.questionId;
-                      return r.doc;
-                    });
-                    setNode({ kind: "question", id });
-                  }}
+                  onClick={() => duplicateTarget(selected)}
                 >
                   Nhân bản
                 </button>
                 <button
                   type="button"
                   className="danger"
-                  onClick={() => {
-                    update((d) => removeQuestion(d, exId, selected.id));
-                    onNotice(`Đã xoá câu ${numbers.get(selected.id)}. Bấm Ctrl+Z để lấy lại.`);
-                  }}
+                  onClick={() => removeTarget(selected)}
                 >
                   Xoá
                 </button>
@@ -545,6 +637,9 @@ export function ExerciseEditor({ session, env, onNotice, onReadAloud }: Props) {
         </div>
       </aside>
 
+      {menu && (
+        <ContextMenu x={menu.x} y={menu.y} onClose={closeMenu} {...menuFor(menu.target)} />
+      )}
       {importDialog}
       {assigning && <AssignDialog dir={session.dir} doc={doc} exercise={exercise} onClose={() => setAssigning(false)} />}
       {trying && (

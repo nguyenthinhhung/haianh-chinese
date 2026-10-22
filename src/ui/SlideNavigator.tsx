@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { addSlide, duplicateSlide, moveSlide, removeSlide } from "../core/document";
 import type { RenderEnv } from "../renderer/render";
+import { ContextMenu } from "./ContextMenu";
 import { useServices } from "./services";
 import { SHORTCUTS } from "./shortcuts";
 import { SlidePicker, rememberSlideType } from "./SlidePicker";
@@ -20,7 +21,7 @@ interface Props {
   shortcuts?: boolean;
 }
 
-function isTyping(target: EventTarget | null): boolean {
+export function isTyping(target: EventTarget | null): boolean {
   return target instanceof HTMLElement && (/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) || target.isContentEditable);
 }
 
@@ -174,52 +175,13 @@ export function SlideNavigator({ session, env, selectedId, onSelect, toReview, o
     return () => window.removeEventListener("keydown", onKey);
   }, [shortcuts]);
 
-  useEffect(() => {
-    if (!menu) return;
-    const close = () => setMenu(null);
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
-    };
-    window.addEventListener("pointerdown", close);
-    window.addEventListener("keydown", onKey);
-    window.addEventListener("blur", close);
-    window.addEventListener("resize", close);
-    listRef.current?.addEventListener("scroll", close);
-    const list = listRef.current;
-    return () => {
-      window.removeEventListener("pointerdown", close);
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("blur", close);
-      window.removeEventListener("resize", close);
-      list?.removeEventListener("scroll", close);
-    };
-  }, [menu, listRef]);
+  const closeMenu = useCallback(() => setMenu(null), []);
 
   function openMenu(e: React.MouseEvent, slideId: string) {
     e.preventDefault();
     setAdding(false);
     onSelect(slideId);
     setMenu({ slideId, x: e.clientX, y: e.clientY });
-  }
-
-  /** A menu item: runs on click, and the pointerdown that would close the menu first is stopped. */
-  function item(label: string, run: () => void, opts: { hint?: string; disabled?: boolean; danger?: boolean } = {}) {
-    return (
-      <button
-        type="button"
-        role="menuitem"
-        className={opts.danger ? "danger" : undefined}
-        disabled={opts.disabled}
-        onPointerDown={(e) => e.stopPropagation()}
-        onClick={() => {
-          setMenu(null);
-          run();
-        }}
-      >
-        <span>{label}</span>
-        {opts.hint && <kbd>{opts.hint}</kbd>}
-      </button>
-    );
   }
 
   const menuIndex = menu ? doc.slides.findIndex((s) => s.id === menu.slideId) : -1;
@@ -257,20 +219,21 @@ export function SlideNavigator({ session, env, selectedId, onSelect, toReview, o
         ))}
       </ol>
       {menu && menuIndex >= 0 && (
-        <div
-          className="context-menu"
-          role="menu"
-          aria-label={`Slide ${menuIndex + 1}`}
-          style={{ left: menu.x, top: Math.min(menu.y, window.innerHeight - 220) }}
-        >
-          {item("Thêm slide mới…", () => setAdding(true))}
-          {item("Nhân bản slide", () => duplicate(menu.slideId), { hint: SHORTCUTS.duplicate })}
-          <hr />
-          {item("Lên trên", () => move(menu.slideId, menuIndex - 1), { disabled: menuIndex <= 0 })}
-          {item("Xuống dưới", () => move(menu.slideId, menuIndex + 1), { disabled: menuIndex >= doc.slides.length - 1 })}
-          <hr />
-          {item("Xoá slide", () => remove(menu.slideId), { hint: "Delete", danger: true })}
-        </div>
+        <ContextMenu
+          x={menu.x}
+          y={menu.y}
+          label={`Slide ${menuIndex + 1}`}
+          onClose={closeMenu}
+          items={[
+            { label: "Thêm slide mới…", run: () => setAdding(true) },
+            { label: "Nhân bản slide", run: () => duplicate(menu.slideId), hint: SHORTCUTS.duplicate },
+            "-",
+            { label: "Lên trên", run: () => move(menu.slideId, menuIndex - 1), disabled: menuIndex <= 0 },
+            { label: "Xuống dưới", run: () => move(menu.slideId, menuIndex + 1), disabled: menuIndex >= doc.slides.length - 1 },
+            "-",
+            { label: "Xoá slide", run: () => remove(menu.slideId), hint: "Delete", danger: true },
+          ]}
+        />
       )}
       <div className="navigator-actions">
         <div className="add-menu">
