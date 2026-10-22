@@ -226,6 +226,13 @@ nghe, phần đọc, có đồng hồ, xem đáp án sau khi nộp. Đề nằm 
      chọn đúng (tích ở lựa chọn khác thì lựa chọn cũ tự bỏ).
    - **Đúng / Sai**: một câu nhận định. Bỏ tích "Câu này ĐÚNG" nếu đáp án là Sai.
    - **Chọn từ điền chỗ trống**: gõ `___` (ba dấu gạch dưới) ở chỗ cần điền.
+   - **Điền chữ**: học viên tự gõ; ghi mọi cách viết được chấp nhận (ví dụ 你好 và
+     nǐ hǎo). Mặc định không phân biệt dấu thanh, chữ hoa/thường, dấu câu.
+   - **Chọn thanh điệu**: gõ chữ Hán, âm tiết có dấu tự điền và là đáp án.
+   - **Sắp xếp câu**: gõ câu đúng, ngăn các thẻ bằng `/` (我 / 是 / 学生).
+   - **Nối cặp**, **Chọn từ trong khung**, **Phân nhóm**: mỗi cặp, mỗi chỗ trống,
+     mỗi thẻ là 1 điểm; làm đúng một phần thì được một phần điểm.
+   - **Viết / tự luận**: học viên viết tự do, bạn chấm tay trên bảng điểm.
 
    Câu nghe có thể để trống câu hỏi: học viên nghe file của phần rồi chọn đáp án.
    Pinyin tự điền theo chữ Hán như ở slide.
@@ -244,6 +251,21 @@ nghe, phần đọc, có đồng hồ, xem đáp án sau khi nộp. Đề nằm 
    thường, soạn tiếp hôm khác được.
 7. **▶ Làm thử** để làm đề như học viên: bắt đầu, nghe, chọn đáp án, nộp, xem điểm,
    đáp án và giải thích. Kết quả làm thử không được lưu.
+8. Phần nghe có **lời bài nghe** mà chưa có file nghe thì nút **🔊 Tạo file nghe**
+   đọc tất cả bằng giọng Google Dịch (bỏ nhãn "男：", "女："; lời dài được đọc
+   từng đoạn rồi ghép lại). Có file của sách thì nên dùng file của sách.
+
+### Nhập đề từ AI
+
+1. Ở cột trái chế độ Bài tập, bấm **Nhập đề từ AI…**.
+2. Ghi tên giáo trình và bài (ví dụ "HSK 1, Bài 7") để AI chép bài tập trong sách,
+   hoặc ghi chủ đề để AI tự soạn; chọn học viên, dạng câu (bỏ trống để AI tự chọn),
+   có phần nghe hay không.
+3. **Sao chép lời nhắn cho AI**, dán vào ChatGPT/Gemini/Claude, **đính kèm ảnh
+   hoặc PDF các trang bài tập**, gửi đi.
+4. Dán toàn bộ câu trả lời của AI vào ô cuối, xem trước rồi bấm **Thêm đề vào bài**.
+   Câu trả lời có lỗi thì bấm **Sao chép lỗi để gửi lại AI**. File nghe được tạo tự
+   động cho phần nghe; nhớ soát lại đáp án trước khi giao bài.
 
 ### Giao bài và xem điểm
 
@@ -258,9 +280,26 @@ nghe, phần đọc, có đồng hồ, xem đáp án sau khi nộp. Đề nằm 
 3. Sửa đề rồi bấm **Giao bài** lần nữa: link giữ nguyên, bài làm sau đó được chấm
    theo đề mới; điểm đã nộp trước vẫn giữ.
 4. Xem điểm: mở địa chỉ máy chủ trong trình duyệt, đăng nhập, chọn **Bảng điểm**.
-   Mỗi đề có số bài nộp, số học viên, điểm trung bình; bấm **Xem điểm** để thấy từng
-   học viên: điểm, Đạt/Chưa đạt (nếu đề có điểm đạt), thời gian làm (**Quá giờ** khi
-   nộp sau giờ quy định), lúc nộp và lần thứ mấy.
+   Mỗi đề có số bài nộp, số học viên, điểm trung bình, số bài **chờ chấm**; bấm
+   **Xem điểm** để thấy từng học viên: điểm, Đạt/Chưa đạt (nếu đề có điểm đạt),
+   thời gian làm (**Nộp trễ** khi nộp sau giờ quy định), lúc nộp và lần thứ mấy.
+   - Bấm **tên học viên** để xem bài làm: từng câu, em trả lời gì, đáp án đúng. Câu
+     tự luận: nhập điểm rồi bấm **Lưu điểm phần tự luận**; học viên mở lại link sẽ
+     thấy điểm mới. Còn câu chờ chấm thì chưa hiện Đạt/Chưa đạt.
+   - **Thống kê theo câu** (dưới bảng điểm): mỗi câu bao nhiêu em đúng, sai, bỏ
+     trống; câu dưới 50% tô đỏ để ôn lại.
+   - **Tải bảng điểm (CSV)** mở bằng Excel hoặc Google Sheets. Nếu Excel dồn hết vào
+     một cột, dùng Data › From Text/CSV.
+   - **Đóng nhận bài** / **Mở lại nhận bài**, và **Hạn nộp** (giờ Việt Nam): sau hạn,
+     link không cho bắt đầu bài mới; em đang làm dở vẫn nộp được nhưng bị đánh dấu
+     nộp trễ.
+   - **Xoá bài nộp** (trong trang bài làm) và **Gỡ bài tập khỏi web** (cuối trang
+     điểm; link hỏng và mọi bài nộp bị xoá). Gỡ cũng làm được trong app: **Giao bài…**
+     › **Gỡ khỏi web…**.
+   - **Tải bản sao lưu** (trang Bảng điểm): một file JSON chứa mọi đề và bài nộp.
+5. Học viên nộp không được (mất mạng…): trang cho **tải phiếu trả lời**, một file
+   chữ liệt kê từng câu và câu trả lời. Học viên gửi phiếu cho bạn qua Zalo; bạn đọc
+   và chấm tay.
 
 ## 8. Tạo bài bằng AI
 
