@@ -433,7 +433,7 @@ có giấy phép rõ ràng (CC0/OFL), không lấy ảnh trên mạng.
 exercises[]: { id, title, intro, settings, parts[] }
   settings: timeLimit (phút, 0 = không giới hạn), timerStart ("start" | "first-answer"),
             attempts ("one" | "many"), shuffleQuestions, shuffleOptions,
-            maxListens (0 = không giới hạn), showAnswers ("after-submit" | "never"),
+            maxListens (0 = không giới hạn), showAnswers ("after-submit" | "never" = chỉ điểm | "hidden" = không điểm, không đáp án; đề mới mặc định "hidden"),
             pinyin, passPercent (0 = không đặt)
   parts[]:  { id, skill (listening | reading | writing | other), title, instruction,
               audio?, image?, passage, transcript, questions[] }

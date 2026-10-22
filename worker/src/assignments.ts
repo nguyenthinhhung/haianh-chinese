@@ -164,12 +164,12 @@ export function readPayload(row: AssignmentRow): AssignmentPayload {
   return AssignmentPayloadSchema.parse(JSON.parse(row.payload));
 }
 
-/** The result a student sees: always the grade, and the review when the exercise allows it. */
-function resultBody(exercise: Exercise, grade: ExerciseGrade, answers: Answers, attemptId: string, late: boolean) {
+/** The result a student sees: the grade unless the exercise hides it, and the review when the exercise allows it. */
+export function resultBody(exercise: Exercise, grade: ExerciseGrade, answers: Answers, attemptId: string, late: boolean) {
   return {
     attemptId,
     answers,
-    grade,
+    ...(exercise.settings.showAnswers === "hidden" ? {} : { grade }),
     late,
     ...(exercise.settings.showAnswers === "after-submit" ? { review: exerciseReview(exercise) } : {}),
   };

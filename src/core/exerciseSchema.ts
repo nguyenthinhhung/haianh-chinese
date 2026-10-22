@@ -195,7 +195,8 @@ export const ExerciseSettingsSchema = z.object({
   shuffleOptions: z.boolean().default(false),
   /** Plays allowed per recording; 0 means no limit. */
   maxListens: z.number().int().min(0).max(5).default(0),
-  showAnswers: z.enum(["after-submit", "never"]).default("after-submit"),
+  /** After handing in: score and answers, the score only ("never"), or nothing ("hidden"). */
+  showAnswers: z.enum(["after-submit", "never", "hidden"]).default("after-submit"),
   pinyin: z.boolean().default(true),
   /** Percent of the points needed to pass; 0 means no pass mark. */
   passPercent: z.number().int().min(0).max(100).default(0),

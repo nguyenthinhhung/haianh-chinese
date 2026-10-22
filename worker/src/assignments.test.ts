@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { newExercise } from "../../src/core/exercise";
-import { attemptDeadline, cleanAnswers, cleanName, isOpen, vietnamTimeToIso } from "./assignments";
+import { gradeExercise } from "../../src/core/exerciseGrade";
+import { attemptDeadline, cleanAnswers, cleanName, isOpen, resultBody, vietnamTimeToIso } from "./assignments";
 
 describe("cleanName", () => {
   it("keeps one tidy line with a letter in it", () => {
@@ -61,5 +62,19 @@ describe("deadlines", () => {
     // A clock that starts with the first answer runs in the browser; only the deadline holds on the server.
     const firstAnswer = { ...timed, settings: { ...timed.settings, timerStart: "first-answer" as const } };
     expect(attemptDeadline(firstAnswer, { closes_at: null }, start)).toBeNull();
+  });
+});
+
+describe("resultBody", () => {
+  const ex = newExercise("Đề");
+  const grade = gradeExercise(ex, {});
+  const withShow = (showAnswers: "after-submit" | "never" | "hidden") => resultBody({ ...ex, settings: { ...ex.settings, showAnswers } }, grade, {}, "t_x", false);
+
+  it("sends the score and answers, the score only, or neither", () => {
+    expect(withShow("after-submit")).toMatchObject({ grade, review: expect.any(Object) });
+    expect(withShow("never")).toMatchObject({ grade });
+    expect(withShow("never")).not.toHaveProperty("review");
+    expect(withShow("hidden")).not.toHaveProperty("grade");
+    expect(withShow("hidden")).not.toHaveProperty("review");
   });
 });

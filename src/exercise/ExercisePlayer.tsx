@@ -11,7 +11,8 @@ import { ListensContext, listensLeft, PartHeader, QuestionCard, type AssetUrl, t
  */
 
 export interface PlayerResult {
-  grade: ExerciseGrade;
+  /** Absent when the exercise keeps the score from students. */
+  grade?: ExerciseGrade;
   /** Present when the exercise lets students see the answers. */
   review?: ExerciseReview;
   /** Handed in after the time was up (the server says so). */
@@ -377,7 +378,31 @@ export function ExercisePlayer(props: ExercisePlayerProps) {
     );
   }
 
-  if (phase === "result" && result) {
+  const restartButton = settings.attempts === "many" && (
+    <div className="ex-actions">
+      <button type="button" className="ex-primary" onClick={restart}>
+        Làm lại từ đầu
+      </button>
+    </div>
+  );
+
+  if (phase === "result" && result && !result.grade) {
+    return (
+      <div {...deck}>
+        <main className="ex-main ex-result">
+          <div className="ex-score">
+            <p className="ex-kicker">{exercise.title}</p>
+            <p className="ex-score-big">Đã nộp bài</p>
+            <p className="ex-score-percent">Giáo viên đã nhận bài. Đề này không cho xem điểm và đáp án sau khi nộp.</p>
+            {result.late && <p className="ex-note">Bài được nộp sau giờ quy định.</p>}
+          </div>
+          {restartButton}
+        </main>
+      </div>
+    );
+  }
+
+  if (phase === "result" && result?.grade) {
     const { grade, review } = result;
     const graded = new Map(grade.questions.map((q) => [q.id, q]));
     const status = new Map(grade.questions.map((q) => [q.id, q.status]));
@@ -461,13 +486,7 @@ export function ExercisePlayer(props: ExercisePlayerProps) {
           ) : (
             <p className="ex-note">Giáo viên chỉ cho xem điểm của đề này.</p>
           )}
-          <div className="ex-actions">
-            {settings.attempts === "many" && (
-              <button type="button" className="ex-primary" onClick={restart}>
-                Làm lại từ đầu
-              </button>
-            )}
-          </div>
+          {restartButton}
         </main>
       </div>
     );

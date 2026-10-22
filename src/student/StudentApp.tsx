@@ -95,7 +95,7 @@ async function api<T>(path: string, body?: unknown): Promise<{ status: number; d
   return { status: res.status, data };
 }
 
-const toResult = (body: ResultBody): PlayerResult => ({ grade: body.grade!, ...(body.review ? { review: body.review } : {}), late: !!body.late });
+const toResult = (body: ResultBody): PlayerResult => ({ ...(body.grade ? { grade: body.grade } : {}), ...(body.review ? { review: body.review } : {}), late: !!body.late });
 
 const vietnamTime = (iso: string) =>
   new Date(iso).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", hour: "2-digit", minute: "2-digit", day: "numeric", month: "numeric", year: "numeric" });
@@ -116,7 +116,7 @@ export function StudentApp() {
 
   async function fetchResult(attemptId: string): Promise<Finished | null> {
     const { status, data } = await api<ResultBody>(`/api/a/${slug}/result/${attemptId}`);
-    return status === 200 && data.grade && data.answers ? { answers: data.answers, result: toResult(data) } : null;
+    return status === 200 && data.answers ? { answers: data.answers, result: toResult(data) } : null;
   }
 
   async function showResult(attemptId: string): Promise<boolean> {
@@ -207,7 +207,7 @@ export function StudentApp() {
   async function submit(answers: Answers): Promise<PlayerResult> {
     if (!progress) throw new Error("Bài chưa được bắt đầu; tải lại trang.");
     const { status, data } = await api<ResultBody>(`/api/a/${slug}/submit`, { attemptId: progress.attemptId, answers });
-    if (status !== 200 || !data.grade) {
+    if (status !== 200 || !data.answers) {
       throw new Error(
         status === 404
           ? "Không tìm thấy lượt làm bài này; tải lại trang rồi làm lại."
@@ -254,6 +254,7 @@ export function StudentApp() {
   const lastGrade = previous?.result.grade;
   const startExtra = (
     <>
+      {previous && !lastGrade && <p className="st-previous">Em đã nộp bài này. Đề này không cho xem điểm sau khi nộp.</p>}
       {previous && lastGrade && (
         <div className="st-previous">
           <p>

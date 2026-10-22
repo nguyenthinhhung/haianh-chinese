@@ -354,6 +354,7 @@ export const SETTINGS_EDITOR: EditorFieldSpec = [
     options: [
       { value: "after-submit", label: "Cho xem đáp án, giải thích và lời đoạn nghe" },
       { value: "never", label: "Chỉ cho xem điểm" },
+      { value: "hidden", label: "Không cho xem điểm hay đáp án (chỉ báo đã nộp)" },
     ],
   },
   { kind: "toggle", key: "pinyin", label: "Hiện pinyin" },
@@ -378,8 +379,9 @@ export function newExercise(title: string, pinyin = true): Exercise {
       shuffleQuestions: false,
       shuffleOptions: false,
       maxListens: 0,
-      // Hidden until the teacher chooses to show them, so answers cannot spread between students.
-      showAnswers: "never",
+      // Hidden until the teacher chooses to show them, so answers cannot spread between students
+      // and nobody hands in again and again just to push the score up.
+      showAnswers: "hidden",
       pinyin,
       passPercent: 0,
     },

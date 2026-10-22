@@ -86,7 +86,7 @@ function TryDialog({ exercise, assetUrl, themeId, hanziFont, onClose }: { exerci
           themeId={themeId}
           hanziFont={hanziFont}
           submit={async (answers) => ({
-            grade: gradeExercise(exercise, answers),
+            ...(exercise.settings.showAnswers === "hidden" ? {} : { grade: gradeExercise(exercise, answers) }),
             ...(exercise.settings.showAnswers === "after-submit" ? { review: exerciseReview(exercise) } : {}),
           })}
           onRestart={() => setSeed(Math.random().toString(36).slice(2))}
