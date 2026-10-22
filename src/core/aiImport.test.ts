@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { testEnv } from "../test/env";
-import { buildAiPrompt, extractJson, lengthLimits, parseAiLesson } from "./aiImport";
+import { buildAiPrompt, extractJson, lengthLimits, parseAiLesson, readAiJson } from "./aiImport";
 import { DEFAULT_REQUEST, planSlideCount, resolvePlan, type LessonRequest } from "./lessonPlan";
 
 const { templates } = testEnv();
@@ -26,6 +26,22 @@ describe("extractJson", () => {
 
   it("returns null without JSON", () => {
     expect(extractJson("Xin lỗi, tôi không hiểu.")).toBeNull();
+  });
+});
+
+describe("readAiJson", () => {
+  it("drops backslashes JSON does not allow, keeping real escapes", () => {
+    const reply = String.raw`{"prompt": "我\_\_\_学生。", "note": "it\'s \(easy\)", "t": "女：你好\n男：\"好\" 你"}`;
+    expect(readAiJson(reply)).toEqual({ ok: true, value: { prompt: "我___学生。", note: "it's (easy)", t: '女：你好\n男："好" 你' } });
+  });
+
+  it("escapes raw line breaks inside strings", () => {
+    expect(readAiJson('{"t": "女：你好\n男：好"}')).toEqual({ ok: true, value: { t: "女：你好\n男：好" } });
+  });
+
+  it("reports JSON it cannot mend", () => {
+    const read = readAiJson('{"a": 1,, }');
+    expect(read.ok).toBe(false);
   });
 });
 

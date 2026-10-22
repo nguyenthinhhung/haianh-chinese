@@ -1,5 +1,5 @@
 import { AGE_PROFILES, ageProfile, type AgeBand } from "./ages";
-import { extractJson } from "./aiImport";
+import { readAiJson } from "./aiImport";
 import { describeExercisePath, newExercise, QUESTION_KINDS, QUESTION_TYPES, questionNumbers } from "./exercise";
 import { exerciseIssues } from "./exerciseCheck";
 import { ExerciseSchema, SKILLS, type Exercise, type ExercisePart, type Question, type QuestionType, type Skill } from "./exerciseSchema";
@@ -241,14 +241,9 @@ export type ExerciseImportResult =
  * number, as students will see them.
  */
 export function parseAiExercise(reply: string, pinyin = true): ExerciseImportResult {
-  const json = extractJson(reply);
-  if (!json) return { ok: false, errors: ["Không tìm thấy JSON trong nội dung đã dán."] };
-  let raw: unknown;
-  try {
-    raw = JSON.parse(json);
-  } catch (e) {
-    return { ok: false, errors: [`JSON bị lỗi: ${e instanceof Error ? e.message : String(e)}`] };
-  }
+  const read = readAiJson(reply);
+  if (!read.ok) return read;
+  const raw = read.value;
   const envelope: Raw = Array.isArray(raw) ? { questions: raw } : isObj(raw) ? raw : {};
   const rawParts = Array.isArray(envelope.parts) ? envelope.parts : Array.isArray(envelope.questions) ? [{ questions: envelope.questions }] : [];
   if (!rawParts.some((p) => isObj(p) && list(p.questions).length)) return { ok: false, errors: ['JSON cần có "parts", mỗi phần có danh sách "questions".'] };
@@ -359,6 +354,7 @@ Quy tắc:
 - Mỗi câu chỉ có một đáp án đúng; lựa chọn sai phải hợp lý nhưng chắc chắn sai.
 - Lời bài nghe: mỗi lượt nói một dòng, mở đầu bằng người nói ("男：", "女："); không ghi pinyin. Bài nghe có nhiều câu hỏi thì ghi lời vào "transcript" của phần; mỗi câu một đoạn nghe riêng thì ghi vào "transcript" của câu.
 - Không đưa ảnh, file âm thanh hay link.
+- JSON phải hợp lệ: trong chuỗi chỉ dùng dấu \\ cho \\n (xuống dòng) và \\" (ngoặc kép); chỗ trống viết ___, không viết \\_\\_\\_.
 
 Ví dụ về định dạng (nội dung chỉ để minh hoạ):
 ${JSON.stringify(example, null, 2)}`;

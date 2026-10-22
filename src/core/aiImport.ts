@@ -49,6 +49,51 @@ export function extractJson(text: string): string | null {
 }
 
 /**
+ * Mends what chat tools commonly get wrong inside JSON strings: escapes JSON
+ * does not have (`\_` from Markdown, `\'`, `\(`) lose their backslash, and
+ * raw line breaks or tabs are escaped.
+ */
+export function repairJson(json: string): string {
+  let out = "";
+  let inString = false;
+  for (let i = 0; i < json.length; i++) {
+    const ch = json[i]!;
+    if (!inString) {
+      if (ch === '"') inString = true;
+      out += ch;
+    } else if (ch === "\\") {
+      const next = json[i + 1] ?? "";
+      if (/["\\/bfnrt]/.test(next) || (next === "u" && /^[0-9a-fA-F]{4}$/.test(json.slice(i + 2, i + 6)))) {
+        out += ch + next;
+        i++;
+      }
+    } else if (ch === '"') {
+      inString = false;
+      out += ch;
+    } else if (ch === "\n") out += "\\n";
+    else if (ch === "\r") out += "";
+    else if (ch === "\t") out += "\\t";
+    else out += ch;
+  }
+  return out;
+}
+
+/** The JSON of a chat reply, mended where it is slightly off; or why it cannot be read. */
+export function readAiJson(text: string): { ok: true; value: unknown } | { ok: false; errors: string[] } {
+  const json = extractJson(text);
+  if (!json) return { ok: false, errors: ["Không tìm thấy JSON trong nội dung đã dán."] };
+  try {
+    return { ok: true, value: JSON.parse(json) };
+  } catch (e) {
+    try {
+      return { ok: true, value: JSON.parse(repairJson(json)) };
+    } catch {
+      return { ok: false, errors: [`JSON bị lỗi: ${e instanceof Error ? e.message : String(e)}`] };
+    }
+  }
+}
+
+/**
  * Picture search words the AI wrote into picture fields ("image": "orange
  * fruit"), by path. Links and file names are not search words and are skipped.
  */
@@ -151,14 +196,9 @@ export type AiImportResult =
  * fresh IDs; every problem is reported with its location.
  */
 export function parseAiLesson(text: string, registry: TemplateRegistry): AiImportResult {
-  const json = extractJson(text);
-  if (!json) return { ok: false, errors: ["Không tìm thấy JSON trong nội dung đã dán."] };
-  let raw: unknown;
-  try {
-    raw = JSON.parse(json);
-  } catch (e) {
-    return { ok: false, errors: [`JSON bị lỗi: ${e instanceof Error ? e.message : String(e)}`] };
-  }
+  const read = readAiJson(text);
+  if (!read.ok) return read;
+  const raw = read.value;
   const envelope = Array.isArray(raw) ? { slides: raw } : (raw as { title?: unknown; slides?: unknown } | null);
   if (!envelope || !Array.isArray(envelope.slides) || envelope.slides.length === 0) {
     return { ok: false, errors: ['JSON cần có danh sách "slides".'] };
