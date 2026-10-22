@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { speechText } from "../core/autoAudio";
 import { markReviewed } from "../core/autoImages";
 import { addAsset } from "../core/document";
 import { getIn, type Path } from "../core/fields";
@@ -201,7 +202,7 @@ function AssetField({ field, path, session, target }: FieldProps & { field: Extr
             className="primary"
             disabled={!!busy || !speakText}
             title={speakText ? `Đọc “${speakText}” bằng giọng Google Dịch` : "Nhập chữ Hán trước"}
-            onClick={() => void run("Đang tạo giọng đọc…", () => persistence.speakChinese(session.dir, speakText))}
+            onClick={() => void run("Đang tạo giọng đọc…", () => persistence.speakChinese(session.dir, speechText(speakText)))}
           >
             🔊 Tạo giọng đọc
           </button>

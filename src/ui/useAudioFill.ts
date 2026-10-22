@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { fillAudioSlot, type AudioJob } from "../core/autoAudio";
+import { fillAudioSlot, speechText, type AudioJob } from "../core/autoAudio";
 import { slotKey } from "../core/autoImages";
 import type { ImportedAsset } from "../platform/persistence";
 import { PersistenceError } from "../platform/persistence";
@@ -34,7 +34,7 @@ export function useAudioFill(session: LessonSession) {
         let sound = recordings.current.get(job.text) ?? null;
         if (!recordings.current.has(job.text)) {
           try {
-            sound = await persistence.speakChinese(sessionRef.current.dir, job.text);
+            sound = await persistence.speakChinese(sessionRef.current.dir, speechText(job.text));
           } catch (e) {
             if (e instanceof PersistenceError && e.code === "network") {
               if (alive.current) setProgress((p) => ({ ...p, paused: e.message }));
@@ -71,8 +71,8 @@ export function useAudioFill(session: LessonSession) {
   /** Adds jobs (slots already queued are skipped) and starts working if idle. */
   const enqueue = useCallback(
     (jobs: AudioJob[]) => {
-      const queued = new Set(queue.current.map((j) => slotKey(j.slideId, j.path)));
-      const fresh = jobs.filter((j) => !queued.has(slotKey(j.slideId, j.path)));
+      const queued = new Set(queue.current.map((j) => slotKey(j.ownerId, j.path)));
+      const fresh = jobs.filter((j) => !queued.has(slotKey(j.ownerId, j.path)));
       if (!fresh.length) return 0;
       const restart = !running.current && queue.current.length === 0;
       queue.current.push(...fresh);
