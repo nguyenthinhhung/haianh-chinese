@@ -507,8 +507,9 @@ viên chấm, và khi còn điểm chờ chấm thì chưa kết luận Đạt/C
   nhập/mật khẩu sai 10 lần mỗi 15 phút, bắt đầu và nộp bài theo từng mạng.
 - **Bảng điểm**: từng bài nộp (câu hỏi, em trả lời, đáp án viết bằng chữ qua
   `core/exerciseText.ts`), chấm tay câu tự luận (`applyManualGrades`, chỉ sửa điểm
-  câu chờ chấm hoặc đã chấm tay), thống kê theo câu, CSV (UTF-8 có BOM, ô bắt đầu
-  bằng `=+-@` được thêm `'`), xoá bài nộp, gỡ đề, tải bản sao lưu JSON toàn bộ D1.
+  câu chờ chấm hoặc đã chấm tay), thống kê theo câu, file Excel (`worker/src/xlsx.ts`:
+  zip không nén tự viết, chữ luôn là ô chữ nên tên học viên không thành công thức),
+  xoá bài nộp, gỡ đề, tải bản sao lưu JSON toàn bộ D1.
   Gỡ đề cũng làm được trong app (`unpublish_assignment`, `DELETE /api/assignments/:id`
   trả `removed`).
 - **Phiếu trả lời**: nộp không được thì trình làm bài cho tải một file chữ (`.txt`,
@@ -902,7 +903,7 @@ Chưa làm:
 | --- | --- |
 | Thêm 7 dạng câu: điền chữ, chọn thanh điệu, sắp xếp câu, nối cặp, chọn từ trong khung, phân nhóm, tự luận (chấm tay) | Phủ các dạng bài trong giáo trình HSK/Hán ngữ mà giáo viên dùng. |
 | Hạn nộp, đóng/mở nhận bài và đồng hồ theo giờ máy chủ; giới hạn tần suất bằng D1 | Đề kiểm tra cần hạn nộp không lách được bằng cách chỉnh giờ máy; máy chủ công khai cần chặn dò mật khẩu. |
-| Bảng điểm đầy đủ: xem từng bài nộp, chấm tay, thống kê theo câu, CSV, xoá, gỡ đề, sao lưu | Giáo viên cần biết học viên sai ở đâu và giữ được điểm ngoài máy chủ. |
+| Bảng điểm đầy đủ: xem từng bài nộp, chấm tay, thống kê theo câu, tải Excel (.xlsx), xoá, gỡ đề, sao lưu | Giáo viên cần biết học viên sai ở đâu và giữ được điểm ngoài máy chủ. |
 | Chưa kết luận Đạt/Chưa đạt khi còn câu chờ chấm | Kết luận trước khi chấm tự luận dễ làm học viên hiểu nhầm. |
 | Phiếu trả lời dạng chữ khi nộp không được | Kế hoạch ghi file JSON, nhưng giáo viên cần đọc được phiếu ngay trên điện thoại. |
 | Nhập đề từ AI, tự tạo file nghe cho phần nghe; giọng đọc nhận lời dài | Chép đề từ sách bằng tay chậm; bài nghe của sách thường dài hơn giới hạn 200 ký tự của dịch vụ đọc. |

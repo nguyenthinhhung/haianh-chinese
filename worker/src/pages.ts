@@ -358,7 +358,7 @@ ${header.closesAt ? `<button class="copy" name="action" value="clear-deadline">B
 </form>
 ${
   attempts.length
-    ? `<p class="toolbar"><a class="copy" href="/results/${escapeHtml(header.id)}/csv" download>Tải bảng điểm (CSV)</a> <span class="muted">Bấm tên học viên để xem bài làm.</span></p>
+    ? `<p class="toolbar"><a class="copy" href="/results/${escapeHtml(header.id)}/xlsx" download>Tải bảng điểm (Excel)</a> <span class="muted">Bấm tên học viên để xem bài làm.</span></p>
 <div class="table-wrap"><table><thead><tr><th>Học viên</th><th>Điểm</th><th>%</th><th>Thời gian làm</th><th>Nộp lúc</th><th>Lần</th></tr></thead><tbody>${rows}</tbody></table></div>
 ${statsTable(stats)}`
     : `<div class="empty"><strong>Chưa có bài nộp</strong>Gửi link cho học viên; bài nộp sẽ hiện ở đây.</div>`

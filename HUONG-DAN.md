@@ -288,8 +288,8 @@ nghe, phần đọc, có đồng hồ, xem đáp án sau khi nộp. Đề nằm 
      thấy điểm mới. Còn câu chờ chấm thì chưa hiện Đạt/Chưa đạt.
    - **Thống kê theo câu** (dưới bảng điểm): mỗi câu bao nhiêu em đúng, sai, bỏ
      trống; câu dưới 50% tô đỏ để ôn lại.
-   - **Tải bảng điểm (CSV)** mở bằng Excel hoặc Google Sheets. Nếu Excel dồn hết vào
-     một cột, dùng Data › From Text/CSV.
+   - **Tải bảng điểm (Excel)**: file .xlsx mở bằng Excel, Google Sheets, WPS; mỗi
+     dòng một bài nộp, có điểm từng câu.
    - **Đóng nhận bài** / **Mở lại nhận bài**, và **Hạn nộp** (giờ Việt Nam): sau hạn,
      link không cho bắt đầu bài mới; em đang làm dở vẫn nộp được nhưng bị đánh dấu
      nộp trễ.

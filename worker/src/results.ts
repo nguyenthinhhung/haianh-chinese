@@ -15,6 +15,7 @@ import {
   updateAssignment,
   type AttemptRow,
 } from "./assignments";
+import { xlsx, type Cell } from "./xlsx";
 import { attemptPage, PAGE_CSP, resultsListPage, resultsPage, vietnamInputValue, type AttemptQuestion, type QuestionStat } from "./pages";
 
 /** The teacher's results pages, under /results; signed in already. Null when the path is not one of them. */
@@ -24,7 +25,7 @@ const html = (body: string) =>
 const redirect = (to: string) => new Response(null, { status: 303, headers: { Location: to } });
 const notFound = () => new Response("Not found", { status: 404, headers: { "Cache-Control": "no-store" } });
 
-const download = (body: string, type: string, filename: string, fallback: string) =>
+const download = (body: string | Uint8Array, type: string, filename: string, fallback: string) =>
   new Response(body, {
     headers: {
       "Content-Type": type,
@@ -82,17 +83,10 @@ function attemptQuestions(exercise: Exercise, grade: ExerciseGrade, answers: Ans
   });
 }
 
-/** Excel takes a cell starting with one of these for a formula; names are typed by students. */
-const csvCell = (value: string | number) => {
-  if (typeof value === "number") return String(value);
-  const text = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
-  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
-};
-
 const vietnamTime = (iso: string) => vietnamInputValue(iso).replace("T", " ");
 
-/** One row per hand-in, oldest first, with each question's points; BOM so Excel reads it as UTF-8. */
-function resultsCsv(exercise: Exercise, attempts: AttemptRow[]): string {
+/** One row per hand-in, oldest first, with each question's points; the first row names the columns. */
+function resultsTable(exercise: Exercise, attempts: AttemptRow[]): Cell[][] {
   const questions = questionsOf(exercise);
   const { passPercent } = exercise.settings;
   const head = [
@@ -136,7 +130,7 @@ function resultsCsv(exercise: Exercise, attempts: AttemptRow[]): string {
         }),
       ];
     });
-  return `﻿${[head, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n")}\r\n`;
+  return [head, ...rows];
 }
 
 export async function handleResults(request: Request, db: D1Database, url: URL): Promise<Response | null> {
@@ -210,7 +204,7 @@ export async function handleResults(request: Request, db: D1Database, url: URL):
     );
   }
 
-  const action = /^\/results\/([^/]+)\/(settings|delete|csv)$/.exec(pathname);
+  const action = /^\/results\/([^/]+)\/(settings|delete|xlsx)$/.exec(pathname);
   if (action) {
     const id = action[1]!;
     const what = action[2];
@@ -221,12 +215,12 @@ export async function handleResults(request: Request, db: D1Database, url: URL):
     if (what === "delete" && method === "POST") {
       return (await deleteAssignment(db, id)).ok ? redirect("/results") : notFound();
     }
-    if (what === "csv" && method === "GET") {
+    if (what === "xlsx" && method === "GET") {
       const found = await assignmentResults(db, id);
       if (!found) return notFound();
       const { assignment } = found;
-      const csv = resultsCsv(readPayload(assignment).exercise, found.attempts);
-      return download(csv, "text/csv; charset=utf-8", `Bảng điểm - ${assignment.title}.csv`, `bang-diem-${assignment.slug}.csv`);
+      const book = xlsx("Bảng điểm", resultsTable(readPayload(assignment).exercise, found.attempts));
+      return download(book, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", `Bảng điểm - ${assignment.title}.xlsx`, `bang-diem-${assignment.slug}.xlsx`);
     }
     return null;
   }
