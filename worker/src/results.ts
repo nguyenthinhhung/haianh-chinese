@@ -9,6 +9,7 @@ import {
   deleteAttempt,
   exportAll,
   gradeByHand,
+  handInSlip,
   isOpen,
   listAssignments,
   readPayload,
@@ -33,6 +34,15 @@ const download = (body: string | Uint8Array, type: string, filename: string, fal
       "Cache-Control": "no-store",
     },
   });
+
+/** A slip lists every question and answer; far more than any real one. */
+const MAX_SLIP_BYTES = 300 * 1024;
+
+const SLIP_ERRORS: Record<string, string> = {
+  unreadable: "Không đọc được phiếu. Chọn đúng file phiếu, hoặc dán toàn bộ nội dung kể cả dòng cuối cùng.",
+  "other-exercise": "Phiếu này không thuộc bài tập này, hoặc lượt làm của em đã bị xoá.",
+  "handed-in": "Lượt làm trong phiếu đã được nộp rồi; xem bài của học viên trong bảng dưới.",
+};
 
 const questionsOf = (exercise: Exercise): Question[] => exercise.parts.flatMap((p) => p.questions);
 const gradeOf = (a: AttemptRow): ExerciseGrade | null => (a.grade ? (JSON.parse(a.grade) as ExerciseGrade) : null);
@@ -204,7 +214,7 @@ export async function handleResults(request: Request, db: D1Database, url: URL):
     );
   }
 
-  const action = /^\/results\/([^/]+)\/(settings|delete|xlsx)$/.exec(pathname);
+  const action = /^\/results\/([^/]+)\/(settings|delete|xlsx|slip)$/.exec(pathname);
   if (action) {
     const id = action[1]!;
     const what = action[2];
@@ -214,6 +224,15 @@ export async function handleResults(request: Request, db: D1Database, url: URL):
     }
     if (what === "delete" && method === "POST") {
       return (await deleteAssignment(db, id)).ok ? redirect("/results") : notFound();
+    }
+    if (what === "slip" && method === "POST") {
+      const form = await request.formData();
+      const file = form.get("file");
+      const pasted = form.get("slip");
+      const slip =
+        file instanceof File && file.size ? (file.size <= MAX_SLIP_BYTES ? await file.text() : "") : typeof pasted === "string" ? pasted.slice(0, MAX_SLIP_BYTES) : "";
+      const outcome = await handInSlip(db, id, slip);
+      return redirect(outcome.ok ? `/results/${id}/attempts/${outcome.attemptId}` : `/results/${id}?slip=${outcome.error}`);
     }
     if (what === "xlsx" && method === "GET") {
       const found = await assignmentResults(db, id);
@@ -263,6 +282,7 @@ export async function handleResults(request: Request, db: D1Database, url: URL):
           questionsOf(exercise),
           graded.flatMap(({ grade }) => (grade ? [grade] : [])),
         ),
+        SLIP_ERRORS[url.searchParams.get("slip") ?? ""] ?? "",
       ),
     );
   }

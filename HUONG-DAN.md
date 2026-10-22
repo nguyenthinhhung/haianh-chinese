@@ -298,8 +298,10 @@ nghe, phần đọc, có đồng hồ, xem đáp án sau khi nộp. Đề nằm 
      › **Gỡ khỏi web…**.
    - **Tải bản sao lưu** (trang Bảng điểm): một file JSON chứa mọi đề và bài nộp.
 5. Học viên nộp không được (mất mạng…): trang cho **tải phiếu trả lời**, một file
-   chữ liệt kê từng câu và câu trả lời. Học viên gửi phiếu cho bạn qua Zalo; bạn đọc
-   và chấm tay.
+   chữ liệt kê từng câu và câu trả lời. Học viên gửi phiếu cho bạn qua Zalo. Trên
+   trang điểm của đề, mở **Nhận phiếu trả lời của học viên**, chọn file phiếu (hoặc
+   dán nội dung) rồi bấm **Chấm phiếu**: máy chủ chấm như bài nộp thường (trắc
+   nghiệm và các dạng khác chấm ngay, tự luận chờ bạn chấm).
 
 ## 8. Tạo bài bằng AI
 

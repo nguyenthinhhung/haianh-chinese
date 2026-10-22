@@ -255,6 +255,12 @@ td.answer{white-space:normal;min-width:120px}
 td.name a{color:inherit}
 .points{width:64px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;background:var(--panel)}
 .danger-zone{margin-top:28px}
+.slip{margin-top:28px;padding:12px 16px;border:1px solid var(--border);border-radius:14px;background:var(--panel)}
+.slip summary{cursor:pointer;font-weight:600}
+.slip form{display:grid;gap:10px;margin-top:10px}
+.slip textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:inherit;font:inherit}
+.slip .open{justify-self:start}
+.notice{margin:10px 0 0;color:#c0392b;font-weight:600}
 .copy.danger{border-color:#c0392b;color:#c0392b}
 .assignment .info p:last-child{margin-top:6px}
 `;
@@ -317,7 +323,7 @@ function statsTable(stats: QuestionStat[]): string {
   return `<h3>Thống kê theo câu</h3><div class="table-wrap"><table><thead><tr><th>Câu</th><th>Dạng</th><th>Câu hỏi</th><th>Đúng</th><th>Một phần</th><th>Sai</th><th>Bỏ trống</th><th></th><th>Điểm đạt</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
-export function resultsPage(header: ResultsHeader, attempts: ResultsAttempt[], stats: QuestionStat[] = []): string {
+export function resultsPage(header: ResultsHeader, attempts: ResultsAttempt[], stats: QuestionStat[] = [], notice = ""): string {
   // The nth time this browser handed the exercise in, counted from the first.
   const nth = new Map<ResultsAttempt, number>();
   const counts = new Map<string, number>();
@@ -363,6 +369,14 @@ ${
 ${statsTable(stats)}`
     : `<div class="empty"><strong>Chưa có bài nộp</strong>Gửi link cho học viên; bài nộp sẽ hiện ở đây.</div>`
 }
+<details class="slip"${notice ? " open" : ""}><summary>Nhận phiếu trả lời của học viên</summary>
+${notice ? `<p class="notice" role="alert">${escapeHtml(notice)}</p>` : ""}
+<form method="post" action="/results/${escapeHtml(header.id)}/slip" enctype="multipart/form-data">
+<p class="muted">Học viên nộp không được thì tải phiếu trả lời (file .txt) gửi cho bạn. Chọn file đó, hoặc mở file rồi dán toàn bộ nội dung vào ô dưới; máy chủ chấm như bài nộp thường, câu tự luận chờ bạn chấm.</p>
+<input type="file" name="file" accept=".txt,text/plain">
+<textarea name="slip" rows="4" placeholder="…hoặc dán nội dung phiếu ở đây"></textarea>
+<button class="open">Chấm phiếu</button>
+</form></details>
 <form class="danger-zone" method="post" action="/results/${escapeHtml(header.id)}/delete" onsubmit="return confirm('Gỡ bài tập này khỏi web? Link sẽ không mở được nữa và mọi bài nộp bị xoá.')">
 <button class="copy danger">Gỡ bài tập khỏi web</button> <span class="muted">Link không mở được nữa; mọi bài nộp bị xoá. Tải bảng điểm trước nếu cần giữ.</span>
 </form>`;

@@ -515,7 +515,9 @@ viên chấm, và khi còn điểm chờ chấm thì chưa kết luận Đạt/C
 - **Phiếu trả lời**: nộp không được thì trình làm bài cho tải một file chữ (`.txt`,
   `src/student/slip.ts`) liệt kê từng câu và câu trả lời, cuối có dòng dữ liệu JSON,
   để học viên gửi giáo viên bằng cách khác. Chọn file chữ thay vì JSON để giáo viên
-  đọc được ngay trên điện thoại.
+  đọc được ngay trên điện thoại. Giáo viên đưa phiếu (file hoặc dán) vào trang điểm;
+  máy chủ đọc dòng dữ liệu cuối, chỉ nhận phiếu của lượt làm thuộc đề này và chưa
+  nộp, rồi chấm như bài nộp thường (`handInSlip`), không đánh dấu nộp trễ.
 - **Nhập đề từ AI** (`core/exerciseImport.ts`, `ExerciseImportDialog`): như nhập slide
   (mục 5B), app soạn lời nhắn, giáo viên dán câu trả lời. Câu trả lời dùng dạng gọn
   hơn đề lưu (không có ID, đáp án ghi bằng chữ cái, nhóm bằng số thứ tự); app cấp

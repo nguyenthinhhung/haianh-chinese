@@ -427,14 +427,52 @@ export async function submitAttempt(db: D1Database, slug: string, request: Reque
   // Late work is kept, never refused: the teacher decides what it counts for.
   const deadline = attemptDeadline(exercise, row, attempt.started_at);
   const late = deadline !== null && Date.now() > deadline + GRACE_MS;
-  const grade = gradeExercise(exercise, answers);
+  const grade = await handIn(db, row, attempt.id, answers, late);
+  return json(resultBody(exercise, grade, answers, attempt.id, late));
+}
+
+/** Grades the answers with the exercise as it stands and keeps them; an attempt handed in already stays as it was. */
+async function handIn(db: D1Database, row: AssignmentRow, attemptId: string, answers: Answers, late: boolean): Promise<ExerciseGrade> {
+  const grade = gradeExercise(readPayload(row).exercise, answers);
   await db
     .prepare(
       "UPDATE attempts SET submitted_at = ?, answers = ?, grade = ?, score = ?, max_score = ?, percent = ?, version = ?, late = ? WHERE id = ? AND submitted_at IS NULL",
     )
-    .bind(new Date().toISOString(), JSON.stringify(answers), JSON.stringify(grade), grade.score, grade.max, grade.percent, row.version, late ? 1 : 0, attempt.id)
+    .bind(new Date().toISOString(), JSON.stringify(answers), JSON.stringify(grade), grade.score, grade.max, grade.percent, row.version, late ? 1 : 0, attemptId)
     .run();
-  return json(resultBody(exercise, grade, answers, attempt.id, late));
+  return grade;
+}
+
+export type SlipOutcome = { ok: true; attemptId: string } | { ok: false; error: "unreadable" | "other-exercise" | "handed-in" };
+
+/**
+ * An answer slip a student could not hand in, brought by the teacher: its
+ * last line holds the attempt and the answers. Graded like any hand-in; not
+ * marked late, since the teacher chose to take it.
+ */
+export async function handInSlip(db: D1Database, id: string, slip: string): Promise<SlipOutcome> {
+  type SlipData = { attemptId?: unknown; answers?: unknown };
+  let data: SlipData | null = null;
+  for (const line of slip.split(/\r?\n/).reverse()) {
+    try {
+      const parsed: unknown = JSON.parse(line.trim());
+      if (parsed && typeof parsed === "object" && "attemptId" in parsed) {
+        data = parsed as SlipData;
+        break;
+      }
+    } catch {
+      // Not the data line.
+    }
+  }
+  const attemptId = typeof data?.attemptId === "string" && ATTEMPT_ID.test(data.attemptId) ? data.attemptId : null;
+  const answers = cleanAnswers(data?.answers);
+  if (!EXERCISE_ID.test(id) || !attemptId || !answers) return { ok: false, error: "unreadable" };
+  const row = await db.prepare("SELECT * FROM assignments WHERE id = ?").bind(id).first<AssignmentRow>();
+  const attempt = row && (await db.prepare("SELECT * FROM attempts WHERE id = ? AND assignment_id = ?").bind(attemptId, id).first<AttemptRow>());
+  if (!row || !attempt) return { ok: false, error: "other-exercise" };
+  if (attempt.submitted_at) return { ok: false, error: "handed-in" };
+  await handIn(db, row, attemptId, answers, false);
+  return { ok: true, attemptId };
 }
 
 /** A student's own result again, e.g. after reloading the page. */
