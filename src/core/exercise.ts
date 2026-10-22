@@ -378,7 +378,8 @@ export function newExercise(title: string, pinyin = true): Exercise {
       shuffleQuestions: false,
       shuffleOptions: false,
       maxListens: 0,
-      showAnswers: "after-submit",
+      // Hidden until the teacher chooses to show them, so answers cannot spread between students.
+      showAnswers: "never",
       pinyin,
       passPercent: 0,
     },
