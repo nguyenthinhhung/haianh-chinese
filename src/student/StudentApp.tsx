@@ -109,14 +109,20 @@ export function StudentApp() {
   const [seed, setSeed] = useState(() => progress?.seed ?? randomId(10));
   const [finished, setFinished] = useState<Finished | null>(null);
   const [name, setName] = useState(() => read<string>(keys.name) ?? "");
+  // The last hand-in from this browser, as the server has it now (with the teacher's grading of written answers).
+  const [previous, setPrevious] = useState<Finished | null>(null);
   // Bumped to start another attempt with a fresh copy.
   const [round, setRound] = useState(0);
 
-  async function showResult(attemptId: string): Promise<boolean> {
+  async function fetchResult(attemptId: string): Promise<Finished | null> {
     const { status, data } = await api<ResultBody>(`/api/a/${slug}/result/${attemptId}`);
-    if (status !== 200 || !data.grade || !data.answers) return false;
-    setFinished({ answers: data.answers, result: toResult(data) });
-    return true;
+    return status === 200 && data.grade && data.answers ? { answers: data.answers, result: toResult(data) } : null;
+  }
+
+  async function showResult(attemptId: string): Promise<boolean> {
+    const found = await fetchResult(attemptId);
+    if (found) setFinished(found);
+    return !!found;
   }
 
   useEffect(() => {
@@ -132,7 +138,10 @@ export function StudentApp() {
         // Coming back to an exercise handed in once only, or closed since: show that result instead of a new start.
         const done = read<string>(keys.done);
         const shown = !progress && done && (data.exercise.settings.attempts === "one" || !data.open) ? await showResult(done) : false;
+        // Otherwise the start screen offers it, so the student can come back for the final score.
+        const last = !shown && done ? await fetchResult(done).catch(() => null) : null;
         if (cancelled) return;
+        setPrevious(last);
         // Closed, with nothing under way here: only a student part-way through may still hand in.
         if (!data.open && !progress && !shown) return setFailure("closed");
         setAssignment(data);
@@ -242,6 +251,28 @@ export function StudentApp() {
     </label>
   );
 
+  const lastGrade = previous?.result.grade;
+  const startExtra = (
+    <>
+      {previous && lastGrade && (
+        <div className="st-previous">
+          <p>
+            Lần nộp trước: <strong>{lastGrade.score}/{lastGrade.max - lastGrade.pending} điểm</strong>
+            {lastGrade.pending > 0
+              ? ` — phần tự luận (${lastGrade.pending} điểm) đang chờ giáo viên chấm.`
+              : lastGrade.questions.some((q) => q.manual)
+                ? " — giáo viên đã chấm xong phần tự luận."
+                : ""}
+          </p>
+          <button type="button" onClick={() => setFinished(previous)}>
+            Xem kết quả
+          </button>
+        </div>
+      )}
+      {nameField}
+    </>
+  );
+
   return (
     <>
       <style>{css}</style>
@@ -254,13 +285,14 @@ export function StudentApp() {
         submit={submit}
         onRestart={restart}
         storageKey={progress ? `ls-answers-${progress.attemptId}` : undefined}
-        startExtra={nameField}
+        startExtra={startExtra}
         canStart={/\p{L}/u.test(name)}
         onStart={start}
         finished={finished ?? undefined}
         deadline={progress?.deadline ?? null}
         facts={assignment.closesAt ? [`Hạn nộp ${vietnamTime(assignment.closesAt)}`] : []}
         saveSlip={saveSlip}
+        resultExtra={<p className="ex-note">Khi giáo viên chấm xong, mở lại đường link này trên máy này để xem điểm cuối.</p>}
       />
     </>
   );

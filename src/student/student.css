@@ -27,6 +27,23 @@ body {
   font-size: 20px;
 }
 
+.ex-player .st-previous {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  width: min(480px, 100%);
+  margin: 24px auto 0;
+  padding: 12px 16px;
+  border: 2px solid var(--ex-border);
+  border-radius: 14px;
+  background: var(--ex-surface);
+}
+.ex-player .st-previous p {
+  margin: 0;
+  flex: 1 1 220px;
+}
 .ex-player .st-name {
   display: grid;
   gap: 6px;

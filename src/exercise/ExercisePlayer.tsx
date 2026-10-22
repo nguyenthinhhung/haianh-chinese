@@ -51,6 +51,8 @@ export interface ExercisePlayerProps {
   facts?: string[];
   /** Offered when handing in fails: keeps the answers in a file the student can send the teacher. */
   saveSlip?(answers: Answers): void;
+  /** Shown with a result still waiting for the teacher's grading, e.g. how to see the final score. */
+  resultExtra?: ReactNode;
 }
 
 type Phase = "intro" | "doing" | "result";
@@ -200,7 +202,7 @@ function AudioBar({
 }
 
 export function ExercisePlayer(props: ExercisePlayerProps) {
-  const { exercise, assetUrl, submit, themeId, hanziFont, onRestart, storageKey, startExtra, canStart = true, onStart, finished, deadline, facts, saveSlip } = props;
+  const { exercise, assetUrl, submit, themeId, hanziFont, onRestart, storageKey, startExtra, canStart = true, onStart, finished, deadline, facts, saveSlip, resultExtra } = props;
   const saved = useMemo(() => load(storageKey), [storageKey]);
   const [phase, setPhase] = useState<Phase>(finished ? "result" : saved?.startedAt ? "doing" : "intro");
   const [answers, setAnswers] = useState<Answers>(finished?.answers ?? saved?.answers ?? {});
@@ -380,6 +382,10 @@ export function ExercisePlayer(props: ExercisePlayerProps) {
     const graded = new Map(grade.questions.map((q) => [q.id, q]));
     const status = new Map(grade.questions.map((q) => [q.id, q.status]));
     const wrongCount = grade.questions.filter((q) => q.status !== "correct").length;
+    // Written answers not graded yet count in neither the score nor what it is out of, so the number is fair.
+    const pendingBySkill = new Map<Skill, number>();
+    for (const q of grade.questions) if (q.status === "pending") pendingBySkill.set(q.skill, (pendingBySkill.get(q.skill) ?? 0) + q.points);
+    const gradedByHand = grade.pending === 0 && grade.questions.some((q) => q.manual);
     return (
       <div {...deck}>
         <main className="ex-main ex-result">
@@ -387,23 +393,32 @@ export function ExercisePlayer(props: ExercisePlayerProps) {
             <p className="ex-kicker">{exercise.title}</p>
             <p className="ex-score-big">
               {grade.score}
-              <span>/{grade.max} điểm</span>
+              <span>/{grade.max - grade.pending} điểm</span>
             </p>
-            <p className="ex-score-percent">
-              {grade.percent}%{grade.passed !== undefined && ` · ${grade.passed ? "Đạt" : "Chưa đạt"} (cần ${settings.passPercent}%)`}
-            </p>
+            {grade.pending > 0 ? (
+              <p className="ex-score-percent">
+                Điểm các câu đã chấm. Phần tự luận ({grade.pending} điểm) giáo viên sẽ chấm sau; điểm cuối tính trên {grade.max}.
+              </p>
+            ) : (
+              <p className="ex-score-percent">
+                {grade.percent}%{grade.passed !== undefined && ` · ${grade.passed ? "Đạt" : "Chưa đạt"} (cần ${settings.passPercent}%)`}
+              </p>
+            )}
+            {gradedByHand && <p className="ex-note">Giáo viên đã chấm phần tự luận; đây là điểm cuối.</p>}
             {result.late && <p className="ex-note">Bài được nộp sau giờ quy định.</p>}
-            {grade.pending > 0 && <p className="ex-note">Còn {grade.pending} điểm phần tự luận chờ giáo viên chấm.</p>}
+            {grade.pending > 0 && resultExtra}
             <ul className="ex-skill-scores">
-              {(Object.entries(grade.bySkill) as [Skill, { score: number; max: number }][]).map(([skill, s]) => (
-                <li key={skill}>
-                  <span>{SKILL_LABELS[skill]}</span>
-                  <meter min={0} max={s.max || 1} value={s.score} />
-                  <span>
-                    {s.score}/{s.max}
-                  </span>
-                </li>
-              ))}
+              {(Object.entries(grade.bySkill) as [Skill, { score: number; max: number }][]).map(([skill, s]) => {
+                const waiting = pendingBySkill.get(skill) ?? 0;
+                const max = s.max - waiting;
+                return (
+                  <li key={skill}>
+                    <span>{SKILL_LABELS[skill]}</span>
+                    <meter min={0} max={max || 1} value={s.score} />
+                    <span>{max > 0 ? `${s.score}/${max}${waiting ? " · còn chờ chấm" : ""}` : "Chờ chấm"}</span>
+                  </li>
+                );
+              })}
             </ul>
           </div>
           {review ? (
