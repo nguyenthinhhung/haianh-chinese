@@ -8,24 +8,30 @@ import { CopyButton, fixRequest } from "./AiImportDialog";
 interface Props {
   /** Whether new exercises show pinyin, as the lesson does. */
   pinyin: boolean;
+  /** The lesson's title and words, the starting topic and vocabulary. */
+  lessonTitle: string;
+  lessonWords: string[];
   onImport(exercise: Exercise): void;
   onClose(): void;
 }
 
 // The teacher's last choices, so the next exercise for the same class starts from them.
+// Topic and words belong to the lesson and always start from it.
 const REQUEST_KEY = "ls.aiExerciseRequest";
 
-function loadRequest(): ExerciseRequest {
+function loadRequest(topic: string, words: string[]): ExerciseRequest {
+  let saved: unknown = null;
   try {
-    return normalizeExerciseRequest(JSON.parse(localStorage.getItem(REQUEST_KEY) ?? "null"));
+    saved = JSON.parse(localStorage.getItem(REQUEST_KEY) ?? "null");
   } catch {
-    return normalizeExerciseRequest(null);
+    // Start from the defaults.
   }
+  return normalizeExerciseRequest({ ...(saved && typeof saved === "object" ? saved : {}), topic, words: words.join(", ") });
 }
 
 /** An exercise written by an AI chat tool, usually copied from the textbook's pages. */
-export function ExerciseImportDialog({ pinyin, onImport, onClose }: Props) {
-  const [request, setRequest] = useState(loadRequest);
+export function ExerciseImportDialog({ pinyin, lessonTitle, lessonWords, onImport, onClose }: Props) {
+  const [request, setRequest] = useState(() => loadRequest(lessonTitle, lessonWords));
   const [text, setText] = useState("");
   const result = useMemo(() => (text.trim() ? parseAiExercise(text, pinyin) : null), [text, pinyin]);
   const change = (patch: Partial<ExerciseRequest>) => setRequest((r) => normalizeExerciseRequest({ ...r, ...patch }));
@@ -33,7 +39,8 @@ export function ExerciseImportDialog({ pinyin, onImport, onClose }: Props) {
 
   useEffect(() => {
     try {
-      localStorage.setItem(REQUEST_KEY, JSON.stringify(request));
+      const { topic: _topic, words: _words, ...kept } = request;
+      localStorage.setItem(REQUEST_KEY, JSON.stringify(kept));
     } catch {
       // Not remembering the choices is harmless.
     }
@@ -71,13 +78,13 @@ export function ExerciseImportDialog({ pinyin, onImport, onClose }: Props) {
               </label>
               <label className="ai-form-wide">
                 <span>
-                  Chủ đề <span className="muted">(khi để AI tự soạn)</span>
+                  Chủ đề <span className="muted">(lấy từ tên bài học, sửa nếu cần)</span>
                 </span>
                 <input value={request.topic} onChange={(e) => change({ topic: e.target.value })} placeholder="Ví dụ: Gia đình, số đếm" />
               </label>
               <label className="ai-form-wide">
                 <span>
-                  Từ vựng trọng tâm <span className="muted">(nếu có)</span>
+                  Từ vựng trọng tâm <span className="muted">(lấy từ các slide của bài, bớt hoặc thêm nếu cần)</span>
                 </span>
                 <textarea rows={2} lang="zh-CN" value={request.words} onChange={(e) => change({ words: e.target.value })} placeholder="爸爸, 妈妈, 哥哥" />
               </label>

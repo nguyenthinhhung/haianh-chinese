@@ -22,6 +22,7 @@ import {
   SETTINGS_EDITOR,
 } from "../core/exercise";
 import { exerciseIssues, type ExerciseIssue } from "../core/exerciseCheck";
+import { lessonWords } from "../core/lessonWords";
 import { exerciseReview, expectedAnswer, gradeExercise, studentCopy, studentPart, studentQuestion } from "../core/exerciseGrade";
 import { SKILL_LABELS, type Exercise, type QuestionType } from "../core/exerciseSchema";
 import type { RenderEnv } from "../renderer/render";
@@ -96,7 +97,7 @@ function TryDialog({ exercise, assetUrl, themeId, hanziFont, onClose }: { exerci
 }
 
 export function ExerciseEditor({ session, env, onNotice, onReadAloud }: Props) {
-  const { persistence } = useServices();
+  const { persistence, templates } = useServices();
   const doc = session.doc;
   const [exerciseId, setExerciseId] = useState(doc.exercises[0]?.id);
   const exercise = doc.exercises.find((e) => e.id === exerciseId) ?? doc.exercises[0];
@@ -153,7 +154,15 @@ export function ExerciseEditor({ session, env, onNotice, onReadAloud }: Props) {
     onNotice(`Đã thêm đề “${imported.title}” (Ctrl+Z để bỏ).${reading ? ` Đang tạo giọng đọc cho ${reading} đoạn nghe.` : ""}`);
   }
 
-  const importDialog = importing && <ExerciseImportDialog pinyin={doc.settings.pinyin} onImport={importExercise} onClose={() => setImporting(false)} />;
+  const importDialog = importing && (
+    <ExerciseImportDialog
+      pinyin={doc.settings.pinyin}
+      lessonTitle={doc.title}
+      lessonWords={lessonWords(doc, templates)}
+      onImport={importExercise}
+      onClose={() => setImporting(false)}
+    />
+  );
   const listening = useMemo(() => (exercise ? exerciseAudioJobs(exercise) : []), [exercise]);
 
   if (!exercise) {
